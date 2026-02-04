@@ -6,6 +6,7 @@ import os
 
 from flask import Flask
 
+from app.cli import register_cli
 from app.common.errors import register_error_handlers
 from app.config import get_config
 from app.extensions import init_extensions
@@ -20,6 +21,7 @@ def create_app(config_name: str | None = None) -> Flask:
     init_extensions(app)
     _register_module_blueprints(app)
     register_error_handlers(app)
+    register_cli(app)
 
     return app
 
