@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import click
-from flask import Flask
+from flask import Flask, current_app
 
 from app.extensions import db
+from app.common.access_levels import AccessLevel
 from app.models.client import Client
+from app.models.company import Company
 from app.models.permission import Permission
 from app.models.role import Role
+from app.models.user import User
+from app.repositories.role_repository import RoleRepository
+from app.repositories.user_company_access_repository import UserCompanyAccessRepository
+from app.repositories.user_repository import UserRepository
+from app.services.user_service import UserService
 
 RBAC_PERMISSIONS: dict[str, str] = {
     "tenant.profile.read": "Read tenant profile",
@@ -81,20 +88,60 @@ def register_cli(app: Flask) -> None:
     """Register CLI commands on the Flask app."""
 
     @app.cli.command("seed")
-    def seed() -> None:
+    @click.option(
+        "--scenario",
+        type=click.Choice(["default", "smoke"], case_sensitive=False),
+        default="default",
+        show_default=True,
+        help="Seed scenario to run.",
+    )
+    @click.option(
+        "--allow-production",
+        is_flag=True,
+        help="Allow seeding outside development.",
+    )
+    def seed(scenario: str, allow_production: bool) -> None:
         """Seed the database with initial data."""
-        seed_default_client()
-        seed_rbac()
+        _ensure_seed_allowed(allow_production)
+        normalized_scenario = scenario.lower()
+        if normalized_scenario == "smoke":
+            seed_smoke()
+        else:
+            seed_default_client()
+            seed_rbac()
 
     @app.cli.command("seed_clients")
-    def seed_clients() -> None:
+    @click.option(
+        "--allow-production",
+        is_flag=True,
+        help="Allow seeding outside development.",
+    )
+    def seed_clients(allow_production: bool) -> None:
         """Seed the database with initial client data."""
+        _ensure_seed_allowed(allow_production)
         seed_default_client()
 
     @app.cli.command("seed_rbac")
-    def seed_rbac_command() -> None:
+    @click.option(
+        "--allow-production",
+        is_flag=True,
+        help="Allow seeding outside development.",
+    )
+    def seed_rbac_command(allow_production: bool) -> None:
         """Seed the database with RBAC permissions and roles."""
+        _ensure_seed_allowed(allow_production)
         seed_rbac()
+
+    @app.cli.command("seed_smoke")
+    @click.option(
+        "--allow-production",
+        is_flag=True,
+        help="Allow seeding outside development.",
+    )
+    def seed_smoke_command(allow_production: bool) -> None:
+        """Seed the database with the deterministic smoke scenario."""
+        _ensure_seed_allowed(allow_production)
+        seed_smoke()
 
 
 def seed_default_client() -> None:
@@ -151,6 +198,177 @@ def seed_rbac() -> None:
 
     db.session.commit()
     click.echo("RBAC permissions and roles seeded.")
+
+
+def seed_smoke() -> None:
+    """Seed a deterministic smoke scenario."""
+    click.echo("Seeding smoke scenario...")
+    client_a = _get_or_create_client("Tenant A")
+    client_b = _get_or_create_client("Tenant B")
+
+    seed_rbac()
+
+    user_service = UserService(UserRepository())
+    role_repository = RoleRepository()
+    access_repository = UserCompanyAccessRepository()
+
+    admin_a = _get_or_create_user(client_a, "adminA@test.com", "Passw0rd!", user_service)
+    viewer_a = _get_or_create_user(client_a, "viewerA@test.com", "Passw0rd!", user_service)
+    admin_b = _get_or_create_user(client_b, "adminB@test.com", "Passw0rd!", user_service)
+
+    admin_role_a = _get_or_create_role(client_a, "Admin Cliente", role_repository)
+    operative_role_a = _get_or_create_role(client_a, "Operativo", role_repository)
+    admin_role_b = _get_or_create_role(client_b, "Admin Cliente", role_repository)
+
+    _assign_role(admin_a, admin_role_a)
+    _assign_role(viewer_a, operative_role_a)
+    _assign_role(admin_b, admin_role_b)
+
+    company_a1 = _get_or_create_company(client_a, "A1", "A1")
+    company_a2 = _get_or_create_company(client_a, "A2", "A2")
+    company_b1 = _get_or_create_company(client_b, "B1", "B1")
+
+    _upsert_company_access(
+        access_repository,
+        admin_a,
+        company_a1,
+        AccessLevel.admin.value,
+    )
+    _upsert_company_access(
+        access_repository,
+        admin_a,
+        company_a2,
+        AccessLevel.admin.value,
+    )
+    _upsert_company_access(
+        access_repository,
+        viewer_a,
+        company_a1,
+        AccessLevel.viewer.value,
+    )
+    _upsert_company_access(
+        access_repository,
+        admin_b,
+        company_b1,
+        AccessLevel.admin.value,
+    )
+
+    db.session.commit()
+    click.echo("Smoke scenario seeded.")
+
+
+def _ensure_seed_allowed(allow_production: bool) -> None:
+    env = current_app.config.get("ENV", "development")
+    if env != "development" and not allow_production:
+        raise click.ClickException(
+            "Seeding is only allowed in development. Use --allow-production to override."
+        )
+
+
+def _get_or_create_client(name: str) -> Client:
+    client = Client.query.filter_by(name=name).first()
+    if not client:
+        client = Client(name=name, status="active", plan="smoke")
+        db.session.add(client)
+        db.session.flush()
+        click.echo(f"Created client {name}.")
+        return client
+
+    updated = False
+    if client.status != "active":
+        client.status = "active"
+        updated = True
+    if updated:
+        db.session.add(client)
+        click.echo(f"Updated client {name}.")
+    else:
+        click.echo(f"Reused client {name}.")
+    return client
+
+
+def _get_or_create_company(client: Client, name: str, tax_id: str) -> Company:
+    company = Company.query.filter_by(client_id=client.id, tax_id=tax_id).first()
+    if not company:
+        company = Company(client_id=client.id, name=name, tax_id=tax_id, status="active")
+        db.session.add(company)
+        db.session.flush()
+        click.echo(f"Created company {name} for {client.name}.")
+        return company
+
+    updated = False
+    if company.name != name:
+        company.name = name
+        updated = True
+    if company.status != "active":
+        company.status = "active"
+        updated = True
+    if updated:
+        db.session.add(company)
+        click.echo(f"Updated company {name} for {client.name}.")
+    else:
+        click.echo(f"Reused company {name} for {client.name}.")
+    return company
+
+
+def _get_or_create_user(client: Client, email: str, password: str, user_service: UserService) -> User:
+    normalized_email = user_service.normalize_email(email)
+    repository = user_service.repository
+    user = repository.get_by_email(normalized_email, client.id)
+    if not user:
+        user = user_service.create_invited_user(client.id, normalized_email)
+        click.echo(f"Created user {normalized_email} for {client.name}.")
+    else:
+        click.echo(f"Reused user {normalized_email} for {client.name}.")
+
+    activated = user_service.activate_user(user.id, client.id, password)
+    if activated is not None:
+        user = activated
+        click.echo(f"Activated user {normalized_email} for {client.name}.")
+    return user
+
+
+def _get_or_create_role(client: Client, name: str, repository: RoleRepository) -> Role:
+    role = repository.get_by_name(name, "tenant", client.id)
+    if role:
+        click.echo(f"Reused role {name} for {client.name}.")
+        return role
+    role = Role(name=name, scope="tenant", client_id=client.id)
+    db.session.add(role)
+    db.session.flush()
+    click.echo(f"Created role {name} for {client.name}.")
+    return role
+
+
+def _assign_role(user: User, role: Role) -> None:
+    if role in user.roles:
+        click.echo(f"Role {role.name} already assigned to {user.email}.")
+        return
+    user.roles.append(role)
+    db.session.add(user)
+    click.echo(f"Assigned role {role.name} to {user.email}.")
+
+
+def _upsert_company_access(
+    repository: UserCompanyAccessRepository,
+    user: User,
+    company: Company,
+    access_level: str,
+) -> None:
+    existing = repository.get_user_access(user.id, company.id, company.client_id)
+    if existing is None:
+        repository.upsert_access(user.id, company.id, company.client_id, access_level)
+        click.echo(
+            f"Created {access_level} access for {user.email} on {company.name} ({company.client_id})."
+        )
+    elif existing.access_level != access_level:
+        repository.upsert_access(user.id, company.id, company.client_id, access_level)
+        click.echo(
+            f"Updated access for {user.email} on {company.name} to {access_level} ({company.client_id})."
+        )
+    else:
+        click.echo(
+            f"Reused access for {user.email} on {company.name} ({company.client_id})."
+        )
 
 
 def _assign_role_permissions(
