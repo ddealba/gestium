@@ -29,9 +29,10 @@ services:
       - ./tests/postman:/etc/newman
     depends_on:
       - api
+    entrypoint: ["/bin/sh", "-c"]
     command: >
-      sh -c "until curl -sSf http://api:5000/health > /dev/null; do sleep 1; done;
-      newman run /etc/newman/collection.json -e /etc/newman/environment.json"
+      until curl -sSf http://api:5000/health > /dev/null; do sleep 1; done;
+      newman run /etc/newman/collection.json -e /etc/newman/environment.json
 
 volumes:
   postgres_data:
