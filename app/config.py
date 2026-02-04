@@ -10,6 +10,7 @@ class BaseConfig:
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///gestium.db")
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    ALLOW_X_CLIENT_ID_HEADER = os.getenv("ALLOW_X_CLIENT_ID_HEADER", "false").lower() == "true"
     ENV = os.getenv("FLASK_ENV", "development")
     DEBUG = False
     TESTING = False
