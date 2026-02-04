@@ -16,6 +16,7 @@ COPY . .
 
 EXPOSE 5000
 
-RUN chmod +x /app/scripts/entrypoint.sh
+RUN sed -i 's/\r$//' /app/scripts/entrypoint.sh \
+    && chmod +x /app/scripts/entrypoint.sh
 
 ENTRYPOINT ["/app/scripts/entrypoint.sh"]
