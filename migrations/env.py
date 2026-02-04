@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from flask import current_app
@@ -8,7 +9,14 @@ from sqlalchemy import engine_from_config, pool
 
 config = context.config
 
-fileConfig(config.config_file_name)
+if config.config_file_name:
+    config_path = Path(config.config_file_name)
+    if not config_path.is_file():
+        fallback_path = Path(config_path.name)
+        if fallback_path.is_file():
+            config_path = fallback_path
+    if config_path.is_file():
+        fileConfig(config_path)
 
 target_metadata = current_app.extensions["migrate"].db.metadata
 
