@@ -1,0 +1,27 @@
+{
+  "id": "7b1a1f86-4f86-4b6c-b8d4-bdd90371951f",
+  "name": "gestium-docker",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://api:5000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "client_a_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "client_b_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2024-01-01T00:00:00.000Z",
+  "_postman_exported_using": "Postman/10.20.0"
+}

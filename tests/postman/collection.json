@@ -1,0 +1,288 @@
+{
+  "info": {
+    "_postman_id": "b4c8a1b1-f3bb-4a11-90a4-1f5c04b10b1d",
+    "name": "Gestium Smoke",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login adminA",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"adminA@test.com\",\n  \"password\": \"Passw0rd!\",\n  \"client_id\": \"{{client_a_id}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.environment.set('token_adminA', jsonData.access_token);",
+              "pm.test('token stored', function () {",
+              "  pm.expect(pm.environment.get('token_adminA')).to.be.ok;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List companies adminA",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_adminA}}"
+          }
+        ],
+        "url": "{{base_url}}/companies"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "var names = (jsonData.companies || []).map(function (company) { return company.name; });",
+              "pm.test('contains A1', function () {",
+              "  pm.expect(names).to.include('A1');",
+              "});",
+              "var a1 = (jsonData.companies || []).find(function (company) { return company.name === 'A1'; });",
+              "if (a1) {",
+              "  pm.environment.set('company_a1_id', a1.id);",
+              "}",
+              "pm.test('A1 id stored', function () {",
+              "  pm.expect(pm.environment.get('company_a1_id')).to.be.ok;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login viewerA",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"viewerA@test.com\",\n  \"password\": \"Passw0rd!\",\n  \"client_id\": \"{{client_a_id}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.environment.set('token_viewerA', jsonData.access_token);",
+              "pm.test('token stored', function () {",
+              "  pm.expect(pm.environment.get('token_viewerA')).to.be.ok;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List companies viewerA",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_viewerA}}"
+          }
+        ],
+        "url": "{{base_url}}/companies"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "var names = (jsonData.companies || []).map(function (company) { return company.name; });",
+              "pm.test('does not contain A2', function () {",
+              "  pm.expect(names).to.not.include('A2');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login adminB",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"adminB@test.com\",\n  \"password\": \"Passw0rd!\",\n  \"client_id\": \"{{client_b_id}}\"\n}"
+        },
+        "url": "{{base_url}}/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.environment.set('token_adminB', jsonData.access_token);",
+              "pm.test('token stored', function () {",
+              "  pm.expect(pm.environment.get('token_adminB')).to.be.ok;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get company A1 with adminB",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_adminB}}"
+          }
+        ],
+        "url": "{{base_url}}/companies/{{company_a1_id}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 404', function () {",
+              "  pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create employee with viewerA",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_viewerA}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"full_name\": \"Smoke Employee\",\n  \"start_date\": \"2024-01-01\",\n  \"status\": \"active\"\n}"
+        },
+        "url": "{{base_url}}/companies/{{company_a1_id}}/employees"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 403 or 404', function () {",
+              "  pm.expect([403, 404]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create employee with adminA",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_adminA}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"full_name\": \"Smoke Employee\",\n  \"start_date\": \"2024-01-01\",\n  \"status\": \"active\"\n}"
+        },
+        "url": "{{base_url}}/companies/{{company_a1_id}}/employees"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 201', function () {",
+              "  pm.response.to.have.status(201);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

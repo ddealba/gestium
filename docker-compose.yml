@@ -23,5 +23,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  newman:
+    image: postman/newman:alpine
+    volumes:
+      - ./tests/postman:/etc/newman
+    depends_on:
+      - api
+    command: >
+      sh -c "until curl -sSf http://api:5000/health > /dev/null; do sleep 1; done;
+      newman run /etc/newman/collection.json -e /etc/newman/environment.json"
+
 volumes:
   postgres_data:
