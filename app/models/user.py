@@ -6,6 +6,7 @@ import uuid
 
 from app.extensions import db
 from app.models.base import BaseModel
+from app.models.rbac import user_roles
 
 
 class User(BaseModel):
@@ -28,6 +29,7 @@ class User(BaseModel):
     )
 
     client = db.relationship("Client", backref=db.backref("users", lazy="dynamic"))
+    roles = db.relationship("Role", secondary=user_roles, back_populates="users")
 
     def __repr__(self) -> str:
         return f"<User id={self.id} client_id={self.client_id} email={self.email} status={self.status}>"
