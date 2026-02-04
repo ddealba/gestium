@@ -31,7 +31,7 @@ services:
       - api
     entrypoint: ["/bin/sh", "-c"]
     command: >
-      until curl -sSf http://api:5000/health > /dev/null; do sleep 1; done;
+      until wget -qO- http://api:5000/health > /dev/null; do sleep 1; done;
       newman run /etc/newman/collection.json -e /etc/newman/environment.json
 
 volumes:
