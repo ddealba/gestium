@@ -3,13 +3,13 @@ import sys
 
 import pytest
 
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
 
 @pytest.fixture()
 def app(monkeypatch):
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    if repo_root not in sys.path:
-        sys.path.insert(0, repo_root)
-
     monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
     monkeypatch.setenv("FLASK_ENV", "testing")
 
