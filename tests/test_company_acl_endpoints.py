@@ -34,8 +34,8 @@ def create_user(db_session, client_id: str, email: str = "user@example.com") -> 
     return user
 
 
-def create_company(db_session, client_id: str, name: str) -> Company:
-    company = Company(client_id=client_id, name=name)
+def create_company(db_session, client_id: str, name: str, tax_id: str) -> Company:
+    company = Company(client_id=client_id, name=name, tax_id=tax_id)
     db_session.add(company)
     db_session.commit()
     return company
@@ -64,8 +64,8 @@ def test_list_companies_filters_by_acl(client, db_session):
     seed_rbac()
 
     assign_role(db_session, user, "Operativo")
-    company_a = create_company(db_session, tenant.id, "Alpha")
-    create_company(db_session, tenant.id, "Beta")
+    company_a = create_company(db_session, tenant.id, "Alpha", "A-123")
+    create_company(db_session, tenant.id, "Beta", "B-456")
     assign_access(db_session, user, company_a, "viewer")
 
     response = client.get("/companies", headers=auth_header_for(user))
@@ -75,14 +75,29 @@ def test_list_companies_filters_by_acl(client, db_session):
     assert [company["id"] for company in payload["companies"]] == [company_a.id]
 
 
+def test_list_companies_without_acl_returns_empty(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id)
+    seed_rbac()
+
+    assign_role(db_session, user, "Operativo")
+    create_company(db_session, tenant.id, "Alpha", "A-123")
+
+    response = client.get("/companies", headers=auth_header_for(user))
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["companies"] == []
+
+
 def test_get_company_out_of_scope_returns_404(client, db_session):
     tenant = create_client(db_session)
     user = create_user(db_session, tenant.id)
     seed_rbac()
 
     assign_role(db_session, user, "Operativo")
-    company_a = create_company(db_session, tenant.id, "Alpha")
-    company_b = create_company(db_session, tenant.id, "Beta")
+    company_a = create_company(db_session, tenant.id, "Alpha", "A-123")
+    company_b = create_company(db_session, tenant.id, "Beta", "B-456")
     assign_access(db_session, user, company_a, "viewer")
 
     response = client.get(f"/companies/{company_b.id}", headers=auth_header_for(user))
@@ -96,7 +111,7 @@ def test_patch_company_insufficient_access_returns_403(client, db_session):
     seed_rbac()
 
     assign_role(db_session, user, "Admin Cliente")
-    company_a = create_company(db_session, tenant.id, "Alpha")
+    company_a = create_company(db_session, tenant.id, "Alpha", "A-123")
     assign_access(db_session, user, company_a, "viewer")
 
     response = client.patch(
@@ -114,10 +129,37 @@ def test_rbac_denies_even_with_acl(client, db_session):
     user = create_user(db_session, tenant.id)
     seed_rbac()
 
-    company_a = create_company(db_session, tenant.id, "Alpha")
+    company_a = create_company(db_session, tenant.id, "Alpha", "A-123")
     assign_access(db_session, user, company_a, "viewer")
 
     response = client.get(f"/companies/{company_a.id}", headers=auth_header_for(user))
 
     assert response.status_code == 403
     assert response.get_json()["message"] == "missing_permission"
+
+
+def test_create_company_assigns_admin_access(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id)
+    seed_rbac()
+
+    assign_role(db_session, user, "Admin Cliente")
+
+    response = client.post(
+        "/companies",
+        headers=auth_header_for(user),
+        json={"name": "Gamma", "tax_id": "c-789"},
+    )
+
+    assert response.status_code == 201
+    payload = response.get_json()
+    company_id = payload["company"]["id"]
+
+    access = UserCompanyAccessRepository(db_session).get_user_access(
+        user.id,
+        company_id,
+        user.client_id,
+    )
+
+    assert access is not None
+    assert access.access_level == "admin"
