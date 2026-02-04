@@ -6,9 +6,11 @@ from typing import Any, Callable
 from flask import g, request
 from werkzeug.exceptions import Forbidden, Unauthorized
 
+from app.common.acl import resolve_company_id
 from app.common.authz import AuthorizationService
 from app.common.jwt import decode_token
 from app.repositories.user_repository import UserRepository
+from app.services.company_access_service import CompanyAccessService
 
 
 def noop_decorator(func: Callable):
@@ -60,6 +62,29 @@ def require_permission(code: str):
                 raise Unauthorized("missing_token")
             if not AuthorizationService().user_has_permission(g.user, code):
                 raise Forbidden("missing_permission")
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def require_company_access(required_level: str, company_id_arg: str | None = None):
+    """Ensure the request user has the required company ACL access level."""
+
+    def decorator(func: Callable[..., Any]):
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any):
+            if not getattr(g, "user", None):
+                raise Unauthorized("missing_token")
+            company_id = resolve_company_id(company_id_arg)
+            service = CompanyAccessService()
+            service.require_access(
+                user_id=str(g.user.id),
+                company_id=str(company_id),
+                client_id=str(g.client_id),
+                required_level=required_level,
+            )
             return func(*args, **kwargs)
 
         return wrapper
