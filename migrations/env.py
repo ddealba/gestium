@@ -19,6 +19,9 @@ if config.config_file_name:
         fileConfig(config_path)
 
 target_metadata = current_app.extensions["migrate"].db.metadata
+database_url = current_app.config.get("SQLALCHEMY_DATABASE_URI")
+if database_url:
+    config.set_main_option("sqlalchemy.url", database_url)
 
 
 def run_migrations_offline() -> None:
