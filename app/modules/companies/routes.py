@@ -16,7 +16,6 @@ from app.modules.companies.schemas import (
 )
 from app.modules.companies.service import CompanyService
 from app.services.case_service import CaseService
-from app.services.employee_service import EmployeeService
 
 bp = Blueprint("companies", __name__)
 
@@ -104,23 +103,6 @@ def activate_company(company_id: str):
     company = service.activate_company(str(g.client_id), company_id)
     db.session.commit()
     return ok({"company": CompanyResponseSchema.dump(company)})
-
-
-@bp.post("/companies/<company_id>/employees")
-@auth_required
-@tenant_required
-@require_permission("employee.write")
-@require_company_access("operator")
-def create_employee(company_id: str):
-    payload = request.get_json(silent=True) or {}
-    name = payload.get("name")
-    if not name:
-        raise BadRequest("name_required")
-
-    service = EmployeeService()
-    employee = service.create_employee(str(g.client_id), company_id, name)
-    db.session.commit()
-    return ok({"employee": employee.as_dict()}, status_code=201)
 
 
 @bp.post("/companies/<company_id>/cases")
