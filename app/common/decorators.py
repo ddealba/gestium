@@ -6,6 +6,7 @@ from typing import Any, Callable
 from flask import g, request
 from werkzeug.exceptions import Forbidden, Unauthorized
 
+from app.common.authz import AuthorizationService
 from app.common.jwt import decode_token
 from app.repositories.user_repository import UserRepository
 
@@ -47,3 +48,20 @@ def auth_required(func: Callable[..., Any]):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def require_permission(code: str):
+    """Ensure the request has a valid user with the required permission."""
+
+    def decorator(func: Callable[..., Any]):
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any):
+            if not getattr(g, "user", None):
+                raise Unauthorized("missing_token")
+            if not AuthorizationService().user_has_permission(g.user, code):
+                raise Forbidden("missing_permission")
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
