@@ -1,6 +1,10 @@
 """Models package."""
 
+from app.models.case import Case
 from app.models.client import Client
+from app.models.company import Company
+from app.models.document import Document
+from app.models.employee import Employee
 from app.models.permission import Permission
 from app.models.role import Role
 from app.models.user import User
@@ -8,7 +12,11 @@ from app.models.user_company_access import UserCompanyAccess
 from app.models.user_invitation import UserInvitation
 
 __all__ = [
+    "Case",
     "Client",
+    "Company",
+    "Document",
+    "Employee",
     "Permission",
     "Role",
     "User",
