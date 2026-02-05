@@ -3,7 +3,7 @@
 from flask import Blueprint, g, request
 from werkzeug.exceptions import BadRequest
 
-from app.common.decorators import auth_required, noop_decorator
+from app.common.decorators import auth_required, require_permission
 from app.common.jwt import create_access_token
 from app.common.responses import ok
 from app.common.tenant import tenant_required
@@ -13,12 +13,11 @@ from app.services.invitation_service import InvitationService
 
 bp = Blueprint("auth", __name__)
 
-require_permission = noop_decorator
-
 
 @bp.post("/auth/invite")
+@auth_required
 @tenant_required
-@require_permission
+@require_permission("tenant.users.invite")
 def invite_user():
     payload = request.get_json(silent=True) or {}
     email = payload.get("email")
@@ -39,8 +38,6 @@ def invite_user():
 
 
 @bp.post("/auth/activate")
-@tenant_required
-@require_permission
 def activate_user():
     payload = request.get_json(silent=True) or {}
     token = payload.get("token")
@@ -51,7 +48,7 @@ def activate_user():
         raise BadRequest("password_required")
 
     service = InvitationService()
-    service.consume_invitation(str(g.client_id), token, password)
+    service.consume_invitation(token, password)
     db.session.commit()
 
     return ok({"status": "active"})

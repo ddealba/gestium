@@ -103,13 +103,13 @@ class InvitationService:
         self.invitation_repository.create(invitation)
         return InvitationResult(invitation=invitation, token=token)
 
-    def consume_invitation(self, client_id: str, token: str, password: str) -> User:
+    def consume_invitation(self, token: str, password: str) -> User:
         if not token:
             raise BadRequest("token_required")
         self.validate_password(password)
 
         token_hash = self.hash_token(token)
-        invitation = self.invitation_repository.get_by_token_hash(client_id, token_hash)
+        invitation = self.invitation_repository.get_by_token_hash(token_hash)
         if invitation is None:
             raise BadRequest("token_invalid")
         if invitation.used_at is not None:
@@ -119,6 +119,7 @@ class InvitationService:
         if invitation.expires_at <= now:
             raise BadRequest("token_expired")
 
+        client_id = invitation.client_id
         user = self.user_repository.get_by_email(invitation.email, client_id)
         if user is None:
             raise BadRequest("invited_user_missing")
