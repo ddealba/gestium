@@ -8,7 +8,7 @@ from app.common.jwt import create_access_token
 from app.common.responses import ok
 from app.common.tenant import tenant_required
 from app.extensions import db, limiter
-from app.services.auth_service import AuthService
+from app.modules.auth.service import AuthService
 from app.services.invitation_service import InvitationService
 
 bp = Blueprint("auth", __name__)
