@@ -36,7 +36,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"adminA@test.com\",\n  \"password\": \"Passw0rd!\",\n  \"client_id\": \"{{client_a_id}}\"\n}"
+          "raw": "{\n  \"email\": \"{{adminA_email}}\",\n  \"password\": \"{{adminA_password}}\",\n  \"client_id\": \"{{client_a_id}}\"\n}"
         },
         "url": "{{base_url}}/auth/login"
       },
@@ -107,7 +107,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"viewerA@test.com\",\n  \"password\": \"Passw0rd!\",\n  \"client_id\": \"{{client_a_id}}\"\n}"
+          "raw": "{\n  \"email\": \"{{viewerA_email}}\",\n  \"password\": \"{{viewerA_password}}\",\n  \"client_id\": \"{{client_a_id}}\"\n}"
         },
         "url": "{{base_url}}/auth/login"
       },
@@ -171,7 +171,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"adminB@test.com\",\n  \"password\": \"Passw0rd!\",\n  \"client_id\": \"{{client_b_id}}\"\n}"
+          "raw": "{\n  \"email\": \"{{adminB_email}}\",\n  \"password\": \"{{adminB_password}}\",\n  \"client_id\": \"{{client_b_id}}\"\n}"
         },
         "url": "{{base_url}}/auth/login"
       },

@@ -10,13 +10,49 @@
     },
     {
       "key": "client_a_id",
-      "value": "",
+      "value": "1a8b9d30-7c7c-4c05-9e1c-2c7a7a96c1a1",
       "type": "default",
       "enabled": true
     },
     {
       "key": "client_b_id",
-      "value": "",
+      "value": "2b9c0e41-8d8d-4d16-af2d-3d8b8bb7d2b2",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminA_email",
+      "value": "adminA@test.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminA_password",
+      "value": "Passw0rd!",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "viewerA_email",
+      "value": "viewerA@test.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "viewerA_password",
+      "value": "Passw0rd!",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminB_email",
+      "value": "adminB@test.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminB_password",
+      "value": "Passw0rd!",
       "type": "default",
       "enabled": true
     }
