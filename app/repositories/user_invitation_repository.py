@@ -37,11 +37,10 @@ class UserInvitationRepository:
             .first()
         )
 
-    def get_by_token_hash(self, client_id: str, token_hash: str) -> UserInvitation | None:
+    def get_by_token_hash(self, token_hash: str) -> UserInvitation | None:
         return (
             self.session.query(UserInvitation)
             .filter(
-                UserInvitation.client_id == client_id,
                 UserInvitation.token_hash == token_hash,
             )
             .one_or_none()
