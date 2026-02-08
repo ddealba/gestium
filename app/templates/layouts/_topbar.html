@@ -1,0 +1,42 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="page-title">
+      <h1>{% block page_title %}Panel{% endblock %}</h1>
+      <p>{% block page_subtitle %}Resumen y acciones rápidas{% endblock %}</p>
+    </div>
+  </div>
+
+  <div class="topbar-center">
+    <div class="search" role="search">
+      <i class="ph ph-magnifying-glass"></i>
+      <input class="input input--ghost" placeholder="Buscar… (Ctrl+K)" data-kbd-focus="search" />
+      <span class="kbd">Ctrl K</span>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <button class="btn btn--ghost" type="button" data-toast="Notificaciones (demo)">
+      <i class="ph ph-bell"></i>
+    </button>
+
+    <div class="dropdown" data-dropdown>
+      <button class="btn btn--soft" type="button" data-dropdown-trigger>
+        <i class="ph ph-buildings"></i>
+        <span class="hide-sm">ACME S.L.</span>
+        <i class="ph ph-caret-down"></i>
+      </button>
+      <div class="dropdown-menu" data-dropdown-menu>
+        <button class="dropdown-item" type="button">ACME S.L.</button>
+        <button class="dropdown-item" type="button">GAMMA SL</button>
+        <button class="dropdown-item" type="button">BETA S.A.</button>
+      </div>
+    </div>
+
+    {% block topbar_actions %}
+    <a class="btn btn--primary" href="#">
+      <i class="ph ph-plus"></i>
+      <span class="hide-sm">Acción</span>
+    </a>
+    {% endblock %}
+  </div>
+</header>

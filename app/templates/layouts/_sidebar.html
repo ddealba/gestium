@@ -1,0 +1,49 @@
+<aside class="sidebar" aria-label="Navegación">
+  <div class="brand">
+    <div class="brand-mark">G</div>
+    <div class="brand-text">
+      <b>Gestium</b>
+      <span>Gestoría · SaaS</span>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a class="nav-item {% if active_nav=='dashboard' %}active{% endif %}" href="/dashboard">
+      <span class="nav-icon"><i class="ph ph-squares-four"></i></span>
+      <span class="nav-label">Dashboard</span>
+    </a>
+
+    <a class="nav-item {% if active_nav=='companies' %}active{% endif %}" href="/companies">
+      <span class="nav-icon"><i class="ph ph-buildings"></i></span>
+      <span class="nav-label">Empresas</span>
+    </a>
+
+    <a class="nav-item {% if active_nav=='cases' %}active{% endif %}" href="/cases">
+      <span class="nav-icon"><i class="ph ph-folder-open"></i></span>
+      <span class="nav-label">Expedientes</span>
+    </a>
+
+    <a class="nav-item {% if active_nav=='docs' %}active{% endif %}" href="/documents">
+      <span class="nav-icon"><i class="ph ph-files"></i></span>
+      <span class="nav-label">Documentos</span>
+    </a>
+
+    <a class="nav-item {% if active_nav=='users' %}active{% endif %}" href="/users">
+      <span class="nav-icon"><i class="ph ph-users"></i></span>
+      <span class="nav-label">Usuarios</span>
+    </a>
+
+    <a class="nav-item {% if active_nav=='settings' %}active{% endif %}" href="/settings">
+      <span class="nav-icon"><i class="ph ph-gear-six"></i></span>
+      <span class="nav-label">Configuración</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="avatar"></div>
+    <div class="who">
+      <b>{{ current_user_name|default('David') }}</b>
+      <span>{{ current_user_role|default('Admin Cliente') }}</span>
+    </div>
+  </div>
+</aside>

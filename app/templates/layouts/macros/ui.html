@@ -1,0 +1,13 @@
+{% macro status(text, tone='neutral') -%}
+  <span class="status status--{{tone}}">
+    <span class="status-dot"></span>{{ text }}
+  </span>
+{%- endmacro %}
+
+{% macro badge(text) -%}
+  <span class="badge">{{ text }}</span>
+{%- endmacro %}
+
+{% macro icon(name, size='md') -%}
+  <i class="ph ph-{{name}} icon-{{size}}"></i>
+{%- endmacro %}
