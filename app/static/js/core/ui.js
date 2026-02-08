@@ -45,6 +45,17 @@
     setTimeout(() => { if (node.isConnected) node.remove(); }, 4000);
   }
 
+  window.GestiumUI = window.GestiumUI || {};
+  window.GestiumUI.showToast = function (type, message) {
+    const titleByType = {
+      success: "Éxito",
+      error: "Error",
+      warning: "Aviso",
+      info: "Info",
+    };
+    toast(titleByType[type] || "Info", message);
+  };
+
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-toast]");
     if (!t) return;
@@ -56,7 +67,6 @@
     document.body.style.overflow = "";
   }
 
-  window.GestiumUI = window.GestiumUI || {};
   window.GestiumUI.openDrawer = function (selector) {
     const backdrop = document.querySelector(selector);
     if (!backdrop) return;
