@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 import click
 from flask import Flask, current_app
 
@@ -200,11 +202,18 @@ def seed_rbac() -> None:
     click.echo("RBAC permissions and roles seeded.")
 
 
+SMOKE_TENANT_A_ID = "1a8b9d30-7c7c-4c05-9e1c-2c7a7a96c1a1"
+SMOKE_TENANT_B_ID = "2b9c0e41-8d8d-4d16-af2d-3d8b8bb7d2b2"
+SMOKE_COMPANY_A1_ID = "3c0d1f52-9e9e-4e27-b03e-4e9c9cc8e3c3"
+SMOKE_COMPANY_A2_ID = "4d1e2053-afaf-4f38-c14f-5fadadd9f4d4"
+SMOKE_COMPANY_B1_ID = "5e2f3164-b0b0-5049-d250-60bebeea05e5"
+
+
 def seed_smoke() -> None:
     """Seed a deterministic smoke scenario."""
     click.echo("Seeding smoke scenario...")
-    client_a = _get_or_create_client("Tenant A")
-    client_b = _get_or_create_client("Tenant B")
+    client_a = _get_or_create_client("Tenant A", SMOKE_TENANT_A_ID)
+    client_b = _get_or_create_client("Tenant B", SMOKE_TENANT_B_ID)
 
     seed_rbac()
 
@@ -224,9 +233,9 @@ def seed_smoke() -> None:
     _assign_role(viewer_a, operative_role_a)
     _assign_role(admin_b, admin_role_b)
 
-    company_a1 = _get_or_create_company(client_a, "A1", "A1")
-    company_a2 = _get_or_create_company(client_a, "A2", "A2")
-    company_b1 = _get_or_create_company(client_b, "B1", "B1")
+    company_a1 = _get_or_create_company(client_a, "A1", "A1", SMOKE_COMPANY_A1_ID)
+    company_a2 = _get_or_create_company(client_a, "A2", "A2", SMOKE_COMPANY_A2_ID)
+    company_b1 = _get_or_create_company(client_b, "B1", "B1", SMOKE_COMPANY_B1_ID)
 
     _upsert_company_access(
         access_repository,
@@ -255,6 +264,17 @@ def seed_smoke() -> None:
 
     db.session.commit()
     click.echo("Smoke scenario seeded.")
+    click.echo("")
+    click.echo("Smoke seed details:")
+    click.echo(f"Tenant A ID: {client_a.id}")
+    click.echo(f"Tenant B ID: {client_b.id}")
+    click.echo(f"Company A1 ID: {company_a1.id}")
+    click.echo(f"Company A2 ID: {company_a2.id}")
+    click.echo(f"Company B1 ID: {company_b1.id}")
+    click.echo("Credentials:")
+    click.echo("  adminA@test.com / Passw0rd!")
+    click.echo("  viewerA@test.com / Passw0rd!")
+    click.echo("  adminB@test.com / Passw0rd!")
 
 
 def _ensure_seed_allowed(allow_production: bool) -> None:
@@ -265,10 +285,14 @@ def _ensure_seed_allowed(allow_production: bool) -> None:
         )
 
 
-def _get_or_create_client(name: str) -> Client:
-    client = Client.query.filter_by(name=name).first()
+def _get_or_create_client(name: str, client_id: str | None = None) -> Client:
+    client = None
+    if client_id:
+        client = Client.query.filter_by(id=client_id).first()
     if not client:
-        client = Client(name=name, status="active", plan="smoke")
+        client = Client.query.filter_by(name=name).first()
+    if not client:
+        client = Client(id=client_id or str(uuid.uuid4()), name=name, status="active", plan="smoke")
         db.session.add(client)
         db.session.flush()
         click.echo(f"Created client {name}.")
@@ -286,10 +310,22 @@ def _get_or_create_client(name: str) -> Client:
     return client
 
 
-def _get_or_create_company(client: Client, name: str, tax_id: str) -> Company:
-    company = Company.query.filter_by(client_id=client.id, tax_id=tax_id).first()
+def _get_or_create_company(
+    client: Client, name: str, tax_id: str, company_id: str | None = None
+) -> Company:
+    company = None
+    if company_id:
+        company = Company.query.filter_by(id=company_id).first()
     if not company:
-        company = Company(client_id=client.id, name=name, tax_id=tax_id, status="active")
+        company = Company.query.filter_by(client_id=client.id, tax_id=tax_id).first()
+    if not company:
+        company = Company(
+            id=company_id or str(uuid.uuid4()),
+            client_id=client.id,
+            name=name,
+            tax_id=tax_id,
+            status="active",
+        )
         db.session.add(company)
         db.session.flush()
         click.echo(f"Created company {name} for {client.name}.")
