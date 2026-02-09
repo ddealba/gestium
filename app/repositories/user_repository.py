@@ -26,6 +26,13 @@ class UserRepository:
             .one_or_none()
         )
 
+    def list_active_by_email(self, email: str) -> list[User]:
+        return (
+            self.session.query(User)
+            .filter(User.email == email, User.status == "active")
+            .all()
+        )
+
     def create(self, user: User) -> User:
         self.session.add(user)
         self.session.flush()

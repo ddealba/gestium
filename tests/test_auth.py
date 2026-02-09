@@ -15,8 +15,8 @@ def db_session(app):
         db.drop_all()
 
 
-def create_client(db_session) -> Client:
-    client = Client(name="Acme")
+def create_client(db_session, name: str = "Acme") -> Client:
+    client = Client(name=name)
     db_session.add(client)
     db_session.commit()
     return client
@@ -49,6 +49,55 @@ def test_login_returns_token(client, db_session):
     assert payload["expires_in"] == 3600
     assert payload["access_token"]
 
+
+
+
+def test_login_without_client_id_single_active_match(client, db_session):
+    tenant = create_client(db_session)
+    create_user(db_session, tenant.id, "single@example.com", "supersecret")
+
+    response = client.post(
+        "/auth/login",
+        json={"email": "single@example.com", "password": "supersecret"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["token_type"] == "Bearer"
+    assert payload["expires_in"] == 3600
+    assert payload["access_token"]
+
+
+def test_login_without_client_id_ambiguous_email(client, db_session):
+    tenant_a = create_client(db_session, name="Acme A")
+    tenant_b = create_client(db_session, name="Acme B")
+    create_user(db_session, tenant_a.id, "shared@example.com", "supersecret")
+    create_user(db_session, tenant_b.id, "shared@example.com", "supersecret")
+
+    response = client.post(
+        "/auth/login",
+        json={"email": "shared@example.com", "password": "supersecret"},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "client_id_required"
+
+
+def test_login_without_client_id_ignores_inactive_match(client, db_session):
+    tenant_a = create_client(db_session, name="Acme A")
+    tenant_b = create_client(db_session, name="Acme B")
+    create_user(db_session, tenant_a.id, "mixed@example.com", "supersecret", status="disabled")
+    create_user(db_session, tenant_b.id, "mixed@example.com", "supersecret")
+
+    response = client.post(
+        "/auth/login",
+        json={"email": "mixed@example.com", "password": "supersecret"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["token_type"] == "Bearer"
+    assert payload["access_token"]
 
 def test_auth_me_returns_user(client, db_session):
     tenant = create_client(db_session)
