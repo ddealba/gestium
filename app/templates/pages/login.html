@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Login · Gestium</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/utilities.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/button.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/card.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/form.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components/toast.css') }}">
+</head>
+<body>
+  <main class="content" style="min-height:100vh;display:grid;place-items:center;">
+    <section class="card" style="width:min(420px,92vw);">
+      <div class="card-hd"><b>Iniciar sesión</b></div>
+      <div class="card-bd">
+        <form id="loginForm" class="stack" style="gap:12px;">
+          <label class="field">
+            <span>Email</span>
+            <input class="input" name="email" type="email" autocomplete="email" required>
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input class="input" name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <p id="loginError" style="color:var(--danger-600);font-size:12px;margin:0;"></p>
+          <button class="btn btn--primary" type="submit">Entrar</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  {% include "layouts/_toasts.html" %}
+
+  <script src="{{ url_for('static', filename='js/core/ui.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/pages/login.js') }}"></script>
+</body>
+</html>

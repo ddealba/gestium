@@ -1,0 +1,55 @@
+{% extends "layouts/app_shell.html" %}
+{% set active_nav = "companies" %}
+
+{% block title %}Employees · Gestium{% endblock %}
+{% block page_title %}Employees{% endblock %}
+{% block page_subtitle %}Gestión de empleados por empresa{% endblock %}
+
+{% block topbar_actions %}
+<a class="btn" href="/app/companies"><i class="ph ph-arrow-left"></i><span class="hide-sm">Volver</span></a>
+{% endblock %}
+
+{% block content %}
+<section class="stack" style="gap:16px;" data-company-id="{{ company_id }}" id="employeesPageRoot">
+  <div class="card">
+    <div class="card-hd"><b><i class="ph ph-users"></i> Employees</b></div>
+    <div class="card-bd">
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Start date</th>
+              <th>End date</th>
+              <th>Status</th>
+              <th>Terminate</th>
+            </tr>
+          </thead>
+          <tbody id="employeesTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><b>Nuevo empleado</b></div>
+    <div class="card-bd">
+      <form id="createEmployeeForm" class="row" style="gap:12px;flex-wrap:wrap;align-items:flex-end;">
+        <label class="field" style="flex:2;min-width:220px;">
+          <span>Nombre completo</span>
+          <input class="input" name="full_name" required>
+        </label>
+        <label class="field" style="flex:1;min-width:220px;">
+          <span>Start date</span>
+          <input class="input" type="date" name="start_date" required>
+        </label>
+        <button class="btn btn--primary" type="submit">Crear</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_js %}
+<script type="module" src="{{ url_for('static', filename='js/pages/employees.js') }}"></script>
+{% endblock %}

@@ -15,22 +15,11 @@
   </div>
 
   <div class="topbar-right">
+    <span id="topbarUserEmail" class="hide-sm" style="color:var(--muted);font-size:12px;"></span>
+
     <button class="btn btn--ghost" type="button" data-toast="Notificaciones (demo)">
       <i class="ph ph-bell"></i>
     </button>
-
-    <div class="dropdown" data-dropdown>
-      <button class="btn btn--soft" type="button" data-dropdown-trigger>
-        <i class="ph ph-buildings"></i>
-        <span class="hide-sm">ACME S.L.</span>
-        <i class="ph ph-caret-down"></i>
-      </button>
-      <div class="dropdown-menu" data-dropdown-menu>
-        <button class="dropdown-item" type="button">ACME S.L.</button>
-        <button class="dropdown-item" type="button">GAMMA SL</button>
-        <button class="dropdown-item" type="button">BETA S.A.</button>
-      </div>
-    </div>
 
     {% block topbar_actions %}
     <a class="btn btn--primary" href="#">
