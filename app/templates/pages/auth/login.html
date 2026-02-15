@@ -1,0 +1,28 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Login · Gestium{% endblock %}
+{% block content %}
+  <div class="ff-auth__card">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+      <div class="ff-brand__logo" style="width:34px;height:34px;border-radius:14px"></div>
+      <div style="font-weight:600;">Gestium</div>
+    </div>
+    <h1>Welcome back,</h1>
+
+    <label class="ff-label">Email *</label>
+    <div class="ff-field"><i class="ph ph-envelope"></i><input class="ff-input" placeholder="Enter your email"/></div>
+
+    <div style="height:12px"></div>
+
+    <label class="ff-label">Password *</label>
+    <div class="ff-field"><i class="ph ph-lock"></i><input class="ff-input" type="password" placeholder="Enter password"/></div>
+
+    <div style="margin-top:12px;display:flex;justify-content:flex-end;font-size:12px;">
+      <a href="#" style="color:var(--ff-primary);font-weight:600">Forgot password?</a>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+      <button class="ff-btn ff-btn--primary">Login</button>
+      <a class="ff-btn ff-btn--ghost" style="box-shadow:none;" href="{{ url_for('core.dashboard') }}">Go to demo</a>
+    </div>
+  </div>
+{% endblock %}

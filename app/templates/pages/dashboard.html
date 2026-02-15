@@ -1,117 +1,91 @@
-{% extends "layouts/app_shell.html" %}
-{% set active_nav = "dashboard" %}
+{% extends "layouts/app.html" %}
+{% from "components/ui_macros.html" import tag %}
 
 {% block title %}Dashboard · Gestium{% endblock %}
-{% block page_title %}Panel de control{% endblock %}
-{% block page_subtitle %}Resumen rápido de facturación, cobros y expedientes{% endblock %}
-
-{% block topbar_actions %}
-<button class="btn btn--primary" type="button" data-toast="Crear factura (demo)">
-  <i class="ph ph-plus"></i><span class="hide-sm">Crear factura</span>
-</button>
-{% endblock %}
+{% block page_header %}Dashboard{% endblock %}
 
 {% block content %}
-  <section class="kpis">
-    <div class="card"><div class="kpi">
-      <div class="meta"><span>Facturación (mes)</span><b>12.480 €</b><div class="hint">+8,2% vs mes anterior</div></div>
-      <div class="kpi-pill"><span class="dot dot--primary"></span> Tendencia</div>
-    </div></div>
-
-    <div class="card"><div class="kpi">
-      <div class="meta"><span>Pagos pendientes</span><b>3.120 €</b><div class="hint">5 facturas abiertas</div></div>
-      <div class="kpi-pill"><span class="dot dot--amber"></span> Riesgo</div>
-    </div></div>
-
-    <div class="card"><div class="kpi">
-      <div class="meta"><span>Cobrado (mes)</span><b>9.360 €</b><div class="hint">Plazo medio: 17 días</div></div>
-      <div class="kpi-pill"><span class="dot dot--mint"></span> Saludable</div>
-    </div></div>
-
-    <div class="card"><div class="kpi">
-      <div class="meta"><span>Expedientes en curso</span><b>14</b><div class="hint">2 vencen esta semana</div></div>
-      <div class="kpi-pill"><span class="dot dot--coral"></span> Atención</div>
-    </div></div>
-  </section>
-
-  <section class="grid" style="grid-template-columns: 1.5fr 1fr;">
-    <div class="card">
-      <div class="card-hd">
-        <b>Ingresos y cobros</b>
-        <div class="row" style="color:var(--muted);font-size:12px;">
-          <div class="tabs">
-            <button class="tab is-active" data-tab-group="range" data-tab="6">6M</button>
-            <button class="tab" data-tab-group="range" data-tab="12">12M</button>
-            <button class="tab" data-tab-group="range" data-tab="24">24M</button>
+<section class="ff-grid">
+  <div class="ff-col-3">
+    <div class="ff-card">
+      <div class="ff-stat">
+        <div class="ff-stat__left">
+          <div class="ff-ring" style="--p:.62;--c:var(--ff-primary)"></div>
+          <div>
+            <div class="ff-stat__value">2200</div>
+            <div class="ff-stat__label">Sales</div>
+            <div style="margin-top:10px;">{{ tag("+20% mes","warn") }}</div>
           </div>
         </div>
-      </div>
-      <div class="card-bd">
-        <div class="panel">
-          <canvas id="chart" width="1200" height="520" style="width:100%;height:240px;"></canvas>
-        </div>
-
-        <div class="spread" style="margin:14px 0 10px;">
-          <b style="font-size:13px;">Últimas facturas</b>
-          <span style="font-size:12px;color:var(--muted)">Ver todas <i class="ph ph-arrow-right" style="vertical-align:-2px;"></i></span>
-        </div>
-
-        <table class="table">
-          <thead><tr><th>Factura</th><th>Cliente</th><th>Importe</th><th>Estado</th></tr></thead>
-          <tbody>
-            <tr>
-              <td><b>F-2026-0182</b><div class="sub">03/02/2026</div></td>
-              <td>ACME S.L.</td>
-              <td>1.240 €</td>
-              <td><span class="status status--warn"><span class="status-dot"></span>Pendiente</span></td>
-            </tr>
-            <tr>
-              <td><b>F-2026-0179</b><div class="sub">30/01/2026</div></td>
-              <td>GAMMA SL</td>
-              <td>890 €</td>
-              <td><span class="status status--ok"><span class="status-dot"></span>Cobrada</span></td>
-            </tr>
-            <tr>
-              <td><b>F-2026-0171</b><div class="sub">24/01/2026</div></td>
-              <td>BETA S.A.</td>
-              <td>1.980 €</td>
-              <td><span class="status status--bad"><span class="status-dot"></span>Vencida</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <i class="ph ph-arrow-up-right" style="font-size:18px;opacity:.45"></i>
       </div>
     </div>
+  </div>
 
-    <div class="stack">
-      <div class="card">
-        <div class="card-hd"><b><i class="ph ph-sparkle"></i> Siguiente mejor acción</b></div>
-        <div class="card-bd">
-          <p style="margin:0;color:var(--muted);font-size:12px;line-height:1.4;">
-            Hay 2 expedientes que vencen esta semana. Prioriza “Modelo 303 · Q4” y “IRPF · Regularización”.
-          </p>
-          <div class="row" style="margin-top:12px;flex-wrap:wrap;">
-            <button class="btn" type="button" data-toast="Ir a expedientes (demo)"><i class="ph ph-folder-open"></i>Ver expedientes</button>
-            <button class="btn btn--primary" type="button" data-toast="Automatización (demo)"><i class="ph ph-lightning"></i>Automatizar</button>
+  <div class="ff-col-3">
+    <div class="ff-card">
+      <div class="ff-stat">
+        <div class="ff-stat__left">
+          <div class="ff-ring" style="--p:.72;--c:var(--ff-success)"></div>
+          <div>
+            <div class="ff-stat__value">4400</div>
+            <div class="ff-stat__label">Orders</div>
+            <div style="margin-top:10px;">{{ tag("+30% mes","success") }}</div>
           </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-hd"><b><i class="ph ph-shield-warning"></i> Radar de riesgo</b></div>
-        <div class="card-bd">
-          <p style="margin:0;color:var(--muted);font-size:12px;line-height:1.4;">
-            3 facturas con probabilidad de retraso. Recomendación: recordatorio para GAMMA SL.
-          </p>
-          <div class="row" style="margin-top:12px;flex-wrap:wrap;">
-            <button class="btn" type="button" data-toast="Recordatorio enviado (demo)"><i class="ph ph-envelope-simple"></i>Recordatorio</button>
-            <button class="btn" type="button" data-toast="Aging (demo)"><i class="ph ph-chart-line"></i>Aging</button>
-          </div>
-        </div>
+        <i class="ph ph-arrow-up-right" style="font-size:18px;opacity:.45"></i>
       </div>
     </div>
-  </section>
+  </div>
+
+  <div class="ff-col-3">
+    <div class="ff-card">
+      <div class="ff-stat">
+        <div class="ff-stat__left">
+          <div class="ff-ring" style="--p:.66;--c:var(--ff-secondary)"></div>
+          <div>
+            <div class="ff-stat__value">6600</div>
+            <div class="ff-stat__label">Invoices</div>
+            <div style="margin-top:10px;">{{ tag("+60% mes","blue") }}</div>
+          </div>
+        </div>
+        <i class="ph ph-arrow-up-right" style="font-size:18px;opacity:.45"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="ff-col-3">
+    <div class="ff-card ff-card--brand">
+      <div class="ff-stat">
+        <div class="ff-stat__left">
+          <div class="ff-ring" style="--p:.80;--c:#ff8b3d"></div>
+          <div>
+            <div class="ff-stat__value">8800</div>
+            <div class="ff-stat__label" style="color:rgba(255,255,255,.75)">Payments</div>
+            <div style="margin-top:10px;">{{ tag("+90% mes","warn") }}</div>
+          </div>
+        </div>
+        <i class="ph ph-arrow-up-right" style="font-size:18px;opacity:.65"></i>
+      </div>
+      <div class="ff-watermark"><i class="ph ph-circles-three"></i></div>
+    </div>
+  </div>
+
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <span>Sales</span>
+        <span class="ff-pill"><i class="ph ph-calendar"></i> 2026</span>
+      </div>
+      <div class="ff-card__body">
+        <div data-ff-chart="sales"></div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}
 
-{% block page_js %}
-<script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
+{% block page_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="{{ url_for('static', filename='js/ui.charts.js', v=ui_version) }}"></script>
 {% endblock %}

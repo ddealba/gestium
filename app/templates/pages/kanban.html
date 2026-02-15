@@ -1,0 +1,140 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui_macros.html" import tag %}
+
+{% block title %}Kanban · Gestium{% endblock %}
+{% block page_header %}Expedientes · Kanban{% endblock %}
+
+{% block content %}
+<section class="ff-grid">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <div class="ff-toolbar">
+          <span style="font-weight:600;">Vista Kanban</span>
+          {{ tag("Fiscal") }}
+          {{ tag("Laboral","blue") }}
+          <span class="ff-pill"><i class="ph ph-buildings"></i> Empresa: <b>ACME</b></span>
+        </div>
+        <div class="ff-kpi-mini"><span class="dot"></span> <b>24</b> <span class="ff-muted">en curso</span></div>
+      </div>
+      <div class="ff-card__body" style="padding-top:10px;">
+        <div class="ff-kanban" data-ff-kanban>
+          <div class="ff-kanban__col">
+            <div class="ff-column">
+              <div class="ff-column__head">
+                <div class="ff-column__title"><i class="ph ph-circle"></i> Entrada <span class="ff-column__count">6</span></div>
+              </div>
+              <div class="ff-column__body" data-dropzone>
+                <div class="ff-card-task" draggable="true">
+                  <div class="ff-task__top">
+                    <div>
+                      <div class="ff-task__title">Alta empresa · CIF</div>
+                      <div class="ff-muted" style="font-size:12px;font-weight:600;margin-top:2px;">ACME · #EXP-1021</div>
+                    </div>
+                    <span class="ff-prio ff-prio--hi">Alta</span>
+                  </div>
+                  <div class="ff-task__meta">
+                    <span class="ff-chip"><i class="ph ph-calendar"></i> 2d</span>
+                    {{ tag("Pendiente","warn") }}
+                    <span class="ff-chip"><i class="ph ph-user"></i> Laura</span>
+                  </div>
+                </div>
+
+                <div class="ff-card-task" draggable="true">
+                  <div class="ff-task__top">
+                    <div>
+                      <div class="ff-task__title">Modelo 303 Q1</div>
+                      <div class="ff-muted" style="font-size:12px;font-weight:600;margin-top:2px;">Beta SL · #EXP-1040</div>
+                    </div>
+                    <span class="ff-prio ff-prio--md">Media</span>
+                  </div>
+                  <div class="ff-task__meta">
+                    <span class="ff-chip"><i class="ph ph-file-text"></i> 3 docs</span>
+                    {{ tag("Fiscal") }}
+                    <span class="ff-chip"><i class="ph ph-user"></i> David</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ff-kanban__col">
+            <div class="ff-column">
+              <div class="ff-column__head">
+                <div class="ff-column__title"><i class="ph ph-clock"></i> En curso <span class="ff-column__count">10</span></div>
+                {{ tag("SLA","blue") }}
+              </div>
+              <div class="ff-column__body" data-dropzone>
+                <div class="ff-card-task" draggable="true">
+                  <div class="ff-task__top">
+                    <div>
+                      <div class="ff-task__title">Contrato trabajador</div>
+                      <div class="ff-muted" style="font-size:12px;font-weight:600;margin-top:2px;">ACME · #EXP-1033</div>
+                    </div>
+                    <span class="ff-prio ff-prio--md">Media</span>
+                  </div>
+                  <div class="ff-task__meta">
+                    <span class="ff-chip"><i class="ph ph-users"></i> 2</span>
+                    {{ tag("Laboral","blue") }}
+                    <span class="ff-chip"><i class="ph ph-calendar"></i> 5d</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ff-kanban__col">
+            <div class="ff-column">
+              <div class="ff-column__head">
+                <div class="ff-column__title"><i class="ph ph-magnifying-glass"></i> Revisión <span class="ff-column__count">4</span></div>
+                {{ tag("QA","warn") }}
+              </div>
+              <div class="ff-column__body" data-dropzone>
+                <div class="ff-card-task" draggable="true">
+                  <div class="ff-task__top">
+                    <div>
+                      <div class="ff-task__title">Cierre trimestral</div>
+                      <div class="ff-muted" style="font-size:12px;font-weight:600;margin-top:2px;">Delta · #EXP-0998</div>
+                    </div>
+                    <span class="ff-prio ff-prio--hi">Alta</span>
+                  </div>
+                  <div class="ff-task__meta">
+                    <span class="ff-chip"><i class="ph ph-file-text"></i> 7 docs</span>
+                    {{ tag("Revisión","warn") }}
+                    <span class="ff-chip"><i class="ph ph-user"></i> Sara</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ff-kanban__col">
+            <div class="ff-column">
+              <div class="ff-column__head">
+                <div class="ff-column__title"><i class="ph ph-check-circle"></i> Hecho <span class="ff-column__count">4</span></div>
+                {{ tag("OK","success") }}
+              </div>
+              <div class="ff-column__body" data-dropzone>
+                <div class="ff-card-task" draggable="true">
+                  <div class="ff-task__top">
+                    <div>
+                      <div class="ff-task__title">Alta autónomo</div>
+                      <div class="ff-muted" style="font-size:12px;font-weight:600;margin-top:2px;">ACME · #EXP-0955</div>
+                    </div>
+                    <span class="ff-prio ff-prio--lo">Baja</span>
+                  </div>
+                  <div class="ff-task__meta">
+                    <span class="ff-chip"><i class="ph ph-seal-check"></i> Cerrado</span>
+                    {{ tag("Finalizado","success") }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /kanban -->
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

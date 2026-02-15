@@ -1,55 +1,39 @@
-{% extends "layouts/app_shell.html" %}
-{% set active_nav = "companies" %}
+{% extends "layouts/app.html" %}
 
-{% block title %}Employees · Gestium{% endblock %}
-{% block page_title %}Employees{% endblock %}
-{% block page_subtitle %}Gestión de empleados por empresa{% endblock %}
-
-{% block topbar_actions %}
-<a class="btn" href="/app/companies"><i class="ph ph-arrow-left"></i><span class="hide-sm">Volver</span></a>
-{% endblock %}
+{% block title %}Empleados · Gestium{% endblock %}
 
 {% block content %}
-<section class="stack" style="gap:16px;" data-company-id="{{ company_id }}" id="employeesPageRoot">
-  <div class="card">
-    <div class="card-hd"><b><i class="ph ph-users"></i> Employees</b></div>
-    <div class="card-bd">
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Start date</th>
-              <th>End date</th>
-              <th>Status</th>
-              <th>Terminate</th>
-            </tr>
-          </thead>
-          <tbody id="employeesTbody"></tbody>
-        </table>
+<section class="ff-grid">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Empleados de empresa</h2>
+        <button id="refresh-employees" class="ff-btn ff-btn--ghost" type="button">
+          <i class="ph ph-arrows-clockwise"></i>
+          Recargar
+        </button>
       </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hd"><b>Nuevo empleado</b></div>
-    <div class="card-bd">
-      <form id="createEmployeeForm" class="row" style="gap:12px;flex-wrap:wrap;align-items:flex-end;">
-        <label class="field" style="flex:2;min-width:220px;">
-          <span>Nombre completo</span>
-          <input class="input" name="full_name" required>
-        </label>
-        <label class="field" style="flex:1;min-width:220px;">
-          <span>Start date</span>
-          <input class="input" type="date" name="start_date" required>
-        </label>
-        <button class="btn btn--primary" type="submit">Crear</button>
-      </form>
+      <div class="ff-card__body">
+        <p id="employees-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-table-wrap">
+          <table class="ff-table" id="employees-table" data-company-id="{{ company_id }}">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Puesto</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 {% endblock %}
 
-{% block page_js %}
-<script type="module" src="{{ url_for('static', filename='js/pages/employees.js') }}"></script>
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/employees.js', v=ui_version) }}"></script>
 {% endblock %}

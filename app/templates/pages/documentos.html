@@ -1,0 +1,166 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui_macros.html" import tag %}
+
+{% block title %}Documentos · Gestium{% endblock %}
+{% block page_header %}Documentos{% endblock %}
+
+{% block head %}
+<style>
+  #docsTarget[data-view="grid"] .docs-grid{display:grid}
+  #docsTarget[data-view="grid"] .docs-list{display:none}
+  #docsTarget[data-view="list"] .docs-grid{display:none}
+  #docsTarget[data-view="list"] .docs-list{display:block}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="ff-grid">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <div class="ff-toolbar">
+          <span style="font-weight:600;">Repositorio</span>
+          {{ tag("Pendientes","warn") }}
+          <span class="ff-pill"><i class="ph ph-buildings"></i> Empresa: <b>ACME</b></span>
+        </div>
+
+        <div class="ff-toolbar" data-ff="view-toggle" data-target="#docsTarget">
+          <button class="ff-btn ff-btn--ghost" data-view-btn="grid" style="padding:8px 10px;box-shadow:none;"><i class="ph ph-squares-four"></i></button>
+          <button class="ff-btn ff-btn--ghost" data-view-btn="list" style="padding:8px 10px;box-shadow:none;"><i class="ph ph-list"></i></button>
+          <button class="ff-btn ff-btn--soft"><i class="ph ph-funnel"></i> Filtros</button>
+        </div>
+      </div>
+
+      <div class="ff-card__body" id="docsTarget" data-view="grid">
+        <div class="docs-grid ff-doc-grid" style="margin-top:6px;">
+          <div class="ff-doc">
+            <div class="ff-doccard">
+              <div class="ff-doccard__head">
+                <div>
+                  <div class="ff-doccard__title">DNI Administrador</div>
+                  <div class="ff-muted" style="font-size:12px;font-weight:600;margin-top:2px;">#DOC-301 · PDF</div>
+                </div>
+                {{ tag("Pendiente","warn") }}
+              </div>
+              <div class="ff-doccard__body">
+                <div class="ff-muted" style="font-weight:600;">Subido: 12/02 · 18:03</div>
+                <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+                  <button class="ff-btn ff-btn--soft" data-ff="modal-open" data-target="#modalPreview"><i class="ph ph-eye"></i> Ver</button>
+                  <button class="ff-btn ff-btn--ghost" style="box-shadow:none;"><i class="ph ph-download-simple"></i> Descargar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ff-doc">
+            <div class="ff-doccard">
+              <div class="ff-doccard__head">
+                <div>
+                  <div class="ff-doccard__title">Escritura</div>
+                  <div class="ff-muted" style="font-size:12px;font-weight:600;margin-top:2px;">#DOC-302 · PDF</div>
+                </div>
+                {{ tag("OK","success") }}
+              </div>
+              <div class="ff-doccard__body">
+                <div class="ff-muted" style="font-weight:600;">Validado: 13/02 · 10:10</div>
+                <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+                  <button class="ff-btn ff-btn--soft" data-ff="modal-open" data-target="#modalPreview"><i class="ph ph-eye"></i> Ver</button>
+                  <button class="ff-btn ff-btn--ghost" style="box-shadow:none;"><i class="ph ph-download-simple"></i> Descargar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ff-doc">
+            <div class="ff-doccard">
+              <div class="ff-doccard__head">
+                <div>
+                  <div class="ff-doccard__title">Poderes</div>
+                  <div class="ff-muted" style="font-size:12px;font-weight:600;margin-top:2px;">#DOC-303 · IMG</div>
+                </div>
+                {{ tag("Bloquea","danger") }}
+              </div>
+              <div class="ff-doccard__body">
+                <div class="ff-muted" style="font-weight:600;">Falta anverso</div>
+                <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+                  <button class="ff-btn ff-btn--soft" data-ff="modal-open" data-target="#modalPreview"><i class="ph ph-eye"></i> Ver</button>
+                  <button class="ff-btn ff-btn--ghost" style="box-shadow:none;"><i class="ph ph-paper-plane-tilt"></i> Solicitar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="docs-list" style="margin-top:6px;">
+          <div class="ff-card" style="box-shadow:none;border:1px solid rgba(25,33,61,.08);">
+            <div class="ff-docrow">
+              <div class="ff-docleft">
+                <div class="ff-docicon"><i class="ph ph-file-pdf"></i></div>
+                <div>
+                  <div class="ff-docname">DNI Administrador</div>
+                  <div class="ff-docsub">#DOC-301 · Subido 12/02</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;">
+                {{ tag("Pendiente","warn") }}
+                <button class="ff-iconbtn" data-ff="modal-open" data-target="#modalPreview" title="Preview"><i class="ph ph-eye"></i></button>
+              </div>
+            </div>
+
+            <div class="ff-docrow">
+              <div class="ff-docleft">
+                <div class="ff-docicon" style="background:rgba(103,179,106,.14);color:#2a6b2f;border-color:rgba(103,179,106,.22)"><i class="ph ph-check-circle"></i></div>
+                <div>
+                  <div class="ff-docname">Escritura</div>
+                  <div class="ff-docsub">#DOC-302 · Validado 13/02</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;">
+                {{ tag("OK","success") }}
+                <button class="ff-iconbtn" data-ff="modal-open" data-target="#modalPreview" title="Preview"><i class="ph ph-eye"></i></button>
+              </div>
+            </div>
+
+            <div class="ff-docrow">
+              <div class="ff-docleft">
+                <div class="ff-docicon" style="background:rgba(255,90,122,.14);color:#c22c4a;border-color:rgba(255,90,122,.22)"><i class="ph ph-warning"></i></div>
+                <div>
+                  <div class="ff-docname">Poderes</div>
+                  <div class="ff-docsub">#DOC-303 · Requiere acción</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;">
+                {{ tag("Bloquea","danger") }}
+                <button class="ff-iconbtn" data-ff="modal-open" data-target="#modalPreview" title="Preview"><i class="ph ph-eye"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /body -->
+    </div>
+  </div>
+</section>
+
+<div class="ff-modal" id="modalPreview" aria-hidden="true">
+  <div class="ff-modal__backdrop" data-ff="modal-close"></div>
+  <div class="ff-card" style="position:relative;width:min(720px,92vw);z-index:1">
+    <div class="ff-card__head" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Preview</span>
+      <button class="ff-iconbtn" data-ff="modal-close" title="Close"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="ff-card__body">
+      <div class="ff-card" style="box-shadow:none;border:1px dashed rgba(25,33,61,.16);background:var(--ff-surface-2)">
+        <div style="padding:18px;">
+          <div class="ff-muted" style="font-weight:600;">Placeholder de previsualización</div>
+          <div style="margin-top:10px;font-weight:600;">Aquí iría un PDF viewer / IMG</div>
+          <div class="ff-muted" style="margin-top:6px;">(iframe/pdf.js o vista de imagen)</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;">
+        <button class="ff-btn ff-btn--ghost" data-ff="modal-close" style="box-shadow:none;">Cerrar</button>
+        <button class="ff-btn ff-btn--primary"><i class="ph ph-download-simple"></i> Descargar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
