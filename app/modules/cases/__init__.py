@@ -1,3 +1,5 @@
-"""Cases module package."""
+"""Cases module blueprint exposure."""
 
-__all__: list[str] = []
+from app.modules.cases.routes import bp, cases_bp
+
+__all__ = ["bp", "cases_bp"]

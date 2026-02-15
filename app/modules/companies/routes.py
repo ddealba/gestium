@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from flask import Blueprint, g, request
-from werkzeug.exceptions import BadRequest
-
 from app.common.decorators import auth_required, require_company_access, require_permission
 from app.common.responses import ok
 from app.common.tenant import tenant_required
@@ -15,7 +13,6 @@ from app.modules.companies.schemas import (
     CompanyUpdatePayload,
 )
 from app.modules.companies.service import CompanyService
-from app.services.case_service import CaseService
 
 bp = Blueprint("companies", __name__)
 
@@ -104,19 +101,3 @@ def activate_company(company_id: str):
     db.session.commit()
     return ok({"company": CompanyResponseSchema.dump(company)})
 
-
-@bp.post("/companies/<company_id>/cases")
-@auth_required
-@tenant_required
-@require_permission("case.write")
-@require_company_access("operator")
-def create_case(company_id: str):
-    payload = request.get_json(silent=True) or {}
-    title = payload.get("title")
-    if not title:
-        raise BadRequest("title_required")
-
-    service = CaseService()
-    case = service.create_case(str(g.client_id), company_id, title)
-    db.session.commit()
-    return ok({"case": case.as_dict()}, status_code=201)

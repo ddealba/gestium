@@ -61,6 +61,7 @@ class CaseService:
         case_type = self._optional_str(payload.get("type")) or "general"
         description = self._optional_str(payload.get("description"))
         due_date = self._coerce_due_date(payload.get("due_date"))
+        responsible_user_id = self._optional_str(payload.get("responsible_user_id"))
 
         case = Case(
             client_id=client_id,
@@ -69,6 +70,7 @@ class CaseService:
             type=case_type,
             description=description,
             due_date=due_date,
+            responsible_user_id=responsible_user_id,
             status="open",
         )
         self.repository.create(case)
@@ -176,6 +178,22 @@ class CaseService:
             )
         )
         return case
+
+    def list_case_events(
+        self,
+        client_id: str,
+        company_id: str,
+        case_id: str,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[CaseEvent]:
+        case = self.get_case(client_id, company_id, case_id)
+        return self.event_repository.list_by_case(
+            case_id=case.id,
+            client_id=client_id,
+            limit=limit,
+            offset=offset,
+        )
 
     def add_comment(
         self,
