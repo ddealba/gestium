@@ -12,6 +12,19 @@ class CaseService:
     def __init__(self, repository: CaseRepository | None = None) -> None:
         self.repository = repository or CaseRepository()
 
-    def create_case(self, client_id: str, company_id: str, title: str) -> Case:
-        case = Case(client_id=client_id, company_id=company_id, title=title)
+    def create_case(
+        self,
+        client_id: str,
+        company_id: str,
+        title: str,
+        case_type: str = "general",
+        status: str = "open",
+    ) -> Case:
+        case = Case(
+            client_id=client_id,
+            company_id=company_id,
+            title=title,
+            type=case_type,
+            status=status,
+        )
         return self.repository.add(case)
