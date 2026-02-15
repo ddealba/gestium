@@ -1,0 +1,78 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Cases · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-grid">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Cases de empresa</h2>
+        <button id="refresh-cases" class="ff-btn ff-btn--ghost" type="button">
+          <i class="ph ph-arrows-clockwise"></i>
+          Recargar
+        </button>
+      </div>
+      <div class="ff-card__body">
+        <p id="cases-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-table-wrap">
+          <table class="ff-table" id="cases-table" data-company-id="{{ company_id }}">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Vencimiento</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Crear case</h2>
+      </div>
+      <div class="ff-card__body">
+        <form id="create-case-form" class="ff-form-stack" data-company-id="{{ company_id }}">
+          <label class="ff-label" for="case-title">Título *</label>
+          <div class="ff-field">
+            <i class="ph ph-text-t"></i>
+            <input id="case-title" name="title" class="ff-input" required />
+          </div>
+
+          <label class="ff-label" for="case-type">Tipo *</label>
+          <div class="ff-field">
+            <i class="ph ph-folder-simple"></i>
+            <input id="case-type" name="type" class="ff-input" required />
+          </div>
+
+          <label class="ff-label" for="case-description">Descripción</label>
+          <div class="ff-field">
+            <i class="ph ph-note-pencil"></i>
+            <textarea id="case-description" name="description" class="ff-textarea"></textarea>
+          </div>
+
+          <label class="ff-label" for="case-due-date">Fecha límite</label>
+          <div class="ff-field">
+            <i class="ph ph-calendar"></i>
+            <input id="case-due-date" name="due_date" class="ff-input" type="date" />
+          </div>
+
+          <p id="create-case-message" class="ff-form-message" aria-live="polite"></p>
+          <button type="submit" class="ff-btn ff-btn--primary">Crear case</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/cases.js', v=ui_version) }}"></script>
+{% endblock %}

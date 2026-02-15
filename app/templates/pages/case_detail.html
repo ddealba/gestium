@@ -1,0 +1,46 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Detalle Case · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-grid" id="case-detail-root" data-company-id="{{ company_id }}" data-case-id="{{ case_id }}">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Detalle de case</h2>
+        <a href="/app/companies/{{ company_id }}/cases" class="ff-btn ff-btn--ghost ff-btn--sm">Volver</a>
+      </div>
+      <div class="ff-card__body">
+        <p id="case-detail-message" class="ff-form-message" aria-live="polite"></p>
+        <div id="case-detail-content" class="ff-form-stack"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Timeline de eventos</h2>
+      </div>
+      <div class="ff-card__body">
+        <p id="case-events-message" class="ff-form-message" aria-live="polite"></p>
+        <ul id="case-events-list" class="ff-timeline"></ul>
+
+        <form id="case-comment-form" class="ff-form-stack">
+          <label class="ff-label" for="case-comment">Añadir comentario</label>
+          <div class="ff-field">
+            <i class="ph ph-chat-text"></i>
+            <textarea id="case-comment" name="comment" class="ff-textarea" required></textarea>
+          </div>
+          <p id="case-comment-message" class="ff-form-message" aria-live="polite"></p>
+          <button type="submit" class="ff-btn ff-btn--primary">Comentar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/case_detail.js', v=ui_version) }}"></script>
+{% endblock %}

@@ -32,6 +32,7 @@
         <td>${company.tax_id || '-'}</td>
         <td><span class="ff-tag ${company.status === 'active' ? 'ff-tag--success' : 'ff-tag--warn'}">${company.status || '-'}</span></td>
         <td>
+          <a class="ff-btn ff-btn--ghost ff-btn--sm" href="/app/companies/${company.id}/cases">Cases</a>
           <a class="ff-btn ff-btn--ghost ff-btn--sm" href="/app/companies/${company.id}/employees">Ver empleados</a>
         </td>
       `;
