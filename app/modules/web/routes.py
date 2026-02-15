@@ -72,3 +72,26 @@ def app_company_employees(company_id: str):
         page_id="companies",
         company_id=company_id,
     )
+
+
+@bp.get("/app/companies/<company_id>/cases")
+def app_company_cases(company_id: str):
+    """Render cases page for a company."""
+    return render_template(
+        "pages/cases.html",
+        active_nav="companies",
+        page_id="companies",
+        company_id=company_id,
+    )
+
+
+@bp.get("/app/companies/<company_id>/cases/<case_id>")
+def app_case_detail(company_id: str, case_id: str):
+    """Render case detail page."""
+    return render_template(
+        "pages/case_detail.html",
+        active_nav="companies",
+        page_id="companies",
+        company_id=company_id,
+        case_id=case_id,
+    )
