@@ -1,0 +1,58 @@
+.ff-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ff-form-message {
+  min-height: 20px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ff-muted);
+}
+
+.ff-form-message.is-error {
+  color: var(--ff-danger);
+}
+
+.ff-form-message.is-success {
+  color: var(--ff-success);
+}
+
+.ff-page-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ff-table-wrap {
+  overflow-x: auto;
+}
+
+.ff-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ff-table th,
+.ff-table td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid var(--ff-border);
+  font-size: 14px;
+}
+
+.ff-table th {
+  font-weight: 900;
+}
+
+.ff-empty {
+  text-align: center;
+  color: var(--ff-muted);
+}
+
+.ff-btn--sm {
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+}

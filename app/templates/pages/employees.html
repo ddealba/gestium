@@ -1,0 +1,39 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Empleados · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-grid">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Empleados de empresa</h2>
+        <button id="refresh-employees" class="ff-btn ff-btn--ghost" type="button">
+          <i class="ph ph-arrows-clockwise"></i>
+          Recargar
+        </button>
+      </div>
+      <div class="ff-card__body">
+        <p id="employees-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-table-wrap">
+          <table class="ff-table" id="employees-table" data-company-id="{{ company_id }}">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Puesto</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/employees.js', v=ui_version) }}"></script>
+{% endblock %}
