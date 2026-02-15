@@ -1,0 +1,35 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Empresas · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head ff-page-head">
+    <h2>Empresas</h2>
+    <button id="refresh-companies" class="ff-btn ff-btn--ghost" type="button">
+      <i class="ph ph-arrows-clockwise"></i>
+      Recargar
+    </button>
+  </div>
+  <div class="ff-card__body">
+    <p id="companies-message" class="ff-form-message" aria-live="polite"></p>
+    <div class="ff-table-wrap">
+      <table class="ff-table" id="companies-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>NIF</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/companies.js', v=ui_version) }}"></script>
+{% endblock %}

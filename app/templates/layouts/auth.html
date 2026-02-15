@@ -10,14 +10,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='ui/css/tokens.css', v=ui_version) }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='ui/css/base.css', v=ui_version) }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='ui/css/components.css', v=ui_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css', v=ui_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css', v=ui_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css', v=ui_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css', v=ui_version) }}">
 </head>
 <body>
   <div class="ff-auth">
     {% block content %}{% endblock %}
   </div>
-  <script src="{{ url_for('static', filename='ui/js/ui.core.js', v=ui_version) }}"></script>
+  <script src="{{ url_for('static', filename='js/ui.core.js', v=ui_version) }}"></script>
+  {% block page_scripts %}{% endblock %}
 </body>
 </html>

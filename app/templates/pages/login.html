@@ -1,0 +1,40 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Login · Gestium{% endblock %}
+
+{% block content %}
+<div class="ff-auth__card">
+  <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+    <div class="ff-brand__logo" style="width:34px;height:34px;border-radius:14px"></div>
+    <div style="font-weight:900;">Gestium</div>
+  </div>
+  <h1>Acceso a la plataforma</h1>
+
+  <form id="login-form" class="ff-form-stack">
+    <label class="ff-label" for="login-email">Email *</label>
+    <div class="ff-field">
+      <i class="ph ph-envelope"></i>
+      <input id="login-email" name="email" class="ff-input" type="email" placeholder="usuario@empresa.com" required />
+    </div>
+
+    <label class="ff-label" for="login-password">Password *</label>
+    <div class="ff-field">
+      <i class="ph ph-lock"></i>
+      <input id="login-password" name="password" class="ff-input" type="password" placeholder="••••••••" required />
+    </div>
+
+    <label class="ff-label" for="login-client-id">Client ID (opcional)</label>
+    <div class="ff-field">
+      <i class="ph ph-buildings"></i>
+      <input id="login-client-id" name="client_id" class="ff-input" type="text" placeholder="UUID del tenant" />
+    </div>
+
+    <p id="login-message" class="ff-form-message" aria-live="polite"></p>
+
+    <button class="ff-btn ff-btn--primary" type="submit">Entrar</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/login.js', v=ui_version) }}"></script>
+{% endblock %}

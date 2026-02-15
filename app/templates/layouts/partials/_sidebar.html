@@ -9,7 +9,7 @@
 
   <nav class="ff-nav">
     {% for item in nav_items %}
-      <a class="ff-nav__item {{ 'is-active' if item.active else '' }}"
+      <a class="ff-nav__item {{ 'is-active' if item.active or item.page_id == active_nav else '' }}"
          data-nav="{{ item.page_id }}"
          href="{{ url_for(item.endpoint) }}">
         <span class="ff-nav__icon"><i class="ph {{ item.icon }}"></i></span>
