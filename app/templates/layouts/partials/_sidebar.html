@@ -1,0 +1,23 @@
+<aside class="ff-sidebar">
+  <div class="ff-brand">
+    <div class="ff-brand__logo"></div>
+    <div class="ff-brand__text">
+      <b>Gestium</b>
+      <div class="ff-muted" style="font-size:12px;font-weight:800;">{{ tenant_name|default('UI') }}</div>
+    </div>
+  </div>
+
+  <nav class="ff-nav">
+    {% for item in nav_items %}
+      <a class="ff-nav__item {{ 'is-active' if item.active else '' }}"
+         data-nav="{{ item.page_id }}"
+         href="{{ url_for(item.endpoint) }}">
+        <span class="ff-nav__icon"><i class="ph {{ item.icon }}"></i></span>
+        {{ item.label }}
+        {% if item.badge %}
+          <span class="ff-badge" style="margin-left:auto;background:var(--ff-warning);">{{ item.badge }}</span>
+        {% endif %}
+      </a>
+    {% endfor %}
+  </nav>
+</aside>

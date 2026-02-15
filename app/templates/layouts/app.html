@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{% block title %}Gestium{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='ui/css/tokens.css', v=ui_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='ui/css/base.css', v=ui_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='ui/css/layout.css', v=ui_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='ui/css/components.css', v=ui_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='ui/css/extras.css', v=ui_version) }}">
+
+  {% block head %}{% endblock %}
+</head>
+
+<body data-page="{{ page_id|default('') }}">
+  <div class="ff-app">
+    {% include "layouts/partials/_sidebar.html" %}
+    <div class="ff-main">
+      <div class="ff-blob"></div>
+      {% include "layouts/partials/_topbar.html" %}
+      <main class="ff-content">
+        {% include "layouts/partials/_flash.html" %}
+        {% block content %}{% endblock %}
+      </main>
+      <footer class="ff-footer">© {{ current_year }} · Gestium</footer>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='ui/js/ui.core.js', v=ui_version) }}"></script>
+  {% block page_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,164 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui_macros.html" import tag %}
+
+{% block title %}Expediente · Detalle{% endblock %}
+{% block page_header %}#EXP-1021 · Detalle{% endblock %}
+
+{% block content %}
+<section class="ff-grid">
+  <div class="ff-col-8">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <div class="ff-toolbar">
+          <span style="font-weight:900;">Timeline</span>
+          {{ tag("Pendiente","warn") }}
+          <span class="ff-pill"><i class="ph ph-buildings"></i> Empresa: <b>ACME</b></span>
+          <span class="ff-pill"><i class="ph ph-user"></i> Responsable: <b>Laura</b></span>
+        </div>
+        <button class="ff-btn ff-btn--soft" data-ff="drawer-open" data-target="#drawerActions">
+          <i class="ph ph-lightning"></i> Acciones
+        </button>
+      </div>
+
+      <div class="ff-card__body">
+        <div class="ff-timeline">
+          <div class="ff-event">
+            <div class="ff-event__head">
+              <div class="ff-event__title">Creación de expediente</div>
+              <div class="ff-event__time">Hoy · 09:14</div>
+            </div>
+            <div class="ff-event__body">Expediente registrado desde portal cliente.</div>
+            <div class="ff-event__meta">
+              <span class="ff-chip"><i class="ph ph-user"></i> Cliente</span>
+              {{ tag("Entrada") }}
+            </div>
+          </div>
+
+          <div class="ff-event">
+            <div class="ff-event__head">
+              <div class="ff-event__title">Documento recibido</div>
+              <div class="ff-event__time">Ayer · 18:03</div>
+            </div>
+            <div class="ff-event__body">Se adjunta DNI administrador y escritura.</div>
+            <div class="ff-event__meta">
+              <span class="ff-chip"><i class="ph ph-paperclip"></i> 2 adjuntos</span>
+              {{ tag("Documentos","blue") }}
+            </div>
+          </div>
+
+          <div class="ff-event">
+            <div class="ff-event__head">
+              <div class="ff-event__title">Incidencia detectada</div>
+              <div class="ff-event__time">12/02 · 16:40</div>
+            </div>
+            <div class="ff-event__body">Falta documento de poderes. Solicitar al cliente.</div>
+            <div class="ff-event__meta">
+              {{ tag("Bloqueo","danger") }}
+              <span class="ff-chip"><i class="ph ph-warning"></i> Requiere acción</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ff-col-4">
+    <div class="ff-card">
+      <div class="ff-card__head">Resumen</div>
+      <div class="ff-card__body" style="padding-top:6px;">
+        <div class="ff-grid">
+          <div class="ff-col-12">
+            <div class="ff-pill" style="width:100%;justify-content:space-between;">
+              <span><i class="ph ph-calendar"></i> Objetivo</span><b>+7 días</b>
+            </div>
+          </div>
+          <div class="ff-col-12">
+            <div class="ff-pill" style="width:100%;justify-content:space-between;">
+              <span><i class="ph ph-file-text"></i> Documentos</span><b>3</b>
+            </div>
+          </div>
+          <div class="ff-col-12">
+            <div class="ff-pill" style="width:100%;justify-content:space-between;">
+              <span><i class="ph ph-warning"></i> Incidencias</span><b style="color:var(--ff-danger)">1</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="ff-hr"></div>
+        <div class="ff-muted" style="font-weight:900;margin-bottom:10px;">Accesos rápidos</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="ff-btn ff-btn--soft"><i class="ph ph-upload-simple"></i> Subir doc</button>
+          <button class="ff-btn ff-btn--ghost" style="box-shadow:none;"><i class="ph ph-link"></i> Vincular</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+
+    <div class="ff-card ff-card--brand">
+      <div class="ff-card__head">Siguiente paso</div>
+      <div class="ff-card__body">
+        <div style="font-size:20px;font-weight:900;">Solicitar poderes</div>
+        <div class="ff-muted">Enviar petición al cliente y bloquear hasta recepción.</div>
+        <div style="margin-top:12px;">
+          <button class="ff-btn" style="background:rgba(255,255,255,.18);box-shadow:none;border:1px solid rgba(255,255,255,.22);">
+            <i class="ph ph-paper-plane-tilt"></i> Enviar solicitud
+          </button>
+        </div>
+      </div>
+      <div class="ff-watermark"><i class="ph ph-target"></i></div>
+    </div>
+  </div>
+</section>
+
+<div class="ff-drawer" id="drawerActions" aria-hidden="true">
+  <div class="ff-drawer__backdrop"></div>
+  <div class="ff-drawer__panel">
+    <div class="ff-drawer__head">
+      <div style="font-weight:900;">Acciones rápidas</div>
+      <button class="ff-iconbtn" data-ff="drawer-close" title="Close"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="ff-drawer__body">
+      <div class="ff-card" style="box-shadow:none;border:1px solid rgba(25,33,61,.08);">
+        <div class="ff-card__head">Cambiar estado</div>
+        <div class="ff-card__body">
+          <div class="ff-grid" style="margin-top:6px;">
+            <div class="ff-col-12">
+              <label class="ff-label">Estado</label>
+              <div class="ff-field">
+                <i class="ph ph-seal-check"></i>
+                <select class="ff-select">
+                  <option>Pendiente</option>
+                  <option>En curso</option>
+                  <option>Revisión</option>
+                  <option>Hecho</option>
+                </select>
+              </div>
+            </div>
+            <div class="ff-col-12" style="display:flex;justify-content:flex-end;gap:10px;">
+              <button class="ff-btn ff-btn--ghost" data-ff="drawer-close" style="box-shadow:none;">Cancelar</button>
+              <button class="ff-btn ff-btn--primary">Guardar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="ff-card" style="box-shadow:none;border:1px solid rgba(25,33,61,.08);">
+        <div class="ff-card__head">Registrar nota</div>
+        <div class="ff-card__body">
+          <label class="ff-label">Comentario</label>
+          <div class="ff-field">
+            <i class="ph ph-note-pencil"></i>
+            <textarea class="ff-textarea" style="padding-left:42px;" placeholder="Escribe una nota..."></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+            <button class="ff-btn ff-btn--primary"><i class="ph ph-check"></i> Añadir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

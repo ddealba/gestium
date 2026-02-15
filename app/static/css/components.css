@@ -1,0 +1,71 @@
+.ff-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.ff-col-12{grid-column:span 12}
+.ff-col-8{grid-column:span 8}
+.ff-col-6{grid-column:span 6}
+.ff-col-4{grid-column:span 4}
+.ff-col-3{grid-column:span 3}
+@media(max-width:1080px){
+  .ff-col-8,.ff-col-6,.ff-col-4,.ff-col-3{grid-column:span 12}
+}
+
+.ff-card{
+  background:var(--ff-surface);
+  border-radius:var(--ff-radius);
+  box-shadow:var(--ff-shadow);
+  border:1px solid rgba(25,33,61,.06);
+  overflow:hidden;
+}
+.ff-card__head{
+  padding:16px 18px 12px;
+  font-weight:900;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.ff-card__body{padding:0 18px 18px}
+
+.ff-stat{display:flex;align-items:center;justify-content:space-between;padding:18px}
+.ff-stat__left{display:flex;align-items:center;gap:14px}
+.ff-stat__value{font-size:28px;font-weight:900;letter-spacing:.2px}
+.ff-stat__label{font-size:13px;color:var(--ff-muted);margin-top:2px;font-weight:800}
+
+.ff-tag{
+  font-size:11px;padding:4px 10px;border-radius:999px;
+  background:rgba(91,82,182,.12);color:var(--ff-primary);font-weight:900;
+  display:inline-flex;
+}
+.ff-tag--blue{background:rgba(24,160,251,.14);color:#057cc5}
+.ff-tag--success{background:rgba(103,179,106,.14);color:#2a6b2f}
+.ff-tag--warn{background:rgba(255,139,61,.14);color:#c85d17}
+.ff-tag--danger{background:rgba(255,90,122,.14);color:#c22c4a}
+
+.ff-ring{
+  --p:.72;--c:var(--ff-primary);
+  width:54px;height:54px;border-radius:999px;
+  background:conic-gradient(var(--c) calc(var(--p) * 1turn), rgba(25,33,61,.08) 0);
+  display:grid;place-items:center;
+}
+.ff-ring::after{
+  content:"";width:40px;height:40px;border-radius:999px;
+  background:var(--ff-surface);
+  box-shadow:inset 0 0 0 1px rgba(25,33,61,.06);
+}
+
+.ff-card--brand{background:var(--ff-primary);color:#fff;position:relative}
+.ff-card--brand .ff-card__head{color:#fff}
+.ff-card--brand .ff-muted{color:rgba(255,255,255,.75)}
+.ff-watermark{position:absolute;right:18px;top:18px;font-size:58px;opacity:.18}
+
+/* Auth layout */
+.ff-auth{
+  min-height:100%;
+  background:linear-gradient(90deg, rgba(150,228,255,.35) 0%, rgba(150,228,255,.35) 42%, transparent 42%), var(--ff-bg);
+  display:grid;place-items:center;padding:28px 18px;
+}
+.ff-auth__card{
+  width:min(420px,92vw);
+  background:var(--ff-surface);
+  border-radius:var(--ff-radius);
+  box-shadow:var(--ff-shadow);
+  border:1px solid rgba(25,33,61,.06);
+  padding:22px;
+}
+.ff-auth__card h1{margin:0 0 18px;font-size:22px;font-weight:900}

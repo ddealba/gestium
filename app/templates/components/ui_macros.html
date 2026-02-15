@@ -1,0 +1,8 @@
+{% macro tag(text, variant='default') -%}
+  {% set cls = 'ff-tag' %}
+  {% if variant=='blue' %}{% set cls = cls ~ ' ff-tag--blue' %}{% endif %}
+  {% if variant=='success' %}{% set cls = cls ~ ' ff-tag--success' %}{% endif %}
+  {% if variant=='warn' %}{% set cls = cls ~ ' ff-tag--warn' %}{% endif %}
+  {% if variant=='danger' %}{% set cls = cls ~ ' ff-tag--danger' %}{% endif %}
+  <span class="{{ cls }}">{{ text }}</span>
+{%- endmacro %}
