@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from flask import current_app
 from werkzeug.datastructures import FileStorage
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from app.models.case_event import CaseEvent
 from app.models.document import Document
 from app.modules.cases.repository import CaseEventRepository, CaseRepository
 from app.modules.documents.storage import open_file, save_upload
 from app.repositories.document_repository import DocumentRepository
+from app.services.company_access_service import CompanyAccessService
 
 _EXTENSION_TO_MIME = {
     "pdf": "application/pdf",
@@ -28,10 +29,12 @@ class DocumentModuleService:
         document_repository: DocumentRepository | None = None,
         case_repository: CaseRepository | None = None,
         event_repository: CaseEventRepository | None = None,
+        company_access_service: CompanyAccessService | None = None,
     ) -> None:
         self.document_repository = document_repository or DocumentRepository()
         self.case_repository = case_repository or CaseRepository()
         self.event_repository = event_repository or CaseEventRepository()
+        self.company_access_service = company_access_service or CompanyAccessService()
 
     def upload_case_document(
         self,
@@ -84,16 +87,32 @@ class DocumentModuleService:
         self._ensure_case_access(client_id, company_id, case_id)
         return self.document_repository.list_by_case(client_id=client_id, company_id=company_id, case_id=case_id)
 
-    def get_document_metadata(self, client_id: str, document_id: str) -> Document:
+    def get_document_metadata(self, client_id: str, document_id: str, actor_user_id: str) -> Document:
         document = self.document_repository.get_by_id(client_id=client_id, document_id=document_id)
         if document is None:
             raise NotFound("document_not_found")
+        self._ensure_document_access(client_id, actor_user_id, document.company_id)
         self._ensure_case_access(client_id, document.company_id, document.case_id)
         return document
 
-    def download_document(self, client_id: str, document_id: str):
-        document = self.get_document_metadata(client_id=client_id, document_id=document_id)
+    def download_document(self, client_id: str, document_id: str, actor_user_id: str):
+        document = self.get_document_metadata(
+            client_id=client_id,
+            document_id=document_id,
+            actor_user_id=actor_user_id,
+        )
         return document, open_file(document.storage_path)
+
+    def _ensure_document_access(self, client_id: str, actor_user_id: str, company_id: str) -> None:
+        try:
+            self.company_access_service.require_access(
+                user_id=actor_user_id,
+                company_id=company_id,
+                client_id=client_id,
+                required_level="viewer",
+            )
+        except (Forbidden, NotFound) as exc:
+            raise NotFound("document_not_found") from exc
 
     def _ensure_case_access(self, client_id: str, company_id: str, case_id: str) -> None:
         case = self.case_repository.get_by_id(case_id=case_id, client_id=client_id)
