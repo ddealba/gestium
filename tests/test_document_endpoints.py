@@ -190,3 +190,236 @@ def test_download_document_without_company_access_returns_404(client, app, db_se
 
         assert response.status_code == 404
         assert response.get_json()["message"] == "document_not_found"
+
+
+def test_upload_happy_path_list_and_download(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id, email="operator@example.com")
+        company = create_company(db_session, tenant.id)
+        case_id = create_case(tenant.id, company.id, user.id)
+        assign_role(db_session, user, "Admin Cliente")
+        assign_access(db_session, user, company, "operator")
+
+        upload_response = client.post(
+            f"/companies/{company.id}/cases/{case_id}/documents",
+            headers=auth_header_for(user),
+            data={
+                "doc_type": "evidence",
+                "file": (BytesIO(b"%PDF-1.4 upload"), "ok.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert upload_response.status_code == 201
+        document_id = upload_response.get_json()["document"]["id"]
+
+        list_response = client.get(
+            f"/companies/{company.id}/cases/{case_id}/documents",
+            headers=auth_header_for(user),
+        )
+
+        assert list_response.status_code == 200
+        documents = list_response.get_json()["documents"]
+        assert len(documents) == 1
+        assert documents[0]["id"] == document_id
+
+        download_response = client.get(
+            f"/documents/{document_id}/download",
+            headers=auth_header_for(user),
+        )
+
+        assert download_response.status_code == 200
+        assert download_response.headers["Content-Type"].startswith("application/pdf")
+
+
+def test_upload_without_document_upload_permission_returns_403(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id, email="norole@example.com")
+        company = create_company(db_session, tenant.id)
+        case_id = create_case(tenant.id, company.id, user.id)
+        assign_access(db_session, user, company, "operator")
+
+        response = client.post(
+            f"/companies/{company.id}/cases/{case_id}/documents",
+            headers=auth_header_for(user),
+            data={
+                "file": (BytesIO(b"%PDF-1.4 upload"), "no-permission.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 403
+
+
+def test_upload_with_viewer_acl_returns_403(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id, email="viewer-acl@example.com")
+        company = create_company(db_session, tenant.id)
+        case_id = create_case(tenant.id, company.id, user.id)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company, "viewer")
+
+        response = client.post(
+            f"/companies/{company.id}/cases/{case_id}/documents",
+            headers=auth_header_for(user),
+            data={
+                "file": (BytesIO(b"%PDF-1.4 upload"), "viewer.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 403
+
+
+def test_cross_tenant_list_documents_returns_404(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant_a = create_client(db_session)
+        tenant_b = create_client(db_session)
+        seed_rbac()
+
+        user_a = create_user(db_session, tenant_a.id, email="tenant-a@example.com")
+        user_b = create_user(db_session, tenant_b.id, email="tenant-b@example.com")
+
+        company_a = create_company(db_session, tenant_a.id, name="Alpha A", tax_id="A-001")
+        company_b = create_company(db_session, tenant_b.id, name="Alpha B", tax_id="B-001")
+        case_a_id = create_case(tenant_a.id, company_a.id, user_a.id)
+
+        assign_role(db_session, user_a, "Operativo")
+        assign_access(db_session, user_a, company_a, "operator")
+
+        assign_role(db_session, user_b, "Admin Cliente")
+        assign_access(db_session, user_b, company_b, "operator")
+
+        upload_response = client.post(
+            f"/companies/{company_a.id}/cases/{case_a_id}/documents",
+            headers=auth_header_for(user_a),
+            data={
+                "file": (BytesIO(b"%PDF-1.4 upload"), "tenant-a.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+        assert upload_response.status_code == 201
+
+        response = client.get(
+            f"/companies/{company_a.id}/cases/{case_a_id}/documents",
+            headers=auth_header_for(user_b),
+        )
+
+        assert response.status_code == 404
+
+
+def test_cross_tenant_download_returns_404(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant_a = create_client(db_session)
+        tenant_b = create_client(db_session)
+        seed_rbac()
+
+        user_a = create_user(db_session, tenant_a.id, email="owner@example.com")
+        user_b = create_user(db_session, tenant_b.id, email="intruder@example.com")
+
+        company_a = create_company(db_session, tenant_a.id, name="Owner Co", tax_id="OA-001")
+        company_b = create_company(db_session, tenant_b.id, name="Intruder Co", tax_id="IB-001")
+        case_a_id = create_case(tenant_a.id, company_a.id, user_a.id)
+
+        assign_role(db_session, user_a, "Operativo")
+        assign_access(db_session, user_a, company_a, "operator")
+
+        assign_role(db_session, user_b, "Admin Cliente")
+        assign_access(db_session, user_b, company_b, "operator")
+
+        upload_response = client.post(
+            f"/companies/{company_a.id}/cases/{case_a_id}/documents",
+            headers=auth_header_for(user_a),
+            data={
+                "file": (BytesIO(b"%PDF-1.4 upload"), "tenant-a.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+        assert upload_response.status_code == 201
+        document_id = upload_response.get_json()["document"]["id"]
+
+        response = client.get(
+            f"/documents/{document_id}/download",
+            headers=auth_header_for(user_b),
+        )
+
+        assert response.status_code == 404
+
+
+def test_upload_validation_missing_or_empty_file_returns_400(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id, email="validator@example.com")
+        company = create_company(db_session, tenant.id)
+        case_id = create_case(tenant.id, company.id, user.id)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company, "operator")
+
+        missing_response = client.post(
+            f"/companies/{company.id}/cases/{case_id}/documents",
+            headers=auth_header_for(user),
+            data={"doc_type": "evidence"},
+            content_type="multipart/form-data",
+        )
+        assert missing_response.status_code == 400
+
+        empty_response = client.post(
+            f"/companies/{company.id}/cases/{case_id}/documents",
+            headers=auth_header_for(user),
+            data={
+                "file": (BytesIO(b""), "empty.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert empty_response.status_code == 400
+
+
+def test_upload_validation_mimetype_not_allowed_returns_400(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id, email="mimetype@example.com")
+        company = create_company(db_session, tenant.id)
+        case_id = create_case(tenant.id, company.id, user.id)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company, "operator")
+
+        response = client.post(
+            f"/companies/{company.id}/cases/{case_id}/documents",
+            headers=auth_header_for(user),
+            data={
+                "file": (BytesIO(b"MZ executable"), "bad.pdf", "application/octet-stream"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 400

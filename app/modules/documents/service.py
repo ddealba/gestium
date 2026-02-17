@@ -151,6 +151,9 @@ class DocumentModuleService:
         size_bytes = file.stream.tell()
         file.stream.seek(0)
 
+        if size_bytes == 0:
+            raise BadRequest("file_empty")
+
         max_size = int(current_app.config.get("MAX_CONTENT_LENGTH", 25 * 1024 * 1024))
         if size_bytes > max_size:
             raise BadRequest("file_too_large")
