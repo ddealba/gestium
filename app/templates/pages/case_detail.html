@@ -38,6 +38,51 @@
       </div>
     </div>
   </div>
+
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Documentos</h2>
+      </div>
+      <div class="ff-card__body">
+        <p id="case-documents-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-table-wrap">
+          <table class="ff-table" id="case-documents-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="case-documents-body"></tbody>
+          </table>
+        </div>
+
+        <form id="case-document-upload-form" class="ff-form-stack">
+          <label class="ff-label" for="case-document-file">Subir documento</label>
+          <input id="case-document-file" name="file" type="file" class="ff-input" required />
+
+          <label class="ff-label" for="case-document-type">Tipo de documento (opcional)</label>
+          <div class="ff-field">
+            <i class="ph ph-file-text"></i>
+            <select id="case-document-type" name="doc_type" class="ff-input">
+              <option value="">Sin tipo</option>
+              <option value="dni">DNI</option>
+              <option value="contrato">Contrato</option>
+              <option value="resolucion">Resolución</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+
+          <p id="case-document-upload-message" class="ff-form-message" aria-live="polite"></p>
+          <button type="submit" id="case-document-upload-button" class="ff-btn ff-btn--primary">Subir</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </section>
 {% endblock %}
 
