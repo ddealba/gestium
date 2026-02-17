@@ -5,6 +5,14 @@ from __future__ import annotations
 import os
 
 
+def _parse_allowed_document_mime(raw_value: str) -> tuple[str, ...]:
+    """Parse allowed document mime/extensions from env var."""
+    values = [value.strip().lower() for value in raw_value.split(",") if value.strip()]
+    if not values:
+        values = ["pdf", "png", "jpg"]
+    return tuple(values)
+
+
 class BaseConfig:
     SECRET_KEY = os.getenv("SECRET_KEY", "changeme")
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///gestium.db")
@@ -12,6 +20,11 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     ALLOW_X_CLIENT_ID_HEADER = os.getenv("ALLOW_X_CLIENT_ID_HEADER", "false").lower() == "true"
     ENV = os.getenv("FLASK_ENV", "development")
+    DOCUMENT_STORAGE_ROOT = os.getenv("DOCUMENT_STORAGE_ROOT", "/data/documents")
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(25 * 1024 * 1024)))
+    ALLOWED_DOCUMENT_MIME = _parse_allowed_document_mime(
+        os.getenv("ALLOWED_DOCUMENT_MIME", "pdf,png,jpg")
+    )
     DEBUG = False
     TESTING = False
 

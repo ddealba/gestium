@@ -9,8 +9,11 @@ services:
       AUTO_SEED_SMOKE: "true"
       ALLOW_X_CLIENT_ID_HEADER: "true"
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DOCUMENT_STORAGE_ROOT: /data/documents
     ports:
       - "5000:5000"
+    volumes:
+      - documents_data:/data/documents
     depends_on:
       - postgres
 
@@ -38,3 +41,4 @@ services:
 
 volumes:
   postgres_data:
+  documents_data:
