@@ -19,6 +19,25 @@ class DocumentRepository:
         self.session.flush()
         return document
 
+    def get_by_id(self, client_id: str, document_id: str) -> Document | None:
+        return (
+            self.session.query(Document)
+            .filter(Document.id == document_id, Document.client_id == client_id)
+            .one_or_none()
+        )
+
+    def list_by_case(self, client_id: str, company_id: str, case_id: str) -> list[Document]:
+        return (
+            self.session.query(Document)
+            .filter(
+                Document.client_id == client_id,
+                Document.company_id == company_id,
+                Document.case_id == case_id,
+            )
+            .order_by(Document.created_at.desc())
+            .all()
+        )
+
     @staticmethod
     def filter_by_allowed_companies(query, allowed_company_ids: set[str]):
         if not allowed_company_ids:
