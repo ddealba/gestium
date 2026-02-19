@@ -70,6 +70,14 @@
     }
   };
 
+  const safeReadJson = async (response) => {
+    try {
+      return await response.json();
+    } catch (error) {
+      return null;
+    }
+  };
+
   const renderDetail = (item) => {
     detailContainer.innerHTML = `
       <p><strong>ID:</strong> ${item.id}</p>
@@ -306,7 +314,7 @@
     setMessage(documentsMessage, 'Cargando documentos…');
     try {
       const response = await fetch(`/companies/${companyId}/cases/${caseId}/documents`, { headers });
-      const data = await response.json();
+      const data = await safeReadJson(response);
       if (!response.ok) {
         showPermissionToastIfNeeded(response.status);
         renderDocuments([]);
@@ -317,7 +325,7 @@
         return;
       }
 
-      caseDocuments = data.documents || [];
+      caseDocuments = data?.documents || [];
       renderDocuments(caseDocuments);
       renderExtractionDocumentOptions(caseDocuments);
       setMessage(documentsMessage, '');
