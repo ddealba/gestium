@@ -7,8 +7,10 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from app.models.case_event import CaseEvent
+from app.extensions import db
 from app.models.document import Document
 from app.modules.cases.repository import CaseEventRepository, CaseRepository
+from app.models.document_extraction import DocumentExtraction
 from app.modules.documents.storage import open_file, save_upload
 from app.repositories.document_repository import DocumentRepository
 from app.services.company_access_service import CompanyAccessService
@@ -80,6 +82,21 @@ class DocumentModuleService:
                 payload={"document_id": document.id, "filename": original_filename},
             )
         )
+
+        if current_app.config.get("AUTO_EXTRACTION_ENABLED", False):
+            db.session.add(
+                DocumentExtraction(
+                    client_id=client_id,
+                    document_id=document.id,
+                    company_id=company_id,
+                    case_id=case_id,
+                    created_by_user_id=actor_user_id,
+                    provider="system",
+                    schema_version="v1",
+                    extracted_json={},
+                    status="partial",
+                )
+            )
 
         return document
 

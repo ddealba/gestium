@@ -25,6 +25,7 @@ class BaseConfig:
     ALLOWED_DOCUMENT_MIME = _parse_allowed_document_mime(
         os.getenv("ALLOWED_DOCUMENT_MIME", "pdf,png,jpg")
     )
+    AUTO_EXTRACTION_ENABLED = os.getenv("AUTO_EXTRACTION_ENABLED", "false").lower() == "true"
     DEBUG = False
     TESTING = False
 

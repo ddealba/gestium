@@ -10,6 +10,7 @@ from app.models.case_event import CaseEvent
 from app.models.client import Client
 from app.models.company import Company
 from app.models.document import Document
+from app.models.document_extraction import DocumentExtraction
 from app.models.user import User
 from app.modules.cases.service import CaseService
 from app.modules.documents.service import DocumentModuleService
@@ -82,6 +83,51 @@ def test_upload_case_document_saves_file_and_creates_attachment_event(app, tmp_p
         )
         assert attachment_event.payload["document_id"] == document.id
         assert attachment_event.payload["filename"] == "evidencia.pdf"
+
+
+
+def test_upload_case_document_creates_placeholder_extraction_when_enabled(app, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf", "png", "jpg")
+        app.config["AUTO_EXTRACTION_ENABLED"] = True
+
+        db.create_all()
+        tenant = _create_client()
+        company = _create_company(tenant.id)
+        actor = _create_user(tenant.id, "owner@example.com")
+        case = CaseService().create_case(
+            client_id=tenant.id,
+            company_id=company.id,
+            actor_user_id=actor.id,
+            payload={"title": "Caso con extracción automática"},
+        )
+
+        file = FileStorage(
+            stream=BytesIO(b"%PDF-1.4 fake content"),
+            filename="autoevidencia.pdf",
+            content_type="application/pdf",
+        )
+
+        document = DocumentModuleService().upload_case_document(
+            client_id=tenant.id,
+            company_id=company.id,
+            case_id=case.id,
+            actor_user_id=actor.id,
+            file=file,
+            doc_type="evidence",
+        )
+        db.session.commit()
+
+        extraction = (
+            db.session.query(DocumentExtraction)
+            .filter(DocumentExtraction.document_id == document.id)
+            .one()
+        )
+        assert extraction.status == "partial"
+        assert extraction.provider == "system"
+        assert extraction.extracted_json == {}
 
 
 
