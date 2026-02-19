@@ -16,6 +16,13 @@
   const documentUploadForm = document.getElementById('case-document-upload-form');
   const documentUploadMessage = document.getElementById('case-document-upload-message');
   const documentUploadButton = document.getElementById('case-document-upload-button');
+  const extractionDocumentSelect = document.getElementById('extraction-document-select');
+  const extractionLatestMessage = document.getElementById('extraction-latest-message');
+  const extractionLatestJson = document.getElementById('extraction-latest-json');
+  const extractionManualForm = document.getElementById('extraction-manual-form');
+  const extractionManualMessage = document.getElementById('extraction-manual-message');
+
+  let caseDocuments = [];
 
   const setMessage = (el, text, isError = false, isSuccess = false) => {
     if (!el) return;
@@ -183,6 +190,111 @@
     }
   };
 
+  const renderLatestExtraction = (payload) => {
+    if (!extractionLatestJson) return;
+    extractionLatestJson.textContent = JSON.stringify(payload || {}, null, 2);
+  };
+
+  const clearLatestExtraction = (message = 'Selecciona un documento para consultar su extracción latest.') => {
+    setMessage(extractionLatestMessage, '');
+    if (extractionLatestJson) extractionLatestJson.textContent = message;
+  };
+
+  const selectedDocumentId = () => extractionDocumentSelect?.value || '';
+
+  const renderExtractionDocumentOptions = (documents) => {
+    if (!extractionDocumentSelect) return;
+    const currentValue = extractionDocumentSelect.value;
+    extractionDocumentSelect.innerHTML = '<option value="">Selecciona un documento…</option>';
+
+    documents.forEach((document) => {
+      const option = document.createElement('option');
+      option.value = document.id;
+      option.textContent = document.original_filename || document.id;
+      extractionDocumentSelect.appendChild(option);
+    });
+
+    if (documents.some((document) => document.id === currentValue)) {
+      extractionDocumentSelect.value = currentValue;
+      return;
+    }
+
+    clearLatestExtraction();
+  };
+
+  const loadLatestExtraction = async () => {
+    const documentId = selectedDocumentId();
+    if (!documentId) {
+      clearLatestExtraction();
+      return;
+    }
+
+    const headers = apiHeaders();
+    if (!headers) {
+      setMessage(extractionLatestMessage, 'Debes iniciar sesión para consultar extracciones.', true);
+      return;
+    }
+
+    setMessage(extractionLatestMessage, 'Cargando extracción latest…');
+
+    try {
+      const response = await fetch(`/documents/${documentId}/extractions/latest`, { headers });
+      if (response.status === 404) {
+        clearLatestExtraction('No hay extracción latest para este documento.');
+        return;
+      }
+
+      const data = await response.json();
+      if (!response.ok) {
+        showPermissionToastIfNeeded(response.status);
+        setMessage(extractionLatestMessage, 'No se pudo consultar la extracción latest.', true);
+        return;
+      }
+
+      renderLatestExtraction(data.extraction?.extracted_json || {});
+      setMessage(extractionLatestMessage, 'Última extracción cargada.', false, true);
+    } catch (error) {
+      setMessage(extractionLatestMessage, 'Error de red cargando extracción latest.', true);
+    }
+  };
+
+  const setManualExtractionEnabled = (enabled) => {
+    if (!extractionManualForm) return;
+    extractionManualForm.hidden = !enabled;
+    Array.from(extractionManualForm.elements).forEach((el) => {
+      el.disabled = !enabled;
+    });
+
+    if (!enabled) {
+      setMessage(extractionManualMessage, 'No tienes permisos para registrar extracción manual.', true);
+    }
+  };
+
+  const loadExtractionWritePermissions = async () => {
+    const headers = apiHeaders();
+    if (!headers) {
+      setManualExtractionEnabled(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/rbac/me/permissions', { headers });
+      const data = await response.json();
+      if (!response.ok) {
+        setManualExtractionEnabled(false);
+        return;
+      }
+
+      const canWrite = Array.isArray(data.permissions) && data.permissions.includes('document.extraction.write');
+      setManualExtractionEnabled(canWrite);
+      if (canWrite) {
+        setMessage(extractionManualMessage, '');
+      }
+    } catch (error) {
+      setManualExtractionEnabled(false);
+    }
+  };
+
   const loadCaseDocuments = async () => {
     const headers = apiHeaders();
     if (!headers) {
@@ -205,7 +317,9 @@
         return;
       }
 
-      renderDocuments(data.documents || []);
+      caseDocuments = data.documents || [];
+      renderDocuments(caseDocuments);
+      renderExtractionDocumentOptions(caseDocuments);
       setMessage(documentsMessage, '');
     } catch (error) {
       setMessage(documentsMessage, 'Error de red cargando documentos.', true);
@@ -325,8 +439,65 @@
     }
   });
 
+  extractionDocumentSelect?.addEventListener('change', loadLatestExtraction);
+
+  extractionManualForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const documentId = selectedDocumentId();
+    if (!documentId) {
+      setMessage(extractionManualMessage, 'Selecciona primero un documento.', true);
+      return;
+    }
+
+    const headers = apiHeaders();
+    if (!headers) {
+      setMessage(extractionManualMessage, 'Debes iniciar sesión para registrar extracción manual.', true);
+      return;
+    }
+
+    const rawJson = extractionManualForm.elements.raw_json.value.trim();
+    if (!rawJson) {
+      setMessage(extractionManualMessage, 'Debes pegar un JSON válido.', true);
+      return;
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse(rawJson);
+    } catch (error) {
+      setMessage(extractionManualMessage, 'El contenido no es JSON válido.', true);
+      return;
+    }
+
+    setMessage(extractionManualMessage, 'Registrando extracción…');
+
+    try {
+      const response = await fetch(`/documents/${documentId}/extractions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        showPermissionToastIfNeeded(response.status);
+        setMessage(extractionManualMessage, data.message || 'No se pudo registrar la extracción.', true);
+        return;
+      }
+
+      setMessage(extractionManualMessage, 'Extracción registrada correctamente.', false, true);
+      extractionManualForm.reset();
+      renderLatestExtraction(data.extraction?.extracted_json || {});
+      setMessage(extractionLatestMessage, 'Última extracción cargada.', false, true);
+    } catch (error) {
+      setMessage(extractionManualMessage, 'Error de red registrando extracción.', true);
+    }
+  });
+
   loadCaseDetail();
   loadCaseEvents();
   loadCaseDocuments();
   loadUploadPermissions();
+  loadExtractionWritePermissions();
 })();
