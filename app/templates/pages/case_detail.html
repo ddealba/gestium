@@ -83,6 +83,43 @@
       </div>
     </div>
   </div>
+
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Datos extraídos</h2>
+      </div>
+      <div class="ff-card__body">
+        <div class="ff-form-stack">
+          <label class="ff-label" for="extraction-document-select">Documento</label>
+          <div class="ff-field">
+            <i class="ph ph-file-text"></i>
+            <select id="extraction-document-select" class="ff-input">
+              <option value="">Selecciona un documento…</option>
+            </select>
+          </div>
+        </div>
+
+        <p id="extraction-latest-message" class="ff-form-message" aria-live="polite"></p>
+        <pre id="extraction-latest-json" class="ff-code-block">Selecciona un documento para consultar su extracción latest.</pre>
+
+        <form id="extraction-manual-form" class="ff-form-stack" hidden>
+          <label class="ff-label" for="extraction-manual-json">Pegar JSON</label>
+          <div class="ff-field" style="padding: 0;">
+            <textarea
+              id="extraction-manual-json"
+              name="raw_json"
+              class="ff-textarea"
+              rows="10"
+              placeholder='{"schema_version":"v1","extracted_json":{"campo":"valor"}}'
+            ></textarea>
+          </div>
+          <p id="extraction-manual-message" class="ff-form-message" aria-live="polite"></p>
+          <button type="submit" class="ff-btn ff-btn--primary">Registrar extracción</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </section>
 {% endblock %}
 
