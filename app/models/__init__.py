@@ -5,6 +5,7 @@ from app.models.case_event import CaseEvent
 from app.models.client import Client
 from app.models.company import Company
 from app.models.document import Document
+from app.models.document_extraction import DocumentExtraction
 from app.models.employee import Employee
 from app.models.permission import Permission
 from app.models.role import Role
@@ -18,6 +19,7 @@ __all__ = [
     "Client",
     "Company",
     "Document",
+    "DocumentExtraction",
     "Employee",
     "Permission",
     "Role",
