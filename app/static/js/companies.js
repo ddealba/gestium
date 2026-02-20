@@ -11,12 +11,6 @@
     message.classList.toggle('is-error', isError);
   };
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('gestium_access_token');
-    if (!token) return null;
-    return { Authorization: `Bearer ${token}` };
-  };
-
   const renderCompanies = (companies) => {
     tbody.innerHTML = '';
 
@@ -41,26 +35,16 @@
   };
 
   const loadCompanies = async () => {
-    const headers = getAuthHeaders();
-    if (!headers) {
-      setMessage('Debes iniciar sesión para consultar empresas.', true);
-      return;
-    }
-
     setMessage('Cargando empresas…');
     try {
-      const response = await fetch('/companies', { headers });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage('No se pudieron cargar las empresas.', true);
-        return;
-      }
-
-      renderCompanies(data.companies || []);
+      const data = await window.apiFetch('/companies');
+      renderCompanies(data?.companies || []);
       setMessage('');
     } catch (error) {
-      setMessage('Error de red al consultar empresas.', true);
+      if (error?.noAccess) {
+        window.showToast('error', 'No tienes acceso');
+      }
+      setMessage(error?.data?.message || 'No se pudieron cargar las empresas.', true);
     }
   };
 

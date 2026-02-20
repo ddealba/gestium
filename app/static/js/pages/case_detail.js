@@ -31,50 +31,12 @@
     el.classList.toggle('is-success', isSuccess);
   };
 
-  const getToken = () => localStorage.getItem('gestium_access_token');
-
-  const apiHeaders = () => {
-    const token = getToken();
-    if (!token) return null;
-    return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-  };
-
-  const apiAuthHeaders = () => {
-    const token = getToken();
-    if (!token) return null;
-    return { Authorization: `Bearer ${token}` };
-  };
-
-  const showToast = (text) => {
-    let wrap = document.querySelector('.ff-toast-wrap');
-    if (!wrap) {
-      wrap = document.createElement('div');
-      wrap.className = 'ff-toast-wrap';
-      document.body.appendChild(wrap);
+  const handleError = (error, fallbackMessage, el) => {
+    if (error?.noAccess) {
+      window.showToast('error', 'No tienes acceso');
     }
-
-    const toast = document.createElement('div');
-    toast.className = 'ff-toast';
-    toast.textContent = text;
-    wrap.appendChild(toast);
-
-    setTimeout(() => {
-      toast.remove();
-      if (!wrap.children.length) wrap.remove();
-    }, 2600);
-  };
-
-  const showPermissionToastIfNeeded = (status) => {
-    if (status === 403 || status === 404) {
-      showToast('No tienes permisos o acceso');
-    }
-  };
-
-  const safeReadJson = async (response) => {
-    try {
-      return await response.json();
-    } catch (error) {
-      return null;
+    if (el) {
+      setMessage(el, error?.data?.message || fallbackMessage, true);
     }
   };
 
@@ -151,50 +113,24 @@
   };
 
   const loadCaseDetail = async () => {
-    const headers = apiHeaders();
-    if (!headers) {
-      setMessage(detailMessage, 'Debes iniciar sesión para consultar el detalle.', true);
-      return;
-    }
-
     setMessage(detailMessage, 'Cargando detalle…');
     try {
-      const response = await fetch(`/companies/${companyId}/cases/${caseId}`, { headers });
-      const data = await response.json();
-      if (!response.ok) {
-        showPermissionToastIfNeeded(response.status);
-        setMessage(detailMessage, 'No se pudo cargar el detalle del case.', true);
-        return;
-      }
-
-      renderDetail(data.case || {});
+      const data = await window.apiFetch(`/companies/${companyId}/cases/${caseId}`);
+      renderDetail(data?.case || {});
       setMessage(detailMessage, '');
     } catch (error) {
-      setMessage(detailMessage, 'Error de red cargando el detalle.', true);
+      handleError(error, 'No se pudo cargar el detalle del case.', detailMessage);
     }
   };
 
   const loadCaseEvents = async () => {
-    const headers = apiHeaders();
-    if (!headers) {
-      setMessage(eventsMessage, 'Debes iniciar sesión para consultar eventos.', true);
-      return;
-    }
-
     setMessage(eventsMessage, 'Cargando eventos…');
     try {
-      const response = await fetch(`/companies/${companyId}/cases/${caseId}/events`, { headers });
-      const data = await response.json();
-      if (!response.ok) {
-        showPermissionToastIfNeeded(response.status);
-        setMessage(eventsMessage, 'No se pudieron cargar los eventos.', true);
-        return;
-      }
-
-      renderEvents(data.events || []);
+      const data = await window.apiFetch(`/companies/${companyId}/cases/${caseId}/events`);
+      renderEvents(data?.events || []);
       setMessage(eventsMessage, '');
     } catch (error) {
-      setMessage(eventsMessage, 'Error de red cargando eventos.', true);
+      handleError(error, 'No se pudieron cargar los eventos.', eventsMessage);
     }
   };
 
@@ -237,32 +173,14 @@
       return;
     }
 
-    const headers = apiHeaders();
-    if (!headers) {
-      setMessage(extractionLatestMessage, 'Debes iniciar sesión para consultar extracciones.', true);
-      return;
-    }
-
     setMessage(extractionLatestMessage, 'Cargando extracción latest…');
 
     try {
-      const response = await fetch(`/documents/${documentId}/extractions/latest`, { headers });
-      if (response.status === 404) {
-        clearLatestExtraction('No hay extracción latest para este documento.');
-        return;
-      }
-
-      const data = await response.json();
-      if (!response.ok) {
-        showPermissionToastIfNeeded(response.status);
-        setMessage(extractionLatestMessage, 'No se pudo consultar la extracción latest.', true);
-        return;
-      }
-
-      renderLatestExtraction(data.extraction?.extracted_json || {});
+      const data = await window.apiFetch(`/documents/${documentId}/extractions/latest`);
+      renderLatestExtraction(data?.extraction?.extracted_json || {});
       setMessage(extractionLatestMessage, 'Última extracción cargada.', false, true);
     } catch (error) {
-      setMessage(extractionLatestMessage, 'Error de red cargando extracción latest.', true);
+      handleError(error, 'No se pudo consultar la extracción latest.', extractionLatestMessage);
     }
   };
 
@@ -279,94 +197,56 @@
   };
 
   const loadExtractionWritePermissions = async () => {
-    const headers = apiHeaders();
-    if (!headers) {
-      setManualExtractionEnabled(false);
-      return;
-    }
-
     try {
-      const response = await fetch('/rbac/me/permissions', { headers });
-      const data = await response.json();
-      if (!response.ok) {
-        setManualExtractionEnabled(false);
-        return;
-      }
-
-      const canWrite = Array.isArray(data.permissions) && data.permissions.includes('document.extraction.write');
+      const data = await window.apiFetch('/rbac/me/permissions');
+      const canWrite = Array.isArray(data?.permissions) && data.permissions.includes('document.extraction.write');
       setManualExtractionEnabled(canWrite);
       if (canWrite) {
         setMessage(extractionManualMessage, '');
       }
     } catch (error) {
+      if (error?.noAccess) {
+        window.showToast('error', 'No tienes acceso');
+      }
       setManualExtractionEnabled(false);
     }
   };
 
   const loadCaseDocuments = async () => {
-    const headers = apiHeaders();
-    if (!headers) {
-      setMessage(documentsMessage, 'Debes iniciar sesión para consultar documentos.', true);
-      setUploadEnabled(false);
-      return;
-    }
-
     setMessage(documentsMessage, 'Cargando documentos…');
     try {
-      const response = await fetch(`/companies/${companyId}/cases/${caseId}/documents`, { headers });
-      const data = await safeReadJson(response);
-      if (!response.ok) {
-        showPermissionToastIfNeeded(response.status);
-        renderDocuments([]);
-        setMessage(documentsMessage, 'No se pudieron cargar los documentos.', true);
-        if (response.status === 403) {
-          setUploadEnabled(false);
-        }
-        return;
-      }
-
+      const data = await window.apiFetch(`/companies/${companyId}/cases/${caseId}/documents`);
       caseDocuments = data?.documents || [];
       renderDocuments(caseDocuments);
       renderExtractionDocumentOptions(caseDocuments);
       setMessage(documentsMessage, '');
     } catch (error) {
-      setMessage(documentsMessage, 'Error de red cargando documentos.', true);
+      renderDocuments([]);
+      handleError(error, 'No se pudieron cargar los documentos.', documentsMessage);
+      if (error?.status === 403) {
+        setUploadEnabled(false);
+      }
     }
   };
 
   const loadUploadPermissions = async () => {
-    const headers = apiHeaders();
-    if (!headers) {
-      setUploadEnabled(false);
-      return;
-    }
-
     try {
-      const response = await fetch('/rbac/me/permissions', { headers });
-      const data = await response.json();
-      if (!response.ok) {
-        setUploadEnabled(false);
-        return;
-      }
-
-      const canUpload = Array.isArray(data.permissions) && data.permissions.includes('document.upload');
+      const data = await window.apiFetch('/rbac/me/permissions');
+      const canUpload = Array.isArray(data?.permissions) && data.permissions.includes('document.upload');
       setUploadEnabled(canUpload);
       if (!canUpload) {
         setMessage(documentUploadMessage, 'No tienes permisos para subir documentos.', true);
       }
     } catch (error) {
+      if (error?.noAccess) {
+        window.showToast('error', 'No tienes acceso');
+      }
       setUploadEnabled(false);
     }
   };
 
   commentForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const headers = apiHeaders();
-
-    if (!headers) {
-      setMessage(commentMessage, 'Debes iniciar sesión para comentar.', true);
-      return;
-    }
 
     const comment = commentForm.elements.comment.value.trim();
     if (!comment) {
@@ -377,36 +257,21 @@
     setMessage(commentMessage, 'Guardando comentario…');
 
     try {
-      const response = await fetch(`/companies/${companyId}/cases/${caseId}/events/comment`, {
+      await window.apiFetch(`/companies/${companyId}/cases/${caseId}/events/comment`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ comment }),
+        body: { comment },
       });
-
-      if (!response.ok) {
-        if (response.status === 403 || response.status === 404) {
-          showToast('No tienes permisos para comentar este case.');
-        }
-        setMessage(commentMessage, 'No se pudo publicar el comentario.', true);
-        return;
-      }
 
       commentForm.reset();
       setMessage(commentMessage, 'Comentario añadido.', false, true);
       loadCaseEvents();
     } catch (error) {
-      setMessage(commentMessage, 'Error de red al guardar comentario.', true);
+      handleError(error, 'No se pudo publicar el comentario.', commentMessage);
     }
   });
 
   documentUploadForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
-
-    const headers = apiAuthHeaders();
-    if (!headers) {
-      setMessage(documentUploadMessage, 'Debes iniciar sesión para subir documentos.', true);
-      return;
-    }
 
     const fileInput = documentUploadForm.elements.file;
     const file = fileInput?.files?.[0];
@@ -427,23 +292,16 @@
     setMessage(documentUploadMessage, 'Subiendo documento…');
 
     try {
-      const response = await fetch(`/companies/${companyId}/cases/${caseId}/documents`, {
+      await window.apiFetch(`/companies/${companyId}/cases/${caseId}/documents`, {
         method: 'POST',
-        headers,
-        body: formData,
+        formData,
       });
-
-      if (!response.ok) {
-        showPermissionToastIfNeeded(response.status);
-        setMessage(documentUploadMessage, 'No se pudo subir el documento.', true);
-        return;
-      }
 
       documentUploadForm.reset();
       setMessage(documentUploadMessage, 'Documento subido correctamente.', false, true);
       await loadCaseDocuments();
     } catch (error) {
-      setMessage(documentUploadMessage, 'Error de red al subir documento.', true);
+      handleError(error, 'No se pudo subir el documento.', documentUploadMessage);
     }
   });
 
@@ -455,12 +313,6 @@
     const documentId = selectedDocumentId();
     if (!documentId) {
       setMessage(extractionManualMessage, 'Selecciona primero un documento.', true);
-      return;
-    }
-
-    const headers = apiHeaders();
-    if (!headers) {
-      setMessage(extractionManualMessage, 'Debes iniciar sesión para registrar extracción manual.', true);
       return;
     }
 
@@ -481,25 +333,17 @@
     setMessage(extractionManualMessage, 'Registrando extracción…');
 
     try {
-      const response = await fetch(`/documents/${documentId}/extractions`, {
+      const data = await window.apiFetch(`/documents/${documentId}/extractions`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
+        body: payload,
       });
-
-      const data = await response.json();
-      if (!response.ok) {
-        showPermissionToastIfNeeded(response.status);
-        setMessage(extractionManualMessage, data.message || 'No se pudo registrar la extracción.', true);
-        return;
-      }
 
       setMessage(extractionManualMessage, 'Extracción registrada correctamente.', false, true);
       extractionManualForm.reset();
-      renderLatestExtraction(data.extraction?.extracted_json || {});
+      renderLatestExtraction(data?.extraction?.extracted_json || {});
       setMessage(extractionLatestMessage, 'Última extracción cargada.', false, true);
     } catch (error) {
-      setMessage(extractionManualMessage, 'Error de red registrando extracción.', true);
+      handleError(error, 'No se pudo registrar la extracción.', extractionManualMessage);
     }
   });
 

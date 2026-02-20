@@ -12,12 +12,6 @@
     message.classList.toggle('is-error', isError);
   };
 
-  const token = localStorage.getItem('gestium_access_token');
-  if (!token) {
-    setMessage('Debes iniciar sesión para consultar empleados.', true);
-    return;
-  }
-
   const renderEmployees = (employees) => {
     tbody.innerHTML = '';
 
@@ -41,20 +35,14 @@
   const loadEmployees = async () => {
     setMessage('Cargando empleados…');
     try {
-      const response = await fetch(`/companies/${companyId}/employees`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage('No se pudieron cargar los empleados.', true);
-        return;
-      }
-
-      renderEmployees(data.employees || []);
+      const data = await window.apiFetch(`/companies/${companyId}/employees`);
+      renderEmployees(data?.employees || []);
       setMessage('');
     } catch (error) {
-      setMessage('Error de red al consultar empleados.', true);
+      if (error?.noAccess) {
+        window.showToast('error', 'No tienes acceso');
+      }
+      setMessage(error?.data?.message || 'No se pudieron cargar los empleados.', true);
     }
   };
 

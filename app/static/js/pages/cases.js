@@ -15,12 +15,6 @@
     el.classList.toggle('is-success', isSuccess);
   };
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('gestium_access_token');
-    if (!token) return null;
-    return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-  };
-
   const statusClass = (status) => {
     if (status === 'done') return 'ff-tag--success';
     if (status === 'cancelled') return 'ff-tag--danger';
@@ -50,36 +44,21 @@
   };
 
   const loadCases = async () => {
-    const headers = getAuthHeaders();
-    if (!headers) {
-      setMessage(message, 'Debes iniciar sesión para consultar cases.', true);
-      return;
-    }
-
     setMessage(message, 'Cargando cases…');
     try {
-      const response = await fetch(`/companies/${companyId}/cases`, { headers });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(message, 'No se pudieron cargar los cases.', true);
-        return;
-      }
-
-      renderCases(data.cases || []);
+      const data = await window.apiFetch(`/companies/${companyId}/cases`);
+      renderCases(data?.cases || []);
       setMessage(message, '');
     } catch (error) {
-      setMessage(message, 'Error de red al consultar cases.', true);
+      if (error?.noAccess) {
+        window.showToast('error', 'No tienes acceso');
+      }
+      setMessage(message, error?.data?.message || 'No se pudieron cargar los cases.', true);
     }
   };
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const headers = getAuthHeaders();
-    if (!headers) {
-      setMessage(createMessage, 'Debes iniciar sesión para crear cases.', true);
-      return;
-    }
 
     const payload = {
       title: form.elements.title.value.trim(),
@@ -95,22 +74,19 @@
 
     setMessage(createMessage, 'Creando case…');
     try {
-      const response = await fetch(`/companies/${companyId}/cases`, {
+      await window.apiFetch(`/companies/${companyId}/cases`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
+        body: payload,
       });
-
-      if (!response.ok) {
-        setMessage(createMessage, 'No tienes permisos o faltan datos para crear el case.', true);
-        return;
-      }
 
       form.reset();
       setMessage(createMessage, 'Case creado correctamente.', false, true);
       loadCases();
     } catch (error) {
-      setMessage(createMessage, 'Error de red al crear el case.', true);
+      if (error?.noAccess) {
+        window.showToast('error', 'No tienes acceso');
+      }
+      setMessage(createMessage, error?.data?.message || 'No tienes permisos o faltan datos para crear el case.', true);
     }
   });
 
