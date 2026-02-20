@@ -105,10 +105,11 @@
       renderCases(data?.cases || []);
       setMessage(message, '');
     } catch (error) {
-      if (error?.noAccess) {
-        window.showToast('error', 'No tienes acceso');
-      }
-      setMessage(message, error?.data?.message || 'No se pudieron cargar los cases.', true);
+      window.handleApiError(error, {
+        defaultMessage: 'No se pudieron cargar los cases.',
+        onNoAccess: () => { window.location.href = '/app/companies'; },
+      });
+      setMessage(message, 'No se pudieron cargar los cases.', true);
     }
   };
 
@@ -138,10 +139,8 @@
       setMessage(createMessage, 'Case creado correctamente.', false, true);
       loadCases();
     } catch (error) {
-      if (error?.noAccess) {
-        window.showToast('error', 'No tienes acceso');
-      }
-      setMessage(createMessage, error?.data?.message || 'No tienes permisos o faltan datos para crear el case.', true);
+      window.handleApiError(error, { defaultMessage: 'No se ha podido guardar' });
+      setMessage(createMessage, 'No se ha podido guardar.', true);
     }
   });
 

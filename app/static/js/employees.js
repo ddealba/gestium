@@ -39,10 +39,8 @@
       renderEmployees(data?.employees || []);
       setMessage('');
     } catch (error) {
-      if (error?.noAccess) {
-        window.showToast('error', 'No tienes acceso');
-      }
-      setMessage(error?.data?.message || 'No se pudieron cargar los empleados.', true);
+      window.handleApiError(error, { defaultMessage: 'No se pudieron cargar los empleados.' });
+      setMessage('No se pudieron cargar los empleados.', true);
     }
   };
 

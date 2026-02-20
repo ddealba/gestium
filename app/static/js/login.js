@@ -29,8 +29,8 @@
       setMessage('Login correcto. Redirigiendo…');
       window.location.href = '/app/companies';
     } catch (error) {
-      const backendMessage = error?.data?.message;
-      setMessage(backendMessage || 'Error de conexión con el servidor.', true);
+      window.handleApiError(error, { defaultMessage: 'No se pudo iniciar sesión.' });
+      setMessage(window.extractErrorMessage(error) || 'No se pudo iniciar sesión.', true);
     }
   });
 })();
