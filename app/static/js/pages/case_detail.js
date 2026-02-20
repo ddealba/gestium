@@ -31,12 +31,10 @@
     el.classList.toggle('is-success', isSuccess);
   };
 
-  const handleError = (error, fallbackMessage, el) => {
-    if (error?.noAccess) {
-      window.showToast('error', 'No tienes acceso');
-    }
+  const handleError = (error, fallbackMessage, el, options = {}) => {
+    window.handleApiError(error, { defaultMessage: fallbackMessage, ...options });
     if (el) {
-      setMessage(el, error?.data?.message || fallbackMessage, true);
+      setMessage(el, fallbackMessage, true);
     }
   };
 
@@ -205,9 +203,7 @@
         setMessage(extractionManualMessage, '');
       }
     } catch (error) {
-      if (error?.noAccess) {
-        window.showToast('error', 'No tienes acceso');
-      }
+      window.handleApiError(error, { defaultMessage: 'No se pudieron cargar los permisos.' });
       setManualExtractionEnabled(false);
     }
   };
@@ -223,7 +219,7 @@
     } catch (error) {
       renderDocuments([]);
       handleError(error, 'No se pudieron cargar los documentos.', documentsMessage);
-      if (error?.status === 403) {
+      if (error?.noAccess) {
         setUploadEnabled(false);
       }
     }
@@ -238,9 +234,7 @@
         setMessage(documentUploadMessage, 'No tienes permisos para subir documentos.', true);
       }
     } catch (error) {
-      if (error?.noAccess) {
-        window.showToast('error', 'No tienes acceso');
-      }
+      window.handleApiError(error, { defaultMessage: 'No se pudieron cargar los permisos.' });
       setUploadEnabled(false);
     }
   };

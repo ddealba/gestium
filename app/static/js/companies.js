@@ -41,10 +41,8 @@
       renderCompanies(data?.companies || []);
       setMessage('');
     } catch (error) {
-      if (error?.noAccess) {
-        window.showToast('error', 'No tienes acceso');
-      }
-      setMessage(error?.data?.message || 'No se pudieron cargar las empresas.', true);
+      window.handleApiError(error, { defaultMessage: 'No se pudieron cargar las empresas.' });
+      setMessage('No se pudieron cargar las empresas.', true);
     }
   };
 

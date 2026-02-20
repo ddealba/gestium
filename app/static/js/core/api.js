@@ -100,24 +100,15 @@
     if (response.status === 401) {
       clearToken();
       window.location.href = '/app/login';
-      const error = new Error('No autorizado');
-      error.status = 401;
-      error.data = data;
-      throw error;
-    }
-
-    if (response.status === 403 || response.status === 404) {
-      const error = new Error('No tienes acceso');
-      error.status = response.status;
-      error.data = data;
-      error.noAccess = true;
-      throw error;
     }
 
     if (response.status >= 400) {
-      const error = new Error('Error de API');
+      const backendMessage = data?.error?.message || data?.message;
+      const error = new Error(backendMessage || 'API error');
       error.status = response.status;
       error.data = data;
+      error.noAccess = response.status === 403 || response.status === 404;
+      error.message = backendMessage || error.message;
       throw error;
     }
 
