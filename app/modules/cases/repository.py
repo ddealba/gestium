@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from werkzeug.exceptions import BadRequest
 from sqlalchemy import or_
 
 from app.extensions import db
 from app.models.case import Case
 from app.models.case_event import CaseEvent
+
+VALID_SORT_FIELDS = {"due_date", "created_at", "status", "title"}
+VALID_ORDERS = {"asc", "desc"}
 
 
 class CaseRepository:
@@ -33,6 +37,8 @@ class CaseRepository:
         client_id: str,
         status: str | None = None,
         q: str | None = None,
+        sort: str | None = None,
+        order: str | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Case]:
@@ -55,8 +61,20 @@ class CaseRepository:
                     )
                 )
 
+        sort_value = sort or "created_at"
+        if sort_value not in VALID_SORT_FIELDS:
+            raise BadRequest("invalid_sort")
+
+        order_value = order or "desc"
+        if order_value not in VALID_ORDERS:
+            raise BadRequest("invalid_order")
+
+        sort_column = getattr(Case, sort_value)
+        direction = sort_column.asc() if order_value == "asc" else sort_column.desc()
+        fallback_direction = Case.created_at.asc() if order_value == "asc" else Case.created_at.desc()
+
         return (
-            query.order_by(Case.created_at.desc())
+            query.order_by(direction, fallback_direction)
             .limit(max(limit, 1))
             .offset(max(offset, 0))
             .all()
