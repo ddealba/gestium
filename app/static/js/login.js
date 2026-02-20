@@ -15,34 +15,22 @@
     setMessage('Validando credenciales…');
 
     const formData = new FormData(form);
-    const payload = {
-      email: String(formData.get('email') || '').trim(),
-      password: String(formData.get('password') || ''),
-    };
-
+    const email = String(formData.get('email') || '').trim();
+    const password = String(formData.get('password') || '');
     const clientId = String(formData.get('client_id') || '').trim();
-    if (clientId) {
-      payload.client_id = clientId;
-    }
 
     try {
-      const response = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-
-      if (!response.ok || !data.access_token) {
-        setMessage('No se pudo iniciar sesión. Revisa tus credenciales.', true);
+      const data = await window.auth.login(email, password, clientId || null);
+      if (!data?.access_token) {
+        setMessage(data?.message || 'No se pudo iniciar sesión. Revisa tus credenciales.', true);
         return;
       }
 
-      localStorage.setItem('gestium_access_token', data.access_token);
       setMessage('Login correcto. Redirigiendo…');
-      window.location.assign('/app/companies');
+      window.location.href = '/app/companies';
     } catch (error) {
-      setMessage('Error de conexión con el servidor.', true);
+      const backendMessage = error?.data?.message;
+      setMessage(backendMessage || 'Error de conexión con el servidor.', true);
     }
   });
 })();
