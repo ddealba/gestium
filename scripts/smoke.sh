@@ -2,8 +2,6 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://api:5000}"
-CLIENT_A_ID="${CLIENT_A_ID:-1a8b9d30-7c7c-4c05-9e1c-2c7a7a96c1a1}"
-CLIENT_B_ID="${CLIENT_B_ID:-2b9c0e41-8d8d-4d16-af2d-3d8b8bb7d2b2}"
 ADMIN_A_EMAIL="${ADMIN_A_EMAIL:-adminA@test.com}"
 ADMIN_A_PASSWORD="${ADMIN_A_PASSWORD:-Passw0rd!}"
 VIEWER_A_EMAIL="${VIEWER_A_EMAIL:-viewerA@test.com}"
@@ -25,10 +23,11 @@ request() {
   local url="$2"
   local data="${3:-}"
   local auth_header="${4:-}"
+  local content_type="${5:-application/json}"
 
   local response
   if [[ -n "$data" ]]; then
-    response=$(curl -sS -X "$method" -H "Content-Type: application/json" ${auth_header:+-H "$auth_header"} -d "$data" "$url" -w "\n%{http_code}")
+    response=$(curl -sS -X "$method" -H "Content-Type: $content_type" ${auth_header:+-H "$auth_header"} -d "$data" "$url" -w "\n%{http_code}")
   else
     response=$(curl -sS -X "$method" ${auth_header:+-H "$auth_header"} "$url" -w "\n%{http_code}")
   fi
@@ -64,10 +63,9 @@ PY
 
 login() {
   local email="$1"
-  local client_id="$2"
-  local password="$3"
+  local password="$2"
   local payload
-  payload=$(printf '{"email":"%s","password":"%s","client_id":"%s"}' "$email" "$password" "$client_id")
+  payload=$(printf '{"email":"%s","password":"%s"}' "$email" "$password")
   local result
   result=$(request "POST" "$BASE_URL/auth/login" "$payload")
   local status body
@@ -75,6 +73,17 @@ login() {
   body="${result#*$'\n'}"
   assert_status 200 "$status" "Login $email"
   echo "$body" | json_get 'data["access_token"]'
+}
+
+get_auth_me() {
+  local token="$1"
+  local result
+  result=$(request "GET" "$BASE_URL/auth/me" "" "Authorization: Bearer $token")
+  local status body
+  status="${result%%$'\n'*}"
+  body="${result#*$'\n'}"
+  assert_status 200 "$status" "GET /auth/me"
+  echo "$body"
 }
 
 get_companies() {
@@ -88,11 +97,54 @@ get_companies() {
   echo "$body"
 }
 
+list_cases() {
+  local token="$1"
+  local company_id="$2"
+  local result
+  result=$(request "GET" "$BASE_URL/companies/$company_id/cases" "" "Authorization: Bearer $token")
+  local status body
+  status="${result%%$'\n'*}"
+  body="${result#*$'\n'}"
+  assert_status 200 "$status" "GET /companies/$company_id/cases"
+  echo "$body"
+}
+
+create_case() {
+  local token="$1"
+  local company_id="$2"
+  local payload
+  payload=$(printf '{"type":"labor","title":"Smoke case %s"}' "$(date +%s)")
+  local result
+  result=$(request "POST" "$BASE_URL/companies/$company_id/cases" "$payload" "Authorization: Bearer $token")
+  local status body
+  status="${result%%$'\n'*}"
+  body="${result#*$'\n'}"
+  assert_status 201 "$status" "POST /companies/$company_id/cases"
+  echo "$body"
+}
+
+list_documents() {
+  local token="$1"
+  local company_id="$2"
+  local case_id="$3"
+  local result
+  result=$(request "GET" "$BASE_URL/companies/$company_id/cases/$case_id/documents" "" "Authorization: Bearer $token")
+  local status body
+  status="${result%%$'\n'*}"
+  body="${result#*$'\n'}"
+  assert_status 200 "$status" "GET /companies/$company_id/cases/$case_id/documents"
+  echo "$body"
+}
+
 health_result=$(request "GET" "$BASE_URL/health")
 health_status="${health_result%%$'\n'*}"
 assert_status 200 "$health_status" "GET /health"
 
-admin_a_token=$(login "$ADMIN_A_EMAIL" "$CLIENT_A_ID" "$ADMIN_A_PASSWORD")
+admin_a_token=$(login "$ADMIN_A_EMAIL" "$ADMIN_A_PASSWORD")
+admin_a_me=$(get_auth_me "$admin_a_token")
+CLIENT_ID=$(echo "$admin_a_me" | json_get 'data["client_id"]')
+ok "Resolved client_id from /auth/me: $CLIENT_ID"
+
 companies_admin_a=$(get_companies "$admin_a_token")
 
 company_names=$(echo "$companies_admin_a" | json_get '[c["name"] for c in data["companies"]]')
@@ -104,9 +156,24 @@ if ! echo "$company_names" | grep -q "A2"; then
 fi
 ok "AdminA sees A1 and A2"
 
-A1_ID=$(echo "$companies_admin_a" | json_get 'next(c["id"] for c in data["companies"] if c["tax_id"] == "A1" or c["name"] == "A1")')
+A1_ID=$(echo "$companies_admin_a" | json_get 'next((c["id"] for c in data["companies"] if c.get("tax_id") == "A1"), data["companies"][0]["id"])')
+ok "Using company_id: $A1_ID"
 
-viewer_a_token=$(login "$VIEWER_A_EMAIL" "$CLIENT_A_ID" "$VIEWER_A_PASSWORD")
+cases_admin_a=$(list_cases "$admin_a_token" "$A1_ID")
+case_count=$(echo "$cases_admin_a" | json_get 'len(data.get("cases", []))')
+if [[ "$case_count" -gt 0 ]]; then
+  CASE_ID=$(echo "$cases_admin_a" | json_get 'data["cases"][0]["id"]')
+  ok "Using existing case_id: $CASE_ID"
+else
+  created_case=$(create_case "$admin_a_token" "$A1_ID")
+  CASE_ID=$(echo "$created_case" | json_get 'data["case"]["id"]')
+  ok "Created case_id: $CASE_ID"
+fi
+
+list_documents "$admin_a_token" "$A1_ID" "$CASE_ID" >/dev/null
+ok "Document listing is reachable for discovered company/case"
+
+viewer_a_token=$(login "$VIEWER_A_EMAIL" "$VIEWER_A_PASSWORD")
 companies_viewer_a=$(get_companies "$viewer_a_token")
 
 viewer_only_a1=$(echo "$companies_viewer_a" | python - <<'PY'
@@ -124,7 +191,7 @@ if [[ "$viewer_only_a1" != "true" ]]; then
 fi
 ok "ViewerA sees only A1"
 
-admin_b_token=$(login "$ADMIN_B_EMAIL" "$CLIENT_B_ID" "$ADMIN_B_PASSWORD")
+admin_b_token=$(login "$ADMIN_B_EMAIL" "$ADMIN_B_PASSWORD")
 company_a1_result=$(request "GET" "$BASE_URL/companies/$A1_ID" "" "Authorization: Bearer $admin_b_token")
 company_a1_status="${company_a1_result%%$'\n'*}"
 if [[ "$company_a1_status" != "404" ]]; then

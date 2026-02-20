@@ -36,7 +36,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"{{adminA_email}}\",\n  \"password\": \"{{adminA_password}}\",\n  \"client_id\": \"{{client_a_id}}\"\n}"
+          "raw": "{\n  \"email\": \"{{adminA_email}}\",\n  \"password\": \"{{adminA_password}}\"\n}"
         },
         "url": "{{base_url}}/auth/login"
       },
@@ -49,9 +49,39 @@
               "  pm.response.to.have.status(200);",
               "});",
               "var jsonData = pm.response.json();",
-              "pm.environment.set('token_adminA', jsonData.access_token);",
+              "pm.environment.set('token_adminA', (jsonData.data && jsonData.data.access_token) || jsonData.access_token);",
               "pm.test('token stored', function () {",
               "  pm.expect(pm.environment.get('token_adminA')).to.be.ok;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth me adminA",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_adminA}}"
+          }
+        ],
+        "url": "{{base_url}}/auth/me"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "pm.environment.set('client_id', (jsonData.data && jsonData.data.client_id) || jsonData.client_id);",
+              "pm.test('client_id stored', function () {",
+              "  pm.expect(pm.environment.get('client_id')).to.be.ok;",
               "});"
             ]
           }
@@ -107,7 +137,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"{{viewerA_email}}\",\n  \"password\": \"{{viewerA_password}}\",\n  \"client_id\": \"{{client_a_id}}\"\n}"
+          "raw": "{\n  \"email\": \"{{viewerA_email}}\",\n  \"password\": \"{{viewerA_password}}\"\n}"
         },
         "url": "{{base_url}}/auth/login"
       },
@@ -120,7 +150,7 @@
               "  pm.response.to.have.status(200);",
               "});",
               "var jsonData = pm.response.json();",
-              "pm.environment.set('token_viewerA', jsonData.access_token);",
+              "pm.environment.set('token_viewerA', (jsonData.data && jsonData.data.access_token) || jsonData.access_token);",
               "pm.test('token stored', function () {",
               "  pm.expect(pm.environment.get('token_viewerA')).to.be.ok;",
               "});"
@@ -171,7 +201,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"{{adminB_email}}\",\n  \"password\": \"{{adminB_password}}\",\n  \"client_id\": \"{{client_b_id}}\"\n}"
+          "raw": "{\n  \"email\": \"{{adminB_email}}\",\n  \"password\": \"{{adminB_password}}\"\n}"
         },
         "url": "{{base_url}}/auth/login"
       },
@@ -184,7 +214,7 @@
               "  pm.response.to.have.status(200);",
               "});",
               "var jsonData = pm.response.json();",
-              "pm.environment.set('token_adminB', jsonData.access_token);",
+              "pm.environment.set('token_adminB', (jsonData.data && jsonData.data.access_token) || jsonData.access_token);",
               "pm.test('token stored', function () {",
               "  pm.expect(pm.environment.get('token_adminB')).to.be.ok;",
               "});"
