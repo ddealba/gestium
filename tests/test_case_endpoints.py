@@ -190,3 +190,74 @@ def test_create_case_invalid_payload_returns_400(client, db_session):
 
     assert response.status_code == 400
     assert response.get_json()["message"] == "type_required"
+
+
+def test_list_cases_filters_by_status_and_sorts_by_due_date(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id)
+    company = create_company(db_session, tenant.id, "Alpha", "A-123")
+    seed_rbac()
+
+    assign_role(db_session, user, "Admin Cliente")
+    assign_access(db_session, user, company, "admin")
+
+    response_a = client.post(
+        f"/companies/{company.id}/cases",
+        headers=auth_header_for(user),
+        json={"type": "laboral", "title": "Case A", "due_date": "2026-01-20"},
+    )
+    response_b = client.post(
+        f"/companies/{company.id}/cases",
+        headers=auth_header_for(user),
+        json={"type": "laboral", "title": "Case B", "due_date": "2026-01-10"},
+    )
+
+    case_a_id = response_a.get_json()["case"]["id"]
+    case_b_id = response_b.get_json()["case"]["id"]
+
+    client.post(
+        f"/companies/{company.id}/cases/{case_b_id}/status",
+        headers=auth_header_for(user),
+        json={"status": "in_progress"},
+    )
+
+    sorted_response = client.get(
+        f"/companies/{company.id}/cases?sort=due_date&order=asc",
+        headers=auth_header_for(user),
+    )
+    assert sorted_response.status_code == 200
+    sorted_ids = [item["id"] for item in sorted_response.get_json()["cases"]]
+    assert sorted_ids[:2] == [case_b_id, case_a_id]
+
+    status_response = client.get(
+        f"/companies/{company.id}/cases?status=in_progress&sort=due_date&order=asc",
+        headers=auth_header_for(user),
+    )
+    assert status_response.status_code == 200
+    filtered_cases = status_response.get_json()["cases"]
+    assert len(filtered_cases) == 1
+    assert filtered_cases[0]["id"] == case_b_id
+
+
+def test_list_cases_invalid_sort_or_order_returns_400(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id)
+    company = create_company(db_session, tenant.id, "Alpha", "A-123")
+    seed_rbac()
+
+    assign_role(db_session, user, "Admin Cliente")
+    assign_access(db_session, user, company, "admin")
+
+    invalid_sort_response = client.get(
+        f"/companies/{company.id}/cases?sort=priority",
+        headers=auth_header_for(user),
+    )
+    assert invalid_sort_response.status_code == 400
+    assert invalid_sort_response.get_json()["message"] == "invalid_sort"
+
+    invalid_order_response = client.get(
+        f"/companies/{company.id}/cases?order=up",
+        headers=auth_header_for(user),
+    )
+    assert invalid_order_response.status_code == 400
+    assert invalid_order_response.get_json()["message"] == "invalid_order"

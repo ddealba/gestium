@@ -34,6 +34,8 @@ class CaseService:
         user_id: str,
         status: str | None = None,
         q: str | None = None,
+        sort: str | None = None,
+        order: str | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Case]:
@@ -44,6 +46,8 @@ class CaseService:
             client_id=client_id,
             status=status,
             q=q,
+            sort=sort,
+            order=order,
             limit=limit,
             offset=offset,
         )

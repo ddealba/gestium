@@ -46,6 +46,8 @@ def list_cases(company_id: str):
         company_id=company_id,
         user_id=str(g.user.id),
         status=request.args.get("status"),
+        sort=request.args.get("sort"),
+        order=request.args.get("order"),
         q=request.args.get("q"),
         limit=_parse_int_arg("limit", 50),
         offset=_parse_int_arg("offset", 0),

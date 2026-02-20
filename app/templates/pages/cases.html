@@ -15,6 +15,32 @@
       </div>
       <div class="ff-card__body">
         <p id="cases-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-filters" id="cases-filters">
+          <div>
+            <label class="ff-label" for="filter-status">Status</label>
+            <select id="filter-status" class="ff-input">
+              <option value="all">All</option>
+              <option value="open">Open</option>
+              <option value="in_progress">In progress</option>
+              <option value="waiting">Waiting</option>
+              <option value="done">Done</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label class="ff-label" for="filter-order">Order</label>
+            <select id="filter-order" class="ff-input">
+              <option value="due_date:asc">Due date ↑</option>
+              <option value="due_date:desc">Due date ↓</option>
+              <option value="created_at:asc">Created ↑</option>
+              <option value="created_at:desc">Created ↓</option>
+            </select>
+          </div>
+          <div class="ff-filters__actions">
+            <button id="apply-filters" class="ff-btn ff-btn--primary" type="button">Apply</button>
+            <button id="clear-filters" class="ff-btn ff-btn--ghost" type="button">Clear filters</button>
+          </div>
+        </div>
         <div class="ff-table-wrap">
           <table class="ff-table" id="cases-table" data-company-id="{{ company_id }}">
             <thead>

@@ -99,3 +99,21 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+.ff-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.ff-filters__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ff-row-overdue {
+  background: rgba(255, 90, 122, 0.08);
+}
