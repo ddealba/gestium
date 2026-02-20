@@ -1,16 +1,29 @@
 # gestium
 
-## Smoke test (curl)
-
-Script de validación rápida sin Postman ni dependencias extra (solo bash + python).
+## Quickstart (Docker)
 
 ```bash
-BASE_URL=http://localhost:5000 \
-CLIENT_A_ID=<uuid-tenant-a> \
-CLIENT_B_ID=<uuid-tenant-b> \
-bash scripts/smoke.sh
+docker compose up --build
 ```
 
-Notas:
-- `BASE_URL` es opcional (default: `http://localhost:5000`).
-- `CLIENT_A_ID` y `CLIENT_B_ID` deben ser los UUIDs de los tenants seeded "Tenant A" y "Tenant B".
+Con la stack arriba:
+
+- UI: `http://localhost:5000/app/login`
+- Credenciales smoke:
+  - `adminA@test.com` / `Passw0rd!`
+  - `viewerA@test.com` / `Passw0rd!`
+  - `adminB@test.com` / `Passw0rd!`
+
+## API smoke
+
+Ejecuta el smoke desde el contenedor `api` sin configurar variables manuales:
+
+```bash
+docker compose exec api bash scripts/smoke.sh
+```
+
+Opcional: para correrlo contra otro host, define `BASE_URL`.
+
+```bash
+BASE_URL=http://localhost:5000 bash scripts/smoke.sh
+```
