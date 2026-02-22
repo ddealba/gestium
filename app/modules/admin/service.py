@@ -9,7 +9,9 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 from app.models.role import Role
 from app.models.user import User
+from app.modules.companies.repository import CompanyRepository
 from app.repositories.role_repository import RoleRepository
+from app.repositories.user_company_access_repository import UserCompanyAccessRepository
 from app.repositories.user_repository import UserRepository
 from app.services.invitation_service import InvitationResult, InvitationService
 
@@ -30,12 +32,16 @@ class TenantAdminService:
         user_repository: UserRepository | None = None,
         role_repository: RoleRepository | None = None,
         invitation_service: InvitationService | None = None,
+        company_repository: CompanyRepository | None = None,
+        access_repository: UserCompanyAccessRepository | None = None,
     ) -> None:
         self.user_repository = user_repository or UserRepository()
         self.role_repository = role_repository or RoleRepository()
         self.invitation_service = invitation_service or InvitationService(
             user_repository=self.user_repository,
         )
+        self.company_repository = company_repository or CompanyRepository()
+        self.access_repository = access_repository or UserCompanyAccessRepository()
 
     def list_users(self, client_id: str, page: int | None, per_page: int | None) -> PaginatedUsers:
         query = self.user_repository.session.query(User).filter(User.client_id == client_id)
@@ -110,6 +116,46 @@ class TenantAdminService:
             .order_by(Role.scope.asc(), Role.name.asc())
             .all()
         )
+
+    def list_company_accesses(self, client_id: str, company_id: str) -> list[dict]:
+        company = self.company_repository.get_by_id(company_id, client_id)
+        if company is None:
+            raise NotFound("company_not_found")
+        rows = self.access_repository.list_company_accesses(company_id, client_id)
+        return [
+            {
+                "user_id": access.user_id,
+                "email": email,
+                "access_level": access.access_level,
+                "created_at": access.created_at.isoformat() if access.created_at else None,
+            }
+            for access, email in rows
+        ]
+
+    def upsert_company_access(self, client_id: str, company_id: str, user_id: str, access_level: str) -> dict:
+        company = self.company_repository.get_by_id(company_id, client_id)
+        if company is None:
+            raise NotFound("company_not_found")
+        user = self.user_repository.get_by_id(user_id, client_id)
+        if user is None:
+            raise NotFound("user_not_found")
+        access = self.access_repository.upsert_access(user_id, company_id, client_id, access_level)
+        return {
+            "user_id": access.user_id,
+            "email": user.email,
+            "access_level": access.access_level,
+            "created_at": access.created_at.isoformat() if access.created_at else None,
+        }
+
+    def remove_company_access(self, client_id: str, company_id: str, user_id: str) -> None:
+        company = self.company_repository.get_by_id(company_id, client_id)
+        if company is None:
+            raise NotFound("company_not_found")
+        if self.user_repository.get_by_id(user_id, client_id) is None:
+            raise NotFound("user_not_found")
+        removed = self.access_repository.remove_access(user_id, company_id, client_id)
+        if not removed:
+            raise NotFound("company_access_not_found")
 
     def _get_tenant_user(self, client_id: str, user_id: str) -> User:
         user = self.user_repository.get_by_id(user_id, client_id)
