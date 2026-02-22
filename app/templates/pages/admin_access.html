@@ -3,13 +3,74 @@
 {% block title %}Admin · Accesos por empresa · Gestium{% endblock %}
 
 {% block content %}
-<section class="ff-card">
-  <div class="ff-card__head ff-page-head">
-    <h2>Accesos por empresa</h2>
+<section class="ff-grid">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Accesos por empresa</h2>
+      </div>
+      <div class="ff-card__body ff-form-stack">
+        <p class="ff-muted">Gestiona el ACL por empresa para usuarios del tenant sin tocar base de datos.</p>
+        <label for="admin-access-company-select">
+          Empresa
+          <select id="admin-access-company-select" class="ff-select"></select>
+        </label>
+        <p id="admin-access-message" class="ff-form-message" aria-live="polite"></p>
+      </div>
+    </div>
   </div>
-  <div class="ff-card__body">
-    <p class="ff-muted">Gestión de ACL por empresa para los usuarios del tenant.</p>
-    <p class="ff-form-message" aria-live="polite">Esta vista consumirá los endpoints de <code>/admin/companies/&lt;company_id&gt;/access</code>.</p>
+
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h3>Accesos actuales</h3>
+      </div>
+      <div class="ff-card__body">
+        <div class="ff-table-wrap">
+          <table id="admin-access-table" class="ff-table">
+            <thead>
+              <tr>
+                <th>Usuario (email)</th>
+                <th>Nivel</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h3>Añadir acceso</h3>
+      </div>
+      <div class="ff-card__body">
+        <form id="admin-access-add-form" class="ff-form-stack">
+          <label for="admin-access-user-select">
+            Usuario
+            <select id="admin-access-user-select" class="ff-select" required></select>
+          </label>
+          <label for="admin-access-level-select">
+            Nivel de acceso
+            <select id="admin-access-level-select" class="ff-select" required>
+              <option value="viewer">viewer</option>
+              <option value="operator">operator</option>
+              <option value="manager">manager</option>
+              <option value="admin">admin</option>
+            </select>
+          </label>
+          <button id="admin-access-add-submit" type="submit" class="ff-btn ff-btn--primary">Añadir</button>
+          <p id="admin-access-add-message" class="ff-form-message" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
   </div>
 </section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/admin_access.js', v=ui_version) }}"></script>
 {% endblock %}
