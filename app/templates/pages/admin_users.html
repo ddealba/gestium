@@ -3,13 +3,77 @@
 {% block title %}Admin · Usuarios · Gestium{% endblock %}
 
 {% block content %}
-<section class="ff-card">
-  <div class="ff-card__head ff-page-head">
-    <h2>Administración de usuarios</h2>
+<section class="ff-grid">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Administración de usuarios</h2>
+        <button id="refresh-admin-users" class="ff-btn ff-btn--ghost" type="button">
+          <i class="ph ph-arrows-clockwise"></i>
+          Recargar
+        </button>
+      </div>
+      <div class="ff-card__body">
+        <p id="admin-users-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-table-wrap">
+          <table class="ff-table" id="admin-users-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Roles</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="ff-card__body">
-    <p class="ff-muted">Gestión de usuarios del tenant.</p>
-    <p class="ff-form-message" aria-live="polite">Esta vista consumirá los endpoints de <code>/admin/users</code>.</p>
+
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h3>Invitar usuario</h3>
+      </div>
+      <div class="ff-card__body">
+        <form id="invite-user-form" class="ff-form-stack">
+          <label>
+            Email
+            <input id="invite-email" name="email" type="email" class="ff-input" required placeholder="usuario@empresa.com" />
+          </label>
+          <label>
+            Roles
+            <select id="invite-roles" class="ff-select" multiple size="5"></select>
+          </label>
+          <button id="invite-submit" type="submit" class="ff-btn ff-btn--primary">Invitar</button>
+          <p id="invite-user-message" class="ff-form-message" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
   </div>
 </section>
+
+<div class="ff-modal" id="edit-roles-modal" aria-hidden="true">
+  <div class="ff-modal__backdrop" data-close-modal="true"></div>
+  <div class="ff-card" style="position:relative; z-index:1; width:min(560px, 92vw);">
+    <div class="ff-card__head ff-page-head">
+      <h3>Editar roles</h3>
+      <button type="button" id="close-edit-roles-modal" class="ff-btn ff-btn--ghost">Cerrar</button>
+    </div>
+    <div class="ff-card__body">
+      <p id="edit-roles-user-email" class="ff-muted"></p>
+      <form id="edit-roles-form" class="ff-form-stack">
+        <div id="edit-roles-checklist" class="ff-form-stack"></div>
+        <button id="save-roles-button" type="submit" class="ff-btn ff-btn--primary">Guardar</button>
+        <p id="edit-roles-message" class="ff-form-message" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/admin_users.js', v=ui_version) }}"></script>
 {% endblock %}
