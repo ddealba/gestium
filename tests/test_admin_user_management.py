@@ -109,6 +109,21 @@ def test_normal_user_cannot_manage_users(client, db_session):
     assert response.get_json()["message"] == "missing_permission"
 
 
+def test_normal_user_cannot_invite_users(client, db_session):
+    tenant = create_client(db_session, "Tenant A")
+    user = create_user(db_session, tenant.id, "user@tenant-a.com", "supersecret")
+    token = login_user(client, user.email, "supersecret", tenant.id)
+
+    response = client.post(
+        "/admin/users/invite",
+        json={"email": "new.user@tenant-a.com"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 403
+    assert response.get_json()["message"] == "missing_permission"
+
+
 def test_cross_tenant_returns_404(client, db_session):
     tenant_a = create_client(db_session, "Tenant A")
     tenant_b = create_client(db_session, "Tenant B")
