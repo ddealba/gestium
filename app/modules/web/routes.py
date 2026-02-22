@@ -35,6 +35,27 @@ def inject_layout_context() -> dict:
                 "active": False,
                 "badge": None,
             },
+            {
+                "page_id": "admin",
+                "label": "Admin",
+                "icon": "ph-shield-check",
+                "active": False,
+                "badge": None,
+                "children": [
+                    {
+                        "page_id": "admin_users",
+                        "endpoint": "web.app_admin_users",
+                        "label": "Usuarios",
+                        "required_permissions": ["tenant.user.read", "tenant.users.manage"],
+                    },
+                    {
+                        "page_id": "admin_access",
+                        "endpoint": "web.app_admin_access",
+                        "label": "Accesos por empresa",
+                        "required_permissions": ["acl.read", "acl.manage"],
+                    },
+                ],
+            },
         ],
     }
 
@@ -95,3 +116,15 @@ def app_case_detail(company_id: str, case_id: str):
         company_id=company_id,
         case_id=case_id,
     )
+
+
+@bp.get("/app/admin/users")
+def app_admin_users():
+    """Render tenant admin users page."""
+    return render_template("pages/admin_users.html", active_nav="admin_users", page_id="admin_users")
+
+
+@bp.get("/app/admin/access")
+def app_admin_access():
+    """Render tenant admin company access page."""
+    return render_template("pages/admin_access.html", active_nav="admin_access", page_id="admin_access")

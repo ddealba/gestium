@@ -9,15 +9,36 @@
 
   <nav class="ff-nav">
     {% for item in nav_items %}
-      <a class="ff-nav__item {{ 'is-active' if item.active or item.page_id == active_nav else '' }}"
-         data-nav="{{ item.page_id }}"
-         href="{{ url_for(item.endpoint) }}">
-        <span class="ff-nav__icon"><i class="ph {{ item.icon }}"></i></span>
-        {{ item.label }}
-        {% if item.badge %}
-          <span class="ff-badge" style="margin-left:auto;background:var(--ff-warning);">{{ item.badge }}</span>
-        {% endif %}
-      </a>
+      {% if item.children %}
+        <div class="ff-nav__group {{ 'is-active' if item.active or item.page_id == active_nav else '' }}">
+          <div class="ff-nav__item ff-nav__item--group">
+            <span class="ff-nav__icon"><i class="ph {{ item.icon }}"></i></span>
+            {{ item.label }}
+          </div>
+          <div class="ff-nav__subnav">
+            {% for child in item.children %}
+              <a class="ff-nav__subitem {{ 'is-active' if child.page_id == active_nav else '' }}"
+                 data-nav="{{ child.page_id }}"
+                 {% if child.required_permissions %}
+                 data-required-permissions="{{ child.required_permissions|join(',') }}"
+                 {% endif %}
+                 href="{{ url_for(child.endpoint) }}">
+                {{ child.label }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <a class="ff-nav__item {{ 'is-active' if item.active or item.page_id == active_nav else '' }}"
+           data-nav="{{ item.page_id }}"
+           href="{{ url_for(item.endpoint) }}">
+          <span class="ff-nav__icon"><i class="ph {{ item.icon }}"></i></span>
+          {{ item.label }}
+          {% if item.badge %}
+            <span class="ff-badge" style="margin-left:auto;background:var(--ff-warning);">{{ item.badge }}</span>
+          {% endif %}
+        </a>
+      {% endif %}
     {% endfor %}
   </nav>
 </aside>
