@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.extensions import db
+from app.models.user import User
 from app.models.user_company_access import UserCompanyAccess
 
 
@@ -68,3 +69,17 @@ class UserCompanyAccessRepository:
         self.session.delete(access)
         self.session.flush()
         return True
+
+    def list_company_accesses(self, company_id: str, client_id: str) -> list[tuple[UserCompanyAccess, str]]:
+        rows = (
+            self.session.query(UserCompanyAccess, User.email)
+            .join(User, User.id == UserCompanyAccess.user_id)
+            .filter(
+                UserCompanyAccess.company_id == company_id,
+                UserCompanyAccess.client_id == client_id,
+                User.client_id == client_id,
+            )
+            .order_by(User.email.asc())
+            .all()
+        )
+        return [(row[0], row[1]) for row in rows]
