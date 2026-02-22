@@ -19,6 +19,27 @@
   const page=document.body.getAttribute('data-page');
   if(page) qsa(`[data-nav="${page}"]`).forEach(a=>a.classList.add('is-active'));
 
+  // Sidebar permission-aware nav visibility
+  const applyPermissionsToSidebar=(permissions)=>{
+    const set=new Set(permissions||[]);
+    qsa('[data-required-permissions]').forEach(el=>{
+      const raw=el.getAttribute('data-required-permissions')||'';
+      const required=raw.split(',').map(v=>v.trim()).filter(Boolean);
+      if(!required.length) return;
+      const allowed=required.some(code=>set.has(code));
+      if(!allowed) el.remove();
+    });
+    qsa('.ff-nav__group').forEach(group=>{
+      if(!qs('.ff-nav__subitem',group)) group.remove();
+    });
+  };
+
+  if(window.apiFetch){
+    window.apiFetch('/rbac/me/permissions')
+      .then(data=>applyPermissionsToSidebar(data?.permissions||[]))
+      .catch(()=>{});
+  }
+
   // Modal
   qsa('[data-ff="modal-open"]').forEach(btn=>{
     btn.addEventListener('click', ()=>{

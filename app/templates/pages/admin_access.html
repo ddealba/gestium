@@ -1,0 +1,15 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Admin · Accesos por empresa · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head ff-page-head">
+    <h2>Accesos por empresa</h2>
+  </div>
+  <div class="ff-card__body">
+    <p class="ff-muted">Gestión de ACL por empresa para los usuarios del tenant.</p>
+    <p class="ff-form-message" aria-live="polite">Esta vista consumirá los endpoints de <code>/admin/companies/&lt;company_id&gt;/access</code>.</p>
+  </div>
+</section>
+{% endblock %}
