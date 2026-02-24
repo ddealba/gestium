@@ -233,7 +233,7 @@ SMOKE_COMPANY_A2_ID = "4d1e2053-afaf-4f38-c14f-5fadadd9f4d4"
 SMOKE_COMPANY_B1_ID = "5e2f3164-b0b0-5049-d250-60bebeea05e5"
 
 
-def seed_smoke() -> None:
+def seed_smoke() -> dict[str, Client | Company | User]:
     """Seed a deterministic smoke scenario."""
     click.echo("Seeding smoke scenario...")
     client_a = _get_or_create_client("Tenant A", SMOKE_TENANT_A_ID)
@@ -300,17 +300,28 @@ def seed_smoke() -> None:
     click.echo("  viewerA@test.com / Passw0rd!")
     click.echo("  adminB@test.com / Passw0rd!")
 
+    return {
+        "client_a": client_a,
+        "client_b": client_b,
+        "company_a1": company_a1,
+        "company_a2": company_a2,
+        "company_b1": company_b1,
+        "admin_a": admin_a,
+        "viewer_a": viewer_a,
+        "admin_b": admin_b,
+    }
+
 
 def seed_demo() -> None:
     """Seed deterministic data to exercise all major app capabilities."""
     click.echo("Seeding demo scenario...")
-    seed_smoke()
+    smoke_data = seed_smoke()
 
-    client_a = Client.query.filter_by(id=SMOKE_TENANT_A_ID).one()
-    company_a1 = Company.query.filter_by(id=SMOKE_COMPANY_A1_ID).one()
-    company_a2 = Company.query.filter_by(id=SMOKE_COMPANY_A2_ID).one()
-    admin_a = User.query.filter_by(client_id=client_a.id, email="admina@test.com").one()
-    viewer_a = User.query.filter_by(client_id=client_a.id, email="viewera@test.com").one()
+    client_a = smoke_data["client_a"]
+    company_a1 = smoke_data["company_a1"]
+    company_a2 = smoke_data["company_a2"]
+    admin_a = smoke_data["admin_a"]
+    viewer_a = smoke_data["viewer_a"]
 
     _seed_demo_employees(client_a, company_a1, company_a2)
     seeded_cases = _seed_demo_cases(client_a, company_a1, company_a2, admin_a, viewer_a)
