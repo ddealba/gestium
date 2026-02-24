@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date, timedelta
 
 import click
 from flask import Flask, current_app
 
 from app.extensions import db
 from app.common.access_levels import AccessLevel
+from app.models.case import Case
+from app.models.case_event import CaseEvent
 from app.models.client import Client
 from app.models.company import Company
+from app.models.document import Document
+from app.models.document_extraction import DocumentExtraction
+from app.models.employee import Employee
 from app.models.permission import Permission
 from app.models.role import Role
 from app.models.user import User
@@ -108,7 +114,7 @@ def register_cli(app: Flask) -> None:
     @app.cli.command("seed")
     @click.option(
         "--scenario",
-        type=click.Choice(["default", "smoke"], case_sensitive=False),
+        type=click.Choice(["default", "smoke", "demo"], case_sensitive=False),
         default="default",
         show_default=True,
         help="Seed scenario to run.",
@@ -124,6 +130,8 @@ def register_cli(app: Flask) -> None:
         normalized_scenario = scenario.lower()
         if normalized_scenario == "smoke":
             seed_smoke()
+        elif normalized_scenario == "demo":
+            seed_demo()
         else:
             seed_default_client()
             seed_rbac()
@@ -291,6 +299,243 @@ def seed_smoke() -> None:
     click.echo("  adminA@test.com / Passw0rd!")
     click.echo("  viewerA@test.com / Passw0rd!")
     click.echo("  adminB@test.com / Passw0rd!")
+
+
+def seed_demo() -> None:
+    """Seed deterministic data to exercise all major app capabilities."""
+    click.echo("Seeding demo scenario...")
+    seed_smoke()
+
+    client_a = Client.query.filter_by(id=SMOKE_TENANT_A_ID).one()
+    company_a1 = Company.query.filter_by(id=SMOKE_COMPANY_A1_ID).one()
+    company_a2 = Company.query.filter_by(id=SMOKE_COMPANY_A2_ID).one()
+    admin_a = User.query.filter_by(client_id=client_a.id, email="admina@test.com").one()
+    viewer_a = User.query.filter_by(client_id=client_a.id, email="viewera@test.com").one()
+
+    _seed_demo_employees(client_a, company_a1, company_a2)
+    seeded_cases = _seed_demo_cases(client_a, company_a1, company_a2, admin_a, viewer_a)
+    _seed_demo_documents(client_a, admin_a, seeded_cases)
+
+    db.session.commit()
+    click.echo("Demo scenario seeded.")
+
+
+def _seed_demo_employees(client: Client, company_a1: Company, company_a2: Company) -> None:
+    employees = [
+        {
+            "company": company_a1,
+            "full_name": "María Gómez",
+            "employee_ref": "A1-EMP-001",
+            "status": "active",
+            "start_date": date(2021, 5, 10),
+            "end_date": None,
+        },
+        {
+            "company": company_a1,
+            "full_name": "Carlos Pérez",
+            "employee_ref": "A1-EMP-002",
+            "status": "terminated",
+            "start_date": date(2020, 3, 1),
+            "end_date": date(2024, 8, 30),
+        },
+        {
+            "company": company_a2,
+            "full_name": "Lucía Torres",
+            "employee_ref": "A2-EMP-001",
+            "status": "active",
+            "start_date": date(2022, 11, 15),
+            "end_date": None,
+        },
+    ]
+
+    for payload in employees:
+        employee = Employee.query.filter_by(
+            client_id=client.id,
+            company_id=payload["company"].id,
+            employee_ref=payload["employee_ref"],
+        ).first()
+        if employee is None:
+            employee = Employee(
+                client_id=client.id,
+                company_id=payload["company"].id,
+                full_name=payload["full_name"],
+                employee_ref=payload["employee_ref"],
+                status=payload["status"],
+                start_date=payload["start_date"],
+                end_date=payload["end_date"],
+            )
+            db.session.add(employee)
+            click.echo(f"Created employee {payload['employee_ref']}.")
+        else:
+            click.echo(f"Reused employee {payload['employee_ref']}.")
+
+
+def _seed_demo_cases(
+    client: Client,
+    company_a1: Company,
+    company_a2: Company,
+    admin_a: User,
+    viewer_a: User,
+) -> list[Case]:
+    today = date.today()
+    cases = [
+        {
+            "company": company_a1,
+            "type": "laboral",
+            "title": "Revisión de contrato colectivo",
+            "description": "Analizar cláusulas y riesgos para renovación.",
+            "status": "in_progress",
+            "responsible": admin_a,
+            "due_date": today + timedelta(days=15),
+        },
+        {
+            "company": company_a1,
+            "type": "inspección",
+            "title": "Inspección de seguridad e higiene",
+            "description": "Preparar documentación para visita de autoridad.",
+            "status": "waiting",
+            "responsible": viewer_a,
+            "due_date": today + timedelta(days=7),
+        },
+        {
+            "company": company_a2,
+            "type": "nómina",
+            "title": "Ajuste extraordinario de nómina",
+            "description": "Regularización de percepciones variables.",
+            "status": "open",
+            "responsible": admin_a,
+            "due_date": today + timedelta(days=21),
+        },
+    ]
+
+    seeded_cases: list[Case] = []
+    for payload in cases:
+        record = Case.query.filter_by(
+            client_id=client.id,
+            company_id=payload["company"].id,
+            title=payload["title"],
+        ).first()
+        if record is None:
+            record = Case(
+                client_id=client.id,
+                company_id=payload["company"].id,
+                type=payload["type"],
+                title=payload["title"],
+                description=payload["description"],
+                status=payload["status"],
+                responsible_user_id=payload["responsible"].id,
+                due_date=payload["due_date"],
+            )
+            db.session.add(record)
+            db.session.flush()
+            click.echo(f"Created case '{payload['title']}'.")
+        else:
+            click.echo(f"Reused case '{payload['title']}'.")
+        seeded_cases.append(record)
+
+        _upsert_case_event(
+            client_id=client.id,
+            company_id=payload["company"].id,
+            case_id=record.id,
+            actor_user_id=payload["responsible"].id,
+            event_type="assignment",
+            payload={"assigned_to": payload["responsible"].email, "source": "demo-seed"},
+        )
+        _upsert_case_event(
+            client_id=client.id,
+            company_id=payload["company"].id,
+            case_id=record.id,
+            actor_user_id=payload["responsible"].id,
+            event_type="comment",
+            payload={"message": "Caso generado automáticamente para demo."},
+        )
+
+    return seeded_cases
+
+
+def _seed_demo_documents(client: Client, admin_user: User, seeded_cases: list[Case]) -> None:
+    for case_record in seeded_cases:
+        filename = f"{case_record.title.lower().replace(' ', '_')}.pdf"
+        storage_path = f"demo/{client.id}/{case_record.company_id}/{case_record.id}/{filename}"
+        document = Document.query.filter_by(
+            client_id=client.id,
+            case_id=case_record.id,
+            original_filename=filename,
+        ).first()
+        if document is None:
+            document = Document(
+                client_id=client.id,
+                company_id=case_record.company_id,
+                case_id=case_record.id,
+                uploaded_by_user_id=admin_user.id,
+                original_filename=filename,
+                content_type="application/pdf",
+                storage_path=storage_path,
+                size_bytes=248000,
+                doc_type="expediente",
+                status="processed",
+            )
+            db.session.add(document)
+            db.session.flush()
+            click.echo(f"Created document {filename}.")
+        else:
+            click.echo(f"Reused document {filename}.")
+
+        extraction = DocumentExtraction.query.filter_by(
+            client_id=client.id,
+            document_id=document.id,
+            schema_version="v1.demo",
+        ).first()
+        if extraction is None:
+            extraction = DocumentExtraction(
+                client_id=client.id,
+                document_id=document.id,
+                company_id=case_record.company_id,
+                case_id=case_record.id,
+                created_by_user_id=admin_user.id,
+                provider="demo",
+                model_name="seed-generator",
+                schema_version="v1.demo",
+                extracted_json={
+                    "case_title": case_record.title,
+                    "summary": "Extracción simulada para entorno demo.",
+                    "tags": ["demo", case_record.type, case_record.status],
+                },
+                confidence=0.91,
+                status="success",
+            )
+            db.session.add(extraction)
+            click.echo(f"Created extraction for {filename}.")
+        else:
+            click.echo(f"Reused extraction for {filename}.")
+
+
+def _upsert_case_event(
+    client_id: str,
+    company_id: str,
+    case_id: str,
+    actor_user_id: str,
+    event_type: str,
+    payload: dict,
+) -> None:
+    event = CaseEvent.query.filter_by(
+        client_id=client_id,
+        case_id=case_id,
+        event_type=event_type,
+    ).first()
+    if event is None:
+        event = CaseEvent(
+            client_id=client_id,
+            company_id=company_id,
+            case_id=case_id,
+            actor_user_id=actor_user_id,
+            event_type=event_type,
+            payload=payload,
+        )
+        db.session.add(event)
+        click.echo(f"Created case event {event_type} for case {case_id}.")
+    else:
+        click.echo(f"Reused case event {event_type} for case {case_id}.")
 
 
 def _ensure_seed_allowed(allow_production: bool) -> None:
