@@ -12,9 +12,19 @@ from app.common.decorators import auth_required
 from app.common.responses import ok
 from app.extensions import db
 from app.modules.admin.service import TenantAdminService
+from app.modules.audit.audit_service import AuditService
 from app.services.company_access_service import CompanyAccessService
 
 bp = Blueprint("admin", __name__)
+
+
+def _safe_int_arg(name: str, default: int) -> int:
+    value = request.args.get(name, type=int)
+    if value is None:
+        return default
+    if value < 0:
+        raise BadRequest(f"invalid_{name}")
+    return value
 
 
 def _require_any_permission(*permission_codes: str) -> None:
@@ -76,6 +86,15 @@ def invite_user():
         role_ids=payload.get("role_ids"),
         role_names=payload.get("role_names") or payload.get("roles"),
     )
+    invited_user = service.user_repository.get_by_email(result.invitation.email, str(g.client_id))
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="invite_user",
+        entity_type="user",
+        entity_id=invited_user.id if invited_user else result.invitation.id,
+        metadata={"email": result.invitation.email},
+    )
     db.session.commit()
 
     return ok(
@@ -95,6 +114,14 @@ def disable_user(user_id: str):
     _require_any_permission("tenant.user.manage", "tenant.users.manage")
     service = TenantAdminService()
     user = service.disable_user(str(g.client_id), user_id)
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="disable_user",
+        entity_type="user",
+        entity_id=user.id,
+        metadata={"status": user.status},
+    )
     db.session.commit()
     return ok(_serialize_user(user))
 
@@ -105,6 +132,14 @@ def enable_user(user_id: str):
     _require_any_permission("tenant.user.manage", "tenant.users.manage")
     service = TenantAdminService()
     user = service.enable_user(str(g.client_id), user_id)
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="enable_user",
+        entity_type="user",
+        entity_id=user.id,
+        metadata={"status": user.status},
+    )
     db.session.commit()
     return ok(_serialize_user(user))
 
@@ -120,6 +155,14 @@ def replace_user_roles(user_id: str):
         user_id,
         role_ids=payload.get("role_ids"),
         role_names=payload.get("role_names") or payload.get("roles"),
+    )
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="change_roles",
+        entity_type="user",
+        entity_id=user_id,
+        metadata={"roles": [role.name for role in roles]},
     )
     db.session.commit()
     return ok(
@@ -214,6 +257,14 @@ def upsert_company_access(company_id: str):
         required_level=AccessLevel.admin.value,
     )
     item = service.upsert_company_access(str(g.client_id), company_id, user_id, access_level)
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="assign_acl",
+        entity_type="company",
+        entity_id=company_id,
+        metadata={"user_id": user_id, "access_level": access_level},
+    )
     db.session.commit()
     return ok(item, status_code=201)
 
@@ -237,6 +288,14 @@ def patch_company_access(company_id: str, user_id: str):
         required_level=AccessLevel.admin.value,
     )
     item = service.upsert_company_access(str(g.client_id), company_id, user_id, access_level)
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="assign_acl",
+        entity_type="company",
+        entity_id=company_id,
+        metadata={"user_id": user_id, "access_level": access_level},
+    )
     db.session.commit()
     return ok(item)
 
@@ -253,5 +312,46 @@ def delete_company_access(company_id: str, user_id: str):
         required_level=AccessLevel.admin.value,
     )
     service.remove_company_access(str(g.client_id), company_id, user_id)
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="revoke_acl",
+        entity_type="company",
+        entity_id=company_id,
+        metadata={"user_id": user_id},
+    )
     db.session.commit()
     return ok({"deleted": True})
+
+
+@bp.get("/admin/audit")
+@auth_required
+def list_audit_logs():
+    _require_any_permission("tenant.user.read", "tenant.users.manage")
+
+    logs = AuditService().list_actions(
+        client_id=str(g.client_id),
+        entity_type=request.args.get("entity_type"),
+        entity_id=request.args.get("entity_id"),
+        user_id=request.args.get("user_id"),
+        limit=_safe_int_arg("limit", 50),
+        offset=_safe_int_arg("offset", 0),
+    )
+    return ok(
+        {
+            "items": [
+                {
+                    "id": item.id,
+                    "created_at": item.created_at.isoformat() if item.created_at else None,
+                    "client_id": item.client_id,
+                    "actor_user_id": item.actor_user_id,
+                    "actor_email": item.actor_user.email if item.actor_user else None,
+                    "action": item.action,
+                    "entity_type": item.entity_type,
+                    "entity_id": item.entity_id,
+                    "metadata": item.metadata_json or {},
+                }
+                for item in logs
+            ]
+        }
+    )

@@ -8,6 +8,7 @@ from app.models.document import Document
 from app.models.document_extraction import DocumentExtraction
 from app.modules.extractions.repository import DocumentExtractionRepository
 from app.repositories.document_repository import DocumentRepository
+from app.modules.audit.audit_service import AuditService
 from app.services.company_access_service import CompanyAccessService
 
 _VALID_EXTRACTION_STATUS = {"success", "failed", "partial"}
@@ -25,6 +26,7 @@ class DocumentExtractionService:
         self.repository = repository or DocumentExtractionRepository()
         self.document_repository = document_repository or DocumentRepository()
         self.company_access_service = company_access_service or CompanyAccessService()
+        self.audit_service = AuditService()
 
     def create_extraction(
         self,
@@ -65,7 +67,16 @@ class DocumentExtractionService:
             status=normalized_status,
             error_message=(error_message or "").strip() or None,
         )
-        return self.repository.create(extraction)
+        created = self.repository.create(extraction)
+        self.audit_service.log_action(
+            client_id=client_id,
+            actor_user_id=actor_user_id,
+            action="create_extraction",
+            entity_type="extraction",
+            entity_id=created.id,
+            metadata={"document_id": document.id, "status": normalized_status},
+        )
+        return created
 
     def get_document_for_actor(
         self,

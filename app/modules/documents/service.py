@@ -12,6 +12,7 @@ from app.models.document import Document
 from app.modules.cases.repository import CaseEventRepository, CaseRepository
 from app.models.document_extraction import DocumentExtraction
 from app.modules.documents.storage import open_file, save_upload
+from app.modules.audit.audit_service import AuditService
 from app.repositories.document_repository import DocumentRepository
 from app.services.company_access_service import CompanyAccessService
 
@@ -39,6 +40,7 @@ class DocumentModuleService:
         self.case_repository = case_repository or CaseRepository()
         self.event_repository = event_repository or CaseEventRepository()
         self.company_access_service = company_access_service or CompanyAccessService()
+        self.audit_service = AuditService()
 
     def upload_case_document(
         self,
@@ -83,6 +85,15 @@ class DocumentModuleService:
                 event_type="attachment",
                 payload={"document_id": document.id, "filename": original_filename},
             )
+        )
+
+        self.audit_service.log_action(
+            client_id=client_id,
+            actor_user_id=actor_user_id,
+            action="upload_document",
+            entity_type="document",
+            entity_id=document.id,
+            metadata={"case_id": case_id, "company_id": company_id, "filename": original_filename},
         )
 
         if current_app.config.get("AUTO_EXTRACTION_ENABLED", False):
@@ -165,6 +176,14 @@ class DocumentModuleService:
                     "to": normalized_status,
                 },
             )
+        )
+        self.audit_service.log_action(
+            client_id=client_id,
+            actor_user_id=actor_user_id,
+            action="change_document_status",
+            entity_type="document",
+            entity_id=document.id,
+            metadata={"from": previous_status, "to": normalized_status},
         )
         return updated
 
