@@ -25,6 +25,18 @@ def _parse_int_arg(name: str, default: int) -> int:
         raise BadRequest(f"invalid_{name}") from exc
 
 
+def _parse_optional_bool_arg(name: str) -> bool | None:
+    raw_value = request.args.get(name)
+    if raw_value is None:
+        return None
+    normalized = raw_value.strip().lower()
+    if normalized in {"true", "1", "yes"}:
+        return True
+    if normalized in {"false", "0", "no"}:
+        return False
+    raise BadRequest(f"invalid_{name}")
+
+
 @bp.post("/companies/<company_id>/cases/<case_id>/documents")
 @auth_required
 @tenant_required
@@ -70,8 +82,30 @@ def list_case_documents(company_id: str, case_id: str):
         order=request.args.get("order") or "desc",
         limit=limit,
         offset=offset,
+        has_extraction=_parse_optional_bool_arg("has_extraction"),
     )
     return ok(DocumentListResponseSchema.dump(documents, total=total, limit=limit, offset=offset))
+
+
+@bp.patch("/documents/<document_id>/status")
+@auth_required
+@tenant_required
+@require_permission("document.write")
+def update_document_status(document_id: str):
+    payload = request.get_json(silent=True) or {}
+    status = payload.get("status")
+    if status is None:
+        raise BadRequest("status_required")
+
+    service = DocumentModuleService()
+    document = service.update_document_status(
+        client_id=str(g.client_id),
+        document_id=document_id,
+        actor_user_id=str(g.user.id),
+        status=status,
+    )
+    db.session.commit()
+    return ok(DocumentResponseSchema.wrap(document))
 
 
 @bp.get("/documents/<document_id>/download")

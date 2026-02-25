@@ -65,6 +65,14 @@
             <input id="case-documents-doc-type" class="ff-input" type="text" placeholder="dni, contrato..." />
           </div>
           <div>
+            <label class="ff-label" for="case-documents-extraction">Extracción</label>
+            <select id="case-documents-extraction" class="ff-input">
+              <option value="all">Todos</option>
+              <option value="with">Con extracción</option>
+              <option value="without">Sin extracción</option>
+            </select>
+          </div>
+          <div>
             <label class="ff-label" for="case-documents-order">Orden</label>
             <select id="case-documents-order" class="ff-input">
               <option value="created_at:desc">Creación ↓</option>
@@ -85,6 +93,7 @@
                 <th>Nombre</th>
                 <th>Tipo</th>
                 <th>Estado</th>
+                <th>Extracción</th>
                 <th>Fecha</th>
                 <th>Acciones</th>
               </tr>

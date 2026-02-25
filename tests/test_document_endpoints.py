@@ -9,6 +9,7 @@ from app.common.jwt import create_access_token
 from app.extensions import db
 from app.models.client import Client
 from app.models.company import Company
+from app.models.document_extraction import DocumentExtraction
 from app.models.role import Role
 from app.models.user import User
 from app.modules.cases.service import CaseService
@@ -423,3 +424,120 @@ def test_upload_validation_mimetype_not_allowed_returns_400(client, app, db_sess
         )
 
         assert response.status_code == 400
+
+
+def test_update_document_status_creates_case_event(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id, email="status@example.com")
+        company = create_company(db_session, tenant.id)
+        case_id = create_case(tenant.id, company.id, user.id)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company, "operator")
+
+        upload_response = client.post(
+            f"/companies/{company.id}/cases/{case_id}/documents",
+            headers=auth_header_for(user),
+            data={
+                "file": (BytesIO(b"%PDF-1.4 upload"), "status.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+        assert upload_response.status_code == 201
+        document_id = upload_response.get_json()["document"]["id"]
+
+        response = client.patch(
+            f"/documents/{document_id}/status",
+            headers=auth_header_for(user),
+            json={"status": "processed"},
+        )
+
+        assert response.status_code == 200
+        payload = response.get_json()["document"]
+        assert payload["status"] == "processed"
+
+        events_response = client.get(
+            f"/companies/{company.id}/cases/{case_id}/events",
+            headers=auth_header_for(user),
+        )
+        assert events_response.status_code == 200
+        assert any(
+            event["event_type"] == "status_change"
+            and event["payload"].get("document_id") == document_id
+            and event["payload"].get("to") == "processed"
+            for event in events_response.get_json().get("events", [])
+        )
+
+
+def test_list_documents_supports_has_extraction_filter(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id, email="extract@example.com")
+        company = create_company(db_session, tenant.id)
+        case_id = create_case(tenant.id, company.id, user.id)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company, "operator")
+
+        service = DocumentModuleService()
+        doc_with_extraction = service.upload_case_document(
+            client_id=tenant.id,
+            company_id=company.id,
+            case_id=case_id,
+            actor_user_id=user.id,
+            file=FileStorage(
+                stream=BytesIO(b"%PDF-1.4 with extraction"),
+                filename="with-extraction.pdf",
+                content_type="application/pdf",
+            ),
+        )
+        service.upload_case_document(
+            client_id=tenant.id,
+            company_id=company.id,
+            case_id=case_id,
+            actor_user_id=user.id,
+            file=FileStorage(
+                stream=BytesIO(b"%PDF-1.4 without extraction"),
+                filename="without-extraction.pdf",
+                content_type="application/pdf",
+            ),
+        )
+        db.session.add(
+            DocumentExtraction(
+                client_id=tenant.id,
+                document_id=doc_with_extraction.id,
+                company_id=company.id,
+                case_id=case_id,
+                created_by_user_id=user.id,
+                provider="manual",
+                schema_version="v1",
+                extracted_json={"ok": True},
+                status="success",
+            )
+        )
+        db.session.commit()
+
+        with_response = client.get(
+            f"/companies/{company.id}/cases/{case_id}/documents?has_extraction=true",
+            headers=auth_header_for(user),
+        )
+        assert with_response.status_code == 200
+        with_items = with_response.get_json()["items"]
+        assert len(with_items) == 1
+        assert with_items[0]["has_extraction"] is True
+
+        without_response = client.get(
+            f"/companies/{company.id}/cases/{case_id}/documents?has_extraction=false",
+            headers=auth_header_for(user),
+        )
+        assert without_response.status_code == 200
+        without_items = without_response.get_json()["items"]
+        assert len(without_items) == 1
+        assert without_items[0]["has_extraction"] is False

@@ -22,6 +22,8 @@ _EXTENSION_TO_MIME = {
     "jpeg": "image/jpeg",
 }
 
+DOCUMENT_STATUS_VALUES = {"pending", "processed", "archived"}
+
 
 class DocumentModuleService:
     """Business logic for document uploads and retrieval."""
@@ -112,6 +114,7 @@ class DocumentModuleService:
         order: str = "desc",
         limit: int = 20,
         offset: int = 0,
+        has_extraction: bool | None = None,
     ) -> tuple[list[Document], int]:
         self._ensure_case_access(client_id, company_id, case_id)
         return self.document_repository.list_by_case(
@@ -125,13 +128,62 @@ class DocumentModuleService:
             order=order,
             limit=limit,
             offset=offset,
+            has_extraction=has_extraction,
         )
 
-    def get_document_metadata(self, client_id: str, document_id: str, actor_user_id: str) -> Document:
+    def update_document_status(
+        self,
+        client_id: str,
+        document_id: str,
+        actor_user_id: str,
+        status: str,
+    ) -> Document:
+        normalized_status = (status or "").strip().lower()
+        if normalized_status not in DOCUMENT_STATUS_VALUES:
+            raise BadRequest("invalid_document_status")
+
+        document = self.get_document_metadata(
+            client_id=client_id,
+            document_id=document_id,
+            actor_user_id=actor_user_id,
+            required_access_level="operator",
+        )
+
+        previous_status = document.status
+        updated = self.document_repository.update_status(document=document, status=normalized_status)
+
+        self.event_repository.create(
+            CaseEvent(
+                client_id=client_id,
+                company_id=document.company_id,
+                case_id=document.case_id,
+                actor_user_id=actor_user_id,
+                event_type="status_change",
+                payload={
+                    "document_id": document.id,
+                    "from": previous_status,
+                    "to": normalized_status,
+                },
+            )
+        )
+        return updated
+
+    def get_document_metadata(
+        self,
+        client_id: str,
+        document_id: str,
+        actor_user_id: str,
+        required_access_level: str = "viewer",
+    ) -> Document:
         document = self.document_repository.get_by_id(client_id=client_id, document_id=document_id)
         if document is None:
             raise NotFound("document_not_found")
-        self._ensure_document_access(client_id, actor_user_id, document.company_id)
+        self._ensure_document_access(
+            client_id,
+            actor_user_id,
+            document.company_id,
+            required_level=required_access_level,
+        )
         self._ensure_case_access(client_id, document.company_id, document.case_id)
         return document
 
@@ -143,13 +195,19 @@ class DocumentModuleService:
         )
         return document, open_file(document.storage_path)
 
-    def _ensure_document_access(self, client_id: str, actor_user_id: str, company_id: str) -> None:
+    def _ensure_document_access(
+        self,
+        client_id: str,
+        actor_user_id: str,
+        company_id: str,
+        required_level: str = "viewer",
+    ) -> None:
         try:
             self.company_access_service.require_access(
                 user_id=actor_user_id,
                 company_id=company_id,
                 client_id=client_id,
-                required_level="viewer",
+                required_level=required_level,
             )
         except (Forbidden, NotFound) as exc:
             raise NotFound("document_not_found") from exc

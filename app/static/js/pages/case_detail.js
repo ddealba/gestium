@@ -16,6 +16,7 @@
   const documentsQInput = document.getElementById('case-documents-q');
   const documentsStatusFilter = document.getElementById('case-documents-status');
   const documentsTypeInput = document.getElementById('case-documents-doc-type');
+  const documentsExtractionFilter = document.getElementById('case-documents-extraction');
   const documentsOrderFilter = document.getElementById('case-documents-order');
   const documentsApplyButton = document.getElementById('case-documents-apply');
   const documentsClearButton = document.getElementById('case-documents-clear');
@@ -29,6 +30,7 @@
   const extractionLatestJson = document.getElementById('extraction-latest-json');
   const extractionManualForm = document.getElementById('extraction-manual-form');
   const extractionManualMessage = document.getElementById('extraction-manual-message');
+  let canWriteDocuments = false;
 
   let caseDocuments = [];
   const documentsState = { limit: 20, offset: 0, total: 0 };
@@ -92,21 +94,51 @@
     documentsBody.innerHTML = '';
 
     if (!documents.length) {
-      documentsBody.innerHTML = '<tr><td colspan="5" class="ff-empty">No hay documentos cargados.</td></tr>';
+      documentsBody.innerHTML = '<tr><td colspan="6" class="ff-empty">No hay documentos cargados.</td></tr>';
       return;
     }
 
     documents.forEach((document) => {
       const row = document.createElement('tr');
+      const extractionText = document.has_extraction ? '✔' : 'Pending';
+      const writeActions = canWriteDocuments
+        ? `
+            <button type="button" class="ff-btn ff-btn--ghost ff-btn--sm" data-action="processed" data-document-id="${document.id}">Marcar procesado</button>
+            <button type="button" class="ff-btn ff-btn--ghost ff-btn--sm" data-action="archived" data-document-id="${document.id}">Archivar</button>
+          `
+        : '';
       row.innerHTML = `
         <td>${document.original_filename || '-'}</td>
         <td>${document.doc_type || '-'}</td>
         <td><span class="ff-tag">${document.status || '-'}</span></td>
+        <td><span class="ff-tag">${extractionText}</span></td>
         <td>${formatDocDate(document.created_at)}</td>
-        <td><a class="ff-btn ff-btn--ghost ff-btn--sm" href="/documents/${document.id}/download">Descargar</a></td>
+        <td>
+          <div class="ff-filters__actions">
+            <a class="ff-btn ff-btn--ghost ff-btn--sm" href="/documents/${document.id}/download">Descargar</a>
+            ${writeActions}
+          </div>
+        </td>
       `;
       documentsBody.appendChild(row);
     });
+  };
+
+  const updateDocumentStatus = async (documentId, status) => {
+    try {
+      const data = await window.apiFetch(`/documents/${documentId}/status`, {
+        method: 'PATCH',
+        body: { status },
+      });
+      const updated = data?.document;
+      if (updated) {
+        caseDocuments = caseDocuments.map((item) => (item.id === documentId ? { ...item, ...updated } : item));
+        renderDocuments(caseDocuments);
+      }
+      setMessage(documentsMessage, 'Estado actualizado correctamente.', false, true);
+    } catch (error) {
+      handleError(error, 'No se pudo actualizar el estado del documento.', documentsMessage);
+    }
   };
 
   const setUploadEnabled = (enabled) => {
@@ -228,11 +260,14 @@
     const q = documentsQInput?.value?.trim();
     const status = documentsStatusFilter?.value || 'all';
     const docType = documentsTypeInput?.value?.trim();
+    const extraction = documentsExtractionFilter?.value || 'all';
     const [sort, order] = (documentsOrderFilter?.value || 'created_at:desc').split(':');
 
     if (q) params.set('q', q);
     if (status !== 'all') params.set('status', status);
     if (docType) params.set('doc_type', docType);
+    if (extraction === 'with') params.set('has_extraction', 'true');
+    if (extraction === 'without') params.set('has_extraction', 'false');
     params.set('sort', sort);
     params.set('order', order);
     params.set('limit', String(documentsState.limit));
@@ -265,6 +300,7 @@
     try {
       const data = await window.apiFetch('/rbac/me/permissions');
       const canUpload = Array.isArray(data?.permissions) && data.permissions.includes('document.upload');
+      canWriteDocuments = Array.isArray(data?.permissions) && data.permissions.includes('document.write');
       setUploadEnabled(canUpload);
       if (!canUpload) {
         setMessage(documentUploadMessage, 'No tienes permisos para subir documentos.', true);
@@ -347,6 +383,7 @@
     if (documentsQInput) documentsQInput.value = '';
     if (documentsStatusFilter) documentsStatusFilter.value = 'all';
     if (documentsTypeInput) documentsTypeInput.value = '';
+    if (documentsExtractionFilter) documentsExtractionFilter.value = 'all';
     if (documentsOrderFilter) documentsOrderFilter.value = 'created_at:desc';
     documentsState.offset = 0;
     loadCaseDocuments();
@@ -360,6 +397,15 @@
   documentsNextButton?.addEventListener('click', () => {
     documentsState.offset += documentsState.limit;
     loadCaseDocuments();
+  });
+
+  documentsBody?.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-action][data-document-id]');
+    if (!button) return;
+    const documentId = button.dataset.documentId;
+    const status = button.dataset.action;
+    if (!documentId || !status) return;
+    updateDocumentStatus(documentId, status);
   });
 
 
