@@ -5,6 +5,13 @@
   const tbody = table.querySelector('tbody');
   const message = document.getElementById('companies-message');
   const refreshButton = document.getElementById('refresh-companies');
+  const qInput = document.getElementById('companies-q');
+  const statusFilter = document.getElementById('companies-status');
+  const orderFilter = document.getElementById('companies-order');
+  const applyFiltersButton = document.getElementById('companies-apply-filters');
+  const clearFiltersButton = document.getElementById('companies-clear-filters');
+  const prevButton = document.getElementById('companies-prev');
+  const nextButton = document.getElementById('companies-next');
 
   const aclSection = document.getElementById('company-access-panel');
   const aclTitle = document.getElementById('company-access-title');
@@ -15,6 +22,7 @@
   const aclLevel = document.getElementById('acl-level');
 
   let selectedCompanyId = null;
+  const state = { limit: 20, offset: 0, total: 0 };
 
   const setMessage = (text, isError = false) => {
     message.textContent = text;
@@ -25,6 +33,26 @@
     if (!aclMessage) return;
     aclMessage.textContent = text;
     aclMessage.classList.toggle('is-error', isError);
+  };
+
+  const updatePaginationButtons = () => {
+    if (prevButton) prevButton.disabled = state.offset <= 0;
+    if (nextButton) nextButton.disabled = state.offset + state.limit >= state.total;
+  };
+
+  const buildQuery = () => {
+    const params = new URLSearchParams();
+    const q = qInput?.value?.trim();
+    const status = statusFilter?.value || 'all';
+    const [sort, order] = (orderFilter?.value || 'created_at:desc').split(':');
+
+    if (q) params.set('q', q);
+    if (status !== 'all') params.set('status', status);
+    params.set('sort', sort);
+    params.set('order', order);
+    params.set('limit', String(state.limit));
+    params.set('offset', String(state.offset));
+    return params.toString();
   };
 
   const renderAccessRows = (items) => {
@@ -90,8 +118,12 @@
   const loadCompanies = async () => {
     setMessage('Cargando empresas…');
     try {
-      const data = await window.apiFetch('/admin/companies');
+      const data = await window.apiFetch(`/companies?${buildQuery()}`);
       renderCompanies(data?.items || []);
+      state.total = data?.total || 0;
+      state.limit = data?.limit || state.limit;
+      state.offset = data?.offset ?? state.offset;
+      updatePaginationButtons();
       setMessage('');
     } catch (error) {
       window.handleApiError(error, { defaultMessage: 'No se pudieron cargar las empresas.' });
@@ -135,6 +167,29 @@
       window.handleApiError(error, { defaultMessage: 'No se pudo guardar el acceso.' });
       setAclMessage('No se pudo guardar el acceso.', true);
     }
+  });
+
+  applyFiltersButton?.addEventListener('click', () => {
+    state.offset = 0;
+    loadCompanies();
+  });
+
+  clearFiltersButton?.addEventListener('click', () => {
+    if (qInput) qInput.value = '';
+    if (statusFilter) statusFilter.value = 'all';
+    if (orderFilter) orderFilter.value = 'created_at:desc';
+    state.offset = 0;
+    loadCompanies();
+  });
+
+  prevButton?.addEventListener('click', () => {
+    state.offset = Math.max(0, state.offset - state.limit);
+    loadCompanies();
+  });
+
+  nextButton?.addEventListener('click', () => {
+    state.offset += state.limit;
+    loadCompanies();
   });
 
   refreshButton?.addEventListener('click', loadCompanies);

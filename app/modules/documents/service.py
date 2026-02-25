@@ -100,9 +100,32 @@ class DocumentModuleService:
 
         return document
 
-    def list_case_documents(self, client_id: str, company_id: str, case_id: str) -> list[Document]:
+    def list_case_documents(
+        self,
+        client_id: str,
+        company_id: str,
+        case_id: str,
+        doc_type: str | None = None,
+        status: str | None = None,
+        q: str | None = None,
+        sort: str = "created_at",
+        order: str = "desc",
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[Document], int]:
         self._ensure_case_access(client_id, company_id, case_id)
-        return self.document_repository.list_by_case(client_id=client_id, company_id=company_id, case_id=case_id)
+        return self.document_repository.list_by_case(
+            client_id=client_id,
+            company_id=company_id,
+            case_id=case_id,
+            doc_type=doc_type,
+            status=status,
+            q=q,
+            sort=sort,
+            order=order,
+            limit=limit,
+            offset=offset,
+        )
 
     def get_document_metadata(self, client_id: str, document_id: str, actor_user_id: str) -> Document:
         document = self.document_repository.get_by_id(client_id=client_id, document_id=document_id)

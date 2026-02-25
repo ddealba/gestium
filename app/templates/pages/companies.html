@@ -13,6 +13,35 @@
   </div>
   <div class="ff-card__body">
     <p id="companies-message" class="ff-form-message" aria-live="polite"></p>
+    <div class="ff-filters" id="companies-filters">
+      <div>
+        <label class="ff-label" for="companies-q">Búsqueda</label>
+        <input id="companies-q" class="ff-input" type="text" placeholder="Nombre o NIF" />
+      </div>
+      <div>
+        <label class="ff-label" for="companies-status">Estado</label>
+        <select id="companies-status" class="ff-input">
+          <option value="all">Todos</option>
+          <option value="active">Activas</option>
+          <option value="inactive">Inactivas</option>
+        </select>
+      </div>
+      <div>
+        <label class="ff-label" for="companies-order">Orden</label>
+        <select id="companies-order" class="ff-input">
+          <option value="created_at:desc">Creación ↓</option>
+          <option value="created_at:asc">Creación ↑</option>
+          <option value="name:asc">Nombre ↑</option>
+          <option value="name:desc">Nombre ↓</option>
+          <option value="status:asc">Estado ↑</option>
+          <option value="status:desc">Estado ↓</option>
+        </select>
+      </div>
+      <div class="ff-filters__actions">
+        <button id="companies-apply-filters" class="ff-btn ff-btn--primary" type="button">Aplicar</button>
+        <button id="companies-clear-filters" class="ff-btn ff-btn--ghost" type="button">Limpiar</button>
+      </div>
+    </div>
     <div class="ff-table-wrap">
       <table class="ff-table" id="companies-table">
         <thead>
@@ -25,6 +54,10 @@
         </thead>
         <tbody></tbody>
       </table>
+    </div>
+    <div class="ff-filters__actions" style="margin-top: 1rem;">
+      <button id="companies-prev" class="ff-btn ff-btn--ghost" type="button">Anterior</button>
+      <button id="companies-next" class="ff-btn ff-btn--ghost" type="button">Siguiente</button>
     </div>
   </div>
 </section>

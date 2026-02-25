@@ -72,7 +72,8 @@ def test_list_companies_filters_by_acl(client, db_session):
 
     assert response.status_code == 200
     payload = response.get_json()
-    assert [company["id"] for company in payload["companies"]] == [company_a.id]
+    assert [company["id"] for company in payload["items"]] == [company_a.id]
+    assert payload["total"] == 1
 
 
 def test_list_companies_without_acl_returns_empty(client, db_session):
@@ -87,7 +88,8 @@ def test_list_companies_without_acl_returns_empty(client, db_session):
 
     assert response.status_code == 200
     payload = response.get_json()
-    assert payload["companies"] == []
+    assert payload["items"] == []
+    assert payload["total"] == 0
 
 
 def test_get_company_out_of_scope_returns_404(client, db_session):
