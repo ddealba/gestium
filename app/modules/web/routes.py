@@ -54,6 +54,12 @@ def inject_layout_context() -> dict:
                         "label": "Accesos por empresa",
                         "required_permissions": ["acl.read", "acl.manage"],
                     },
+                    {
+                        "page_id": "admin_audit",
+                        "endpoint": "web.app_admin_audit",
+                        "label": "Auditoría",
+                        "required_permissions": ["tenant.user.read", "tenant.users.manage"],
+                    },
                 ],
             },
         ],
@@ -128,3 +134,9 @@ def app_admin_users():
 def app_admin_access():
     """Render tenant admin company access page."""
     return render_template("pages/admin_access.html", active_nav="admin_access", page_id="admin_access")
+
+
+@bp.get("/app/admin/audit")
+def app_admin_audit():
+    """Render tenant admin audit page."""
+    return render_template("pages/admin_audit.html", active_nav="admin_audit", page_id="admin_audit")

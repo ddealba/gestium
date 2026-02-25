@@ -10,6 +10,7 @@ from app.models.case import Case
 from app.models.case_event import CaseEvent
 from app.modules.cases.repository import CaseEventRepository, CaseRepository
 from app.modules.companies.repository import CompanyRepository
+from app.modules.audit.audit_service import AuditService
 
 TERMINAL_CASE_STATUSES = {"done", "cancelled"}
 
@@ -26,6 +27,7 @@ class CaseService:
         self.repository = repository or CaseRepository()
         self.event_repository = event_repository or CaseEventRepository()
         self.company_repository = company_repository or CompanyRepository()
+        self.audit_service = AuditService()
 
     def list_company_cases(
         self,
@@ -103,6 +105,15 @@ class CaseService:
                 )
             )
 
+        self.audit_service.log_action(
+            client_id=client_id,
+            actor_user_id=actor_user_id,
+            action="create_case",
+            entity_type="case",
+            entity_id=case.id,
+            metadata={"company_id": company_id, "status": case.status},
+        )
+
         return case
 
     def get_case(self, client_id: str, company_id: str, case_id: str) -> Case:
@@ -156,6 +167,14 @@ class CaseService:
                 event_type="status_change",
                 payload={"from": previous_status, "to": target_status},
             )
+        )
+        self.audit_service.log_action(
+            client_id=client_id,
+            actor_user_id=actor_user_id,
+            action="change_case_status",
+            entity_type="case",
+            entity_id=case.id,
+            metadata={"from": previous_status, "to": target_status},
         )
         return case
 

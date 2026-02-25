@@ -1,0 +1,46 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Admin · Auditoría · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-grid">
+  <div class="ff-col-12">
+    <div class="ff-card">
+      <div class="ff-card__head ff-page-head">
+        <h2>Auditoría</h2>
+      </div>
+      <div class="ff-card__body ff-form-stack">
+        <label for="audit-entity-type-filter">
+          Tipo de entidad
+          <select id="audit-entity-type-filter" class="ff-select">
+            <option value="">Todos</option>
+            <option value="user">user</option>
+            <option value="company">company</option>
+            <option value="case">case</option>
+            <option value="document">document</option>
+            <option value="extraction">extraction</option>
+          </select>
+        </label>
+        <p id="audit-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-table-wrap">
+          <table class="ff-table" id="audit-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>Entidad</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/admin_audit.js', v=ui_version) }}"></script>
+{% endblock %}
