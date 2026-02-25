@@ -7,6 +7,7 @@ from werkzeug.exceptions import BadRequest
 
 from app.extensions import db
 from app.models.document import Document
+from app.models.document_extraction import DocumentExtraction
 
 
 VALID_SORT_FIELDS = {"created_at", "status"}
@@ -31,6 +32,11 @@ class DocumentRepository:
             .one_or_none()
         )
 
+    def update_status(self, document: Document, status: str) -> Document:
+        document.status = status
+        self.session.flush()
+        return document
+
     def list_by_case(
         self,
         client_id: str,
@@ -43,11 +49,26 @@ class DocumentRepository:
         order: str = "desc",
         limit: int = 20,
         offset: int = 0,
+        has_extraction: bool | None = None,
     ) -> tuple[list[Document], int]:
-        query = self.session.query(Document).filter(
+        extraction_subquery = (
+            self.session.query(DocumentExtraction.document_id.label("document_id"))
+            .filter(DocumentExtraction.client_id == client_id)
+            .distinct()
+            .subquery()
+        )
+
+        query = (
+            self.session.query(
+                Document,
+                extraction_subquery.c.document_id.is_not(None).label("has_extraction"),
+            )
+            .outerjoin(extraction_subquery, extraction_subquery.c.document_id == Document.id)
+            .filter(
             Document.client_id == client_id,
             Document.company_id == company_id,
             Document.case_id == case_id,
+            )
         )
 
         if doc_type:
@@ -62,6 +83,11 @@ class DocumentRepository:
                 like_query = f"%{q_value}%"
                 query = query.filter(Document.original_filename.ilike(like_query))
 
+        if has_extraction is True:
+            query = query.filter(extraction_subquery.c.document_id.is_not(None))
+        elif has_extraction is False:
+            query = query.filter(extraction_subquery.c.document_id.is_(None))
+
         if sort not in VALID_SORT_FIELDS:
             raise BadRequest("invalid_sort")
 
@@ -73,12 +99,16 @@ class DocumentRepository:
         fallback_direction = Document.created_at.asc() if order == "asc" else Document.created_at.desc()
 
         total_count = query.count()
-        items = (
+        rows = (
             query.order_by(direction, fallback_direction)
             .limit(max(limit, 1))
             .offset(max(offset, 0))
             .all()
         )
+        items: list[Document] = []
+        for document, has_extraction_flag in rows:
+            document.has_extraction = bool(has_extraction_flag)
+            items.append(document)
         return items, total_count
 
     @staticmethod

@@ -36,6 +36,7 @@ def test_seed_rbac_creates_permissions_and_roles(app):
             "case.assign",
             "case.event.write",
             "document.read",
+            "document.write",
             "document.upload",
             "document.classify",
             "document.extraction.read",
@@ -71,7 +72,9 @@ def test_seed_rbac_creates_permissions_and_roles(app):
             scope="tenant",
             client_id=active_client.id,
         ).one()
-        assert "document.upload" in {permission.code for permission in operator_role.permissions}
+        operator_codes = {permission.code for permission in operator_role.permissions}
+        assert "document.upload" in operator_codes
+        assert "document.write" in operator_codes
 
         assert (
             Role.query.filter_by(

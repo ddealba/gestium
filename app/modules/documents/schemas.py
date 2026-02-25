@@ -22,6 +22,7 @@ class DocumentResponseSchema:
             "id": document.id,
             "original_filename": document.original_filename,
             "status": document.status,
+            "has_extraction": bool(getattr(document, "has_extraction", False)),
             "created_at": _format_datetime(document.created_at),
             "uploaded_by_user_id": document.uploaded_by_user_id,
             "doc_type": document.doc_type,
