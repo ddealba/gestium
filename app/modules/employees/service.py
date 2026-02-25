@@ -26,9 +26,28 @@ class EmployeeService:
         self.repository = repository or EmployeeRepository()
         self.company_repository = company_repository or CompanyRepository()
 
-    def list_employees(self, client_id: str, company_id: str) -> list[Employee]:
+    def list_employees(
+        self,
+        client_id: str,
+        company_id: str,
+        q: str | None = None,
+        status: str | None = None,
+        sort: str = "name",
+        order: str = "asc",
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[Employee], int]:
         self._ensure_company(client_id, company_id)
-        return self.repository.list_by_company(company_id, client_id)
+        return self.repository.list_by_company(
+            company_id=company_id,
+            client_id=client_id,
+            q=q,
+            status=status,
+            sort=sort,
+            order=order,
+            limit=limit,
+            offset=offset,
+        )
 
     def create_employee(
         self,

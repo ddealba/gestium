@@ -37,8 +37,13 @@ class DocumentListResponseSchema:
     """Serializer for case document list responses."""
 
     @staticmethod
-    def dump(documents: list[Document]) -> dict:
-        return {"documents": [DocumentResponseSchema.dump(document) for document in documents]}
+    def dump(documents: list[Document], total: int, limit: int, offset: int) -> dict:
+        return {
+            "items": [DocumentResponseSchema.dump(document) for document in documents],
+            "total": total,
+            "limit": max(limit, 1),
+            "offset": max(offset, 0),
+        }
 
 
 class UploadResponseSchema:

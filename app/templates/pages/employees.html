@@ -15,18 +15,51 @@
       </div>
       <div class="ff-card__body">
         <p id="employees-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-filters" id="employees-filters">
+          <div>
+            <label class="ff-label" for="employees-q">Búsqueda</label>
+            <input id="employees-q" class="ff-input" type="text" placeholder="Nombre o referencia" />
+          </div>
+          <div>
+            <label class="ff-label" for="employees-status">Estado</label>
+            <select id="employees-status" class="ff-input">
+              <option value="all">Todos</option>
+              <option value="active">Activos</option>
+              <option value="terminated">Terminados</option>
+            </select>
+          </div>
+          <div>
+            <label class="ff-label" for="employees-order">Orden</label>
+            <select id="employees-order" class="ff-input">
+              <option value="name:asc">Nombre ↑</option>
+              <option value="name:desc">Nombre ↓</option>
+              <option value="hire_date:desc">Alta ↓</option>
+              <option value="hire_date:asc">Alta ↑</option>
+              <option value="termination_date:desc">Baja ↓</option>
+              <option value="termination_date:asc">Baja ↑</option>
+            </select>
+          </div>
+          <div class="ff-filters__actions">
+            <button id="employees-apply-filters" class="ff-btn ff-btn--primary" type="button">Aplicar</button>
+            <button id="employees-clear-filters" class="ff-btn ff-btn--ghost" type="button">Limpiar</button>
+          </div>
+        </div>
         <div class="ff-table-wrap">
           <table class="ff-table" id="employees-table" data-company-id="{{ company_id }}">
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Email</th>
-                <th>Puesto</th>
+                <th>Referencia</th>
+                <th>Alta</th>
                 <th>Estado</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+        <div class="ff-filters__actions" style="margin-top: 1rem;">
+          <button id="employees-prev" class="ff-btn ff-btn--ghost" type="button">Anterior</button>
+          <button id="employees-next" class="ff-btn ff-btn--ghost" type="button">Siguiente</button>
         </div>
       </div>
     </div>

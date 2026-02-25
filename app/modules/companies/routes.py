@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from flask import Blueprint, g, request
+from werkzeug.exceptions import BadRequest
 from app.common.decorators import auth_required, require_company_access, require_permission
 from app.common.responses import ok
 from app.common.tenant import tenant_required
@@ -17,19 +18,40 @@ from app.modules.companies.service import CompanyService
 bp = Blueprint("companies", __name__)
 
 
+def _parse_int_arg(name: str, default: int) -> int:
+    raw_value = request.args.get(name)
+    if raw_value is None:
+        return default
+    try:
+        return int(raw_value)
+    except ValueError as exc:
+        raise BadRequest(f"invalid_{name}") from exc
+
+
 @bp.get("/companies")
 @auth_required
 @tenant_required
 @require_permission("company.read")
 def list_companies():
     service = CompanyService()
-    companies = service.list_companies(
+    limit = _parse_int_arg("limit", 20)
+    offset = _parse_int_arg("offset", 0)
+    companies, total = service.list_companies(
         client_id=str(g.client_id),
         user_id=str(g.user.id),
         status=request.args.get("status"),
         q=request.args.get("q"),
+        sort=request.args.get("sort") or "created_at",
+        order=request.args.get("order") or "desc",
+        limit=limit,
+        offset=offset,
     )
-    return ok({"companies": [CompanyResponseSchema.dump(company) for company in companies]})
+    return ok({
+        "items": [CompanyResponseSchema.dump(company) for company in companies],
+        "total": total,
+        "limit": max(limit, 1),
+        "offset": max(offset, 0),
+    })
 
 
 @bp.post("/companies")

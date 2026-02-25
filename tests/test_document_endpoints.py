@@ -149,7 +149,7 @@ def test_list_documents_returns_only_documents_from_case(client, app, db_session
         )
 
         assert response.status_code == 200
-        documents = response.get_json()["documents"]
+        documents = response.get_json()["items"]
         assert len(documents) == 1
         assert documents[0]["original_filename"] == "case-a.pdf"
 
@@ -224,7 +224,7 @@ def test_upload_happy_path_list_and_download(client, app, db_session, tmp_path):
         )
 
         assert list_response.status_code == 200
-        documents = list_response.get_json()["documents"]
+        documents = list_response.get_json()["items"]
         assert len(documents) == 1
         assert documents[0]["id"] == document_id
 

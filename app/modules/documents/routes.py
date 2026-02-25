@@ -15,6 +15,16 @@ from app.modules.documents.service import DocumentModuleService
 bp = Blueprint("documents", __name__)
 
 
+def _parse_int_arg(name: str, default: int) -> int:
+    raw_value = request.args.get(name)
+    if raw_value is None:
+        return default
+    try:
+        return int(raw_value)
+    except ValueError as exc:
+        raise BadRequest(f"invalid_{name}") from exc
+
+
 @bp.post("/companies/<company_id>/cases/<case_id>/documents")
 @auth_required
 @tenant_required
@@ -47,12 +57,21 @@ def upload_document(company_id: str, case_id: str):
 @require_company_access("viewer", company_id_arg="company_id")
 def list_case_documents(company_id: str, case_id: str):
     service = DocumentModuleService()
-    documents = service.list_case_documents(
+    limit = _parse_int_arg("limit", 20)
+    offset = _parse_int_arg("offset", 0)
+    documents, total = service.list_case_documents(
         client_id=str(g.client_id),
         company_id=company_id,
         case_id=case_id,
+        doc_type=request.args.get("doc_type"),
+        status=request.args.get("status"),
+        q=request.args.get("q"),
+        sort=request.args.get("sort") or "created_at",
+        order=request.args.get("order") or "desc",
+        limit=limit,
+        offset=offset,
     )
-    return ok(DocumentListResponseSchema.dump(documents))
+    return ok(DocumentListResponseSchema.dump(documents, total=total, limit=limit, offset=offset))
 
 
 @bp.get("/documents/<document_id>/download")

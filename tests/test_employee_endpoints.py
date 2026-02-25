@@ -97,7 +97,8 @@ def test_viewer_can_list_but_not_create_employees(client, db_session):
 
     assert response.status_code == 200
     payload = response.get_json()
-    assert len(payload["employees"]) == 1
+    assert len(payload["items"]) == 1
+    assert payload["total"] == 1
 
     response = client.post(
         f"/companies/{company.id}/employees",

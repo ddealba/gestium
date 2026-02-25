@@ -30,13 +30,21 @@ class CompanyService:
         user_id: str,
         status: str | None = None,
         q: str | None = None,
-    ) -> list[Company]:
+        sort: str = "created_at",
+        order: str = "desc",
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[Company], int]:
         allowed_company_ids = self.access_service.get_allowed_company_ids(user_id, client_id)
-        return self.repository.list(
+        return self.repository.list_by_client(
             client_id=client_id,
             allowed_company_ids=allowed_company_ids,
             status=status,
             q=q,
+            sort=sort,
+            order=order,
+            limit=limit,
+            offset=offset,
         )
 
     def get_company(self, client_id: str, company_id: str) -> Company:

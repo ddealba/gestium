@@ -13,6 +13,14 @@
   const commentMessage = document.getElementById('case-comment-message');
   const documentsMessage = document.getElementById('case-documents-message');
   const documentsBody = document.getElementById('case-documents-body');
+  const documentsQInput = document.getElementById('case-documents-q');
+  const documentsStatusFilter = document.getElementById('case-documents-status');
+  const documentsTypeInput = document.getElementById('case-documents-doc-type');
+  const documentsOrderFilter = document.getElementById('case-documents-order');
+  const documentsApplyButton = document.getElementById('case-documents-apply');
+  const documentsClearButton = document.getElementById('case-documents-clear');
+  const documentsPrevButton = document.getElementById('case-documents-prev');
+  const documentsNextButton = document.getElementById('case-documents-next');
   const documentUploadForm = document.getElementById('case-document-upload-form');
   const documentUploadMessage = document.getElementById('case-document-upload-message');
   const documentUploadButton = document.getElementById('case-document-upload-button');
@@ -23,6 +31,7 @@
   const extractionManualMessage = document.getElementById('extraction-manual-message');
 
   let caseDocuments = [];
+  const documentsState = { limit: 20, offset: 0, total: 0 };
 
   const setMessage = (el, text, isError = false, isSuccess = false) => {
     if (!el) return;
@@ -208,13 +217,40 @@
     }
   };
 
+
+  const updateDocumentPaginationButtons = () => {
+    if (documentsPrevButton) documentsPrevButton.disabled = documentsState.offset <= 0;
+    if (documentsNextButton) documentsNextButton.disabled = documentsState.offset + documentsState.limit >= documentsState.total;
+  };
+
+  const buildDocumentsQuery = () => {
+    const params = new URLSearchParams();
+    const q = documentsQInput?.value?.trim();
+    const status = documentsStatusFilter?.value || 'all';
+    const docType = documentsTypeInput?.value?.trim();
+    const [sort, order] = (documentsOrderFilter?.value || 'created_at:desc').split(':');
+
+    if (q) params.set('q', q);
+    if (status !== 'all') params.set('status', status);
+    if (docType) params.set('doc_type', docType);
+    params.set('sort', sort);
+    params.set('order', order);
+    params.set('limit', String(documentsState.limit));
+    params.set('offset', String(documentsState.offset));
+    return params.toString();
+  };
+
   const loadCaseDocuments = async () => {
     setMessage(documentsMessage, 'Cargando documentos…');
     try {
-      const data = await window.apiFetch(`/companies/${companyId}/cases/${caseId}/documents`);
-      caseDocuments = data?.documents || [];
+      const data = await window.apiFetch(`/companies/${companyId}/cases/${caseId}/documents?${buildDocumentsQuery()}`);
+      caseDocuments = data?.items || [];
+      documentsState.total = data?.total || 0;
+      documentsState.limit = data?.limit || documentsState.limit;
+      documentsState.offset = data?.offset ?? documentsState.offset;
       renderDocuments(caseDocuments);
       renderExtractionDocumentOptions(caseDocuments);
+      updateDocumentPaginationButtons();
       setMessage(documentsMessage, '');
     } catch (error) {
       renderDocuments([]);
@@ -300,6 +336,32 @@
   });
 
   extractionDocumentSelect?.addEventListener('change', loadLatestExtraction);
+
+
+  documentsApplyButton?.addEventListener('click', () => {
+    documentsState.offset = 0;
+    loadCaseDocuments();
+  });
+
+  documentsClearButton?.addEventListener('click', () => {
+    if (documentsQInput) documentsQInput.value = '';
+    if (documentsStatusFilter) documentsStatusFilter.value = 'all';
+    if (documentsTypeInput) documentsTypeInput.value = '';
+    if (documentsOrderFilter) documentsOrderFilter.value = 'created_at:desc';
+    documentsState.offset = 0;
+    loadCaseDocuments();
+  });
+
+  documentsPrevButton?.addEventListener('click', () => {
+    documentsState.offset = Math.max(0, documentsState.offset - documentsState.limit);
+    loadCaseDocuments();
+  });
+
+  documentsNextButton?.addEventListener('click', () => {
+    documentsState.offset += documentsState.limit;
+    loadCaseDocuments();
+  });
+
 
   extractionManualForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
