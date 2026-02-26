@@ -117,3 +117,60 @@
 .ff-row-overdue {
   background: rgba(255, 90, 122, 0.08);
 }
+
+.ff-tenant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.ff-tenant-card {
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--ff-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ff-tenant-card__top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.ff-tenant-card__top h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.ff-tenant-card__logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--ff-border);
+}
+
+.ff-tenant-card__logo--placeholder {
+  display: grid;
+  place-items: center;
+  background: rgba(91, 82, 182, 0.12);
+  color: var(--ff-primary);
+}
+
+.ff-tenant-card__metrics {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ff-muted);
+  font-weight: 600;
+}
+
+.ff-tenant-modal {
+  position: relative;
+  z-index: 1;
+  width: min(540px, 92vw);
+}
