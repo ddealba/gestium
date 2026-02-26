@@ -116,6 +116,9 @@
 
         <div class="ff-filters__actions">
           <a href="/app/platform/tenants/${tenant.id}" class="ff-btn ff-btn--ghost">Ver detalle</a>
+          <button type="button" class="ff-btn ff-btn--primary" data-action="select-tenant" data-tenant-id="${tenant.id}" data-tenant-name="${tenant.name || ''}">
+            Administrar tenant
+          </button>
           <button type="button" class="ff-btn ff-btn--primary" data-action="status-change" data-tenant-id="${tenant.id}" data-next-status="${action.nextStatus}" data-action-label="${action.label}">
             ${action.label}
           </button>
@@ -190,6 +193,14 @@
   });
 
   grid.addEventListener('click', (event) => {
+    const selectTrigger = event.target.closest('button[data-action="select-tenant"]');
+    if (selectTrigger) {
+      sessionStorage.setItem('admin_selected_tenant_id', selectTrigger.dataset.tenantId || '');
+      sessionStorage.setItem('admin_selected_tenant_name', selectTrigger.dataset.tenantName || 'Tenant');
+      window.location.href = '/app/companies';
+      return;
+    }
+
     const trigger = event.target.closest('button[data-action="status-change"]');
     if (!trigger) return;
     const tenant = state.items.find((item) => item.id === trigger.dataset.tenantId);

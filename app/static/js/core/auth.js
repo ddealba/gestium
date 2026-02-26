@@ -21,6 +21,9 @@
 
   const logout = () => {
     window.clearToken();
+    sessionStorage.removeItem('admin_selected_tenant_id');
+    sessionStorage.removeItem('admin_selected_tenant_name');
+    sessionStorage.removeItem('is_super_admin');
     window.location.href = '/app/login';
   };
 

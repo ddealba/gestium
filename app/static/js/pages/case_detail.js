@@ -2,6 +2,8 @@
   const root = document.getElementById('case-detail-root');
   if (!root) return;
 
+  if (window.tenantContext?.requireTenantSelection?.()) return;
+
   const companyId = root.dataset.companyId;
   const caseId = root.dataset.caseId;
 

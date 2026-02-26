@@ -2,6 +2,8 @@
   const companySelect = document.getElementById('admin-access-company-select');
   if (!companySelect) return;
 
+  if (window.tenantContext?.requireTenantSelection?.()) return;
+
   const tableBody = document.querySelector('#admin-access-table tbody');
   const pageMessage = document.getElementById('admin-access-message');
   const addForm = document.getElementById('admin-access-add-form');

@@ -74,9 +74,15 @@
   const apiFetch = async (path, { method = 'GET', headers = {}, body, formData } = {}) => {
     const requestHeaders = { ...headers };
     const token = getToken();
+    const isSuperAdmin = sessionStorage.getItem('is_super_admin') === 'true';
+    const selectedTenantId = sessionStorage.getItem('admin_selected_tenant_id');
 
     if (token) {
       requestHeaders.Authorization = `Bearer ${token}`;
+    }
+
+    if (isSuperAdmin && selectedTenantId) {
+      requestHeaders['X-Admin-Tenant'] = selectedTenantId;
     }
 
     const options = { method, headers: requestHeaders };

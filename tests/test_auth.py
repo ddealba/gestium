@@ -117,6 +117,7 @@ def test_auth_me_returns_user(client, db_session):
         "email": "me@example.com",
         "client_id": tenant.id,
         "status": "active",
+        "is_super_admin": False,
     }
 
 

@@ -2,6 +2,8 @@
   const table = document.getElementById('admin-users-table');
   if (!table) return;
 
+  if (window.tenantContext?.requireTenantSelection?.()) return;
+
   const tbody = table.querySelector('tbody');
   const pageMessage = document.getElementById('admin-users-message');
   const refreshButton = document.getElementById('refresh-admin-users');

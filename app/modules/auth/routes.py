@@ -4,6 +4,7 @@ from flask import Blueprint, g, request
 from werkzeug.exceptions import BadRequest
 
 from app.common.decorators import auth_required, require_permission
+from app.common.authz import AuthorizationService
 from app.common.jwt import create_access_token
 from app.common.responses import ok
 from app.common.tenant import tenant_required
@@ -79,11 +80,13 @@ def login_user():
 @auth_required
 def get_current_user():
     user = g.user
+    authz = AuthorizationService()
     return ok(
         {
             "id": user.id,
             "email": user.email,
             "client_id": user.client_id,
             "status": user.status,
+            "is_super_admin": authz.is_super_admin(user),
         }
     )

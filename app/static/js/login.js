@@ -27,7 +27,9 @@
       }
 
       setMessage('Login correcto. Redirigiendo…');
-      window.location.href = '/app/companies';
+      const me = await window.auth.me();
+      sessionStorage.setItem('is_super_admin', String(Boolean(me?.is_super_admin)));
+      window.location.href = me?.is_super_admin ? '/app/platform/tenants' : '/app/companies';
     } catch (error) {
       window.handleApiError(error, { defaultMessage: 'No se pudo iniciar sesión.' });
       setMessage(window.extractErrorMessage(error) || 'No se pudo iniciar sesión.', true);
