@@ -69,3 +69,16 @@
   padding:22px;
 }
 .ff-auth__card h1{margin:0 0 18px;font-size:22px;font-weight:600}
+
+.ff-tenant-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .625rem .875rem;
+  margin-bottom: .75rem;
+  border: 1px solid rgba(244, 165, 96, .45);
+  border-radius: 10px;
+  background: rgba(244, 165, 96, .12);
+  color: var(--ff-text);
+}

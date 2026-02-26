@@ -2,6 +2,8 @@
   const table = document.getElementById('audit-table');
   if (!table) return;
 
+  if (window.tenantContext?.requireTenantSelection?.()) return;
+
   const tbody = table.querySelector('tbody');
   const filter = document.getElementById('audit-entity-type-filter');
   const message = document.getElementById('audit-message');

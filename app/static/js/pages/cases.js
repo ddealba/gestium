@@ -3,6 +3,8 @@
   const form = document.getElementById('create-case-form');
   if (!table || !form) return;
 
+  if (window.tenantContext?.requireTenantSelection?.()) return;
+
   const companyId = table.dataset.companyId;
   const tbody = table.querySelector('tbody');
   const message = document.getElementById('cases-message');

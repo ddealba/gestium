@@ -2,6 +2,8 @@
   const table = document.getElementById('companies-table');
   if (!table) return;
 
+  if (window.tenantContext?.requireTenantSelection?.()) return;
+
   const tbody = table.querySelector('tbody');
   const message = document.getElementById('companies-message');
   const refreshButton = document.getElementById('refresh-companies');

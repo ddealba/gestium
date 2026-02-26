@@ -2,6 +2,8 @@
   const table = document.getElementById('employees-table');
   if (!table) return;
 
+  if (window.tenantContext?.requireTenantSelection?.()) return;
+
   const companyId = table.dataset.companyId;
   const tbody = table.querySelector('tbody');
   const message = document.getElementById('employees-message');
