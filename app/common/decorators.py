@@ -11,6 +11,7 @@ from app.common.authz import AuthorizationService
 from app.common.jwt import decode_token
 from app.repositories.user_repository import UserRepository
 from app.services.company_access_service import CompanyAccessService
+from app.common.tenant import refresh_tenant_context
 
 
 def noop_decorator(func: Callable):
@@ -46,7 +47,7 @@ def auth_required(func: Callable[..., Any]):
             raise Forbidden("user_inactive")
 
         g.user = user
-        g.client_id = user.client_id
+        refresh_tenant_context()
         return func(*args, **kwargs)
 
     return wrapper

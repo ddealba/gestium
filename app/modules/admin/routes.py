@@ -9,6 +9,7 @@ from app.common.access_levels import AccessLevel
 
 from app.common.authz import AuthorizationService
 from app.common.decorators import auth_required
+from app.common.tenant import tenant_context_required
 from app.common.responses import ok
 from app.extensions import db
 from app.modules.admin.service import TenantAdminService
@@ -53,6 +54,7 @@ def _serialize_user(user) -> dict:
 
 @bp.get("/admin/users")
 @auth_required
+@tenant_context_required
 def list_users():
     _require_any_permission("tenant.user.read", "tenant.users.manage")
     page = request.args.get("page", type=int)
@@ -72,6 +74,7 @@ def list_users():
 
 @bp.post("/admin/users/invite")
 @auth_required
+@tenant_context_required
 def invite_user():
     _require_any_permission("tenant.user.invite", "tenant.users.invite")
     payload = request.get_json(silent=True) or {}
@@ -110,6 +113,7 @@ def invite_user():
 
 @bp.post("/admin/users/<user_id>/disable")
 @auth_required
+@tenant_context_required
 def disable_user(user_id: str):
     _require_any_permission("tenant.user.manage", "tenant.users.manage")
     service = TenantAdminService()
@@ -128,6 +132,7 @@ def disable_user(user_id: str):
 
 @bp.post("/admin/users/<user_id>/enable")
 @auth_required
+@tenant_context_required
 def enable_user(user_id: str):
     _require_any_permission("tenant.user.manage", "tenant.users.manage")
     service = TenantAdminService()
@@ -146,6 +151,7 @@ def enable_user(user_id: str):
 
 @bp.put("/admin/users/<user_id>/roles")
 @auth_required
+@tenant_context_required
 def replace_user_roles(user_id: str):
     _require_any_permission("tenant.user.manage", "tenant.users.manage")
     payload = request.get_json(silent=True) or {}
@@ -175,6 +181,7 @@ def replace_user_roles(user_id: str):
 
 @bp.get("/admin/roles")
 @auth_required
+@tenant_context_required
 def list_roles():
     _require_any_permission("tenant.role.read", "tenant.users.manage")
     service = TenantAdminService()
@@ -184,6 +191,7 @@ def list_roles():
 
 @bp.get("/admin/companies")
 @auth_required
+@tenant_context_required
 def list_admin_companies():
     _require_any_permission("company.read", "tenant.company.read")
     page = request.args.get("page", type=int)
@@ -224,6 +232,7 @@ def list_admin_companies():
 
 @bp.get("/admin/companies/<company_id>/access")
 @auth_required
+@tenant_context_required
 def list_company_access(company_id: str):
     _require_any_permission("acl.read")
     service = TenantAdminService()
@@ -239,6 +248,7 @@ def list_company_access(company_id: str):
 
 @bp.post("/admin/companies/<company_id>/access")
 @auth_required
+@tenant_context_required
 def upsert_company_access(company_id: str):
     _require_any_permission("acl.manage")
     payload = request.get_json(silent=True) or {}
@@ -271,6 +281,7 @@ def upsert_company_access(company_id: str):
 
 @bp.patch("/admin/companies/<company_id>/access/<user_id>")
 @auth_required
+@tenant_context_required
 def patch_company_access(company_id: str, user_id: str):
     _require_any_permission("acl.manage")
     payload = request.get_json(silent=True) or {}
@@ -302,6 +313,7 @@ def patch_company_access(company_id: str, user_id: str):
 
 @bp.delete("/admin/companies/<company_id>/access/<user_id>")
 @auth_required
+@tenant_context_required
 def delete_company_access(company_id: str, user_id: str):
     _require_any_permission("acl.manage")
     service = TenantAdminService()
@@ -326,6 +338,7 @@ def delete_company_access(company_id: str, user_id: str):
 
 @bp.get("/admin/audit")
 @auth_required
+@tenant_context_required
 def list_audit_logs():
     _require_any_permission("tenant.user.read", "tenant.users.manage")
 
