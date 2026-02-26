@@ -1,0 +1,55 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Platform · Nueva gestoría · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head ff-page-head">
+    <h2>Crear nueva gestoría</h2>
+    <a class="ff-btn ff-btn--ghost" href="/app/platform/tenants">Volver</a>
+  </div>
+  <div class="ff-card__body">
+    <form id="platform-tenant-new-form" class="ff-form-stack" style="max-width: 680px;">
+      <label>
+        Nombre *
+        <input id="tenant-name" name="name" class="ff-input" type="text" required placeholder="Gestoría Central" />
+      </label>
+      <label>
+        Plan
+        <select id="tenant-plan" name="plan" class="ff-input">
+          <option value="starter">starter</option>
+          <option value="growth">growth</option>
+          <option value="pro">pro</option>
+          <option value="enterprise">enterprise</option>
+        </select>
+      </label>
+      <label>
+        Estado
+        <select id="tenant-status" name="status" class="ff-input">
+          <option value="active" selected>active</option>
+          <option value="suspended">suspended</option>
+          <option value="disabled">disabled</option>
+        </select>
+      </label>
+      <label>
+        URL del logo
+        <input id="tenant-logo-url" name="logo_url" class="ff-input" type="url" placeholder="https://..." />
+      </label>
+      <label>
+        Email admin inicial
+        <input id="tenant-admin-email" name="admin_email" class="ff-input" type="email" placeholder="admin@gestoria.com" />
+      </label>
+
+      <div class="ff-filters__actions">
+        <button id="tenant-new-submit" class="ff-btn ff-btn--primary" type="submit">Crear tenant</button>
+        <a class="ff-btn ff-btn--ghost" href="/app/platform/tenants">Cancelar</a>
+      </div>
+      <p id="platform-tenant-new-message" class="ff-form-message" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/platform_tenant_new.js', v=ui_version) }}"></script>
+{% endblock %}

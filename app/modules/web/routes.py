@@ -62,6 +62,21 @@ def inject_layout_context() -> dict:
                     },
                 ],
             },
+            {
+                "page_id": "platform",
+                "label": "Platform",
+                "icon": "ph-buildings",
+                "active": False,
+                "badge": None,
+                "children": [
+                    {
+                        "page_id": "platform_tenants",
+                        "endpoint": "web.app_platform_tenants",
+                        "label": "Gestorías",
+                        "required_permissions": ["platform.super_admin"],
+                    },
+                ],
+            },
         ],
     }
 
@@ -140,3 +155,23 @@ def app_admin_access():
 def app_admin_audit():
     """Render tenant admin audit page."""
     return render_template("pages/admin_audit.html", active_nav="admin_audit", page_id="admin_audit")
+
+
+@bp.get("/app/platform/tenants")
+def app_platform_tenants():
+    """Render super-admin tenant cards page."""
+    return render_template(
+        "pages/platform_tenants.html",
+        active_nav="platform_tenants",
+        page_id="platform_tenants",
+    )
+
+
+@bp.get("/app/platform/tenants/new")
+def app_platform_tenant_new():
+    """Render super-admin create tenant page."""
+    return render_template(
+        "pages/platform_tenant_new.html",
+        active_nav="platform_tenants",
+        page_id="platform_tenant_new",
+    )
