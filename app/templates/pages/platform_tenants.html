@@ -43,15 +43,18 @@
   </div>
 </section>
 
-<div class="ff-modal" id="platform-tenant-detail-modal" aria-hidden="true">
-  <div class="ff-modal__backdrop" data-ff="modal-close"></div>
+<div class="ff-modal" id="platform-tenant-status-confirm-modal" aria-hidden="true">
+  <div class="ff-modal__backdrop"></div>
   <div class="ff-card ff-tenant-modal">
     <div class="ff-card__head ff-page-head">
-      <h3 id="tenant-detail-title">Detalle de gestoría</h3>
-      <button type="button" class="ff-btn ff-btn--ghost" data-ff="modal-close">Cerrar</button>
+      <h3>Confirmar cambio de estado</h3>
     </div>
     <div class="ff-card__body">
-      <div id="tenant-detail-content"></div>
+      <p id="platform-tenant-status-confirm-content"></p>
+      <div class="ff-filters__actions" style="margin-top: 1rem;">
+        <button type="button" id="platform-tenant-status-confirm-submit" class="ff-btn ff-btn--primary">Confirmar</button>
+        <button type="button" id="platform-tenant-status-confirm-cancel" class="ff-btn ff-btn--ghost">Cancelar</button>
+      </div>
     </div>
   </div>
 </div>

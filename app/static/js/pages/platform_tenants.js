@@ -10,11 +10,12 @@
   const prevButton = document.getElementById('platform-tenants-prev');
   const nextButton = document.getElementById('platform-tenants-next');
 
-  const detailModal = document.getElementById('platform-tenant-detail-modal');
-  const detailTitle = document.getElementById('tenant-detail-title');
-  const detailContent = document.getElementById('tenant-detail-content');
+  const confirmModal = document.getElementById('platform-tenant-status-confirm-modal');
+  const confirmContent = document.getElementById('platform-tenant-status-confirm-content');
+  const confirmButton = document.getElementById('platform-tenant-status-confirm-submit');
+  const cancelButton = document.getElementById('platform-tenant-status-confirm-cancel');
 
-  const state = { limit: 12, offset: 0, total: 0, items: [] };
+  const state = { limit: 12, offset: 0, total: 0, items: [], pendingAction: null };
 
   const statusVariant = (status) => {
     switch (status) {
@@ -60,6 +61,27 @@
     }, 800);
   };
 
+  const closeConfirmModal = () => {
+    if (!confirmModal) return;
+    confirmModal.classList.remove('is-open');
+    document.body.style.overflow = '';
+    state.pendingAction = null;
+  };
+
+  const openConfirmModal = (tenant, nextStatus, actionLabel) => {
+    if (!confirmModal) return;
+    state.pendingAction = { tenantId: tenant.id, nextStatus };
+    confirmContent.textContent = `¿Confirmas ${actionLabel.toLowerCase()} la gestoría "${tenant.name}"?`;
+    confirmModal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const actionForTenant = (tenant) => {
+    if (tenant.status === 'active') return { label: 'Suspender', nextStatus: 'suspended' };
+    if (tenant.status === 'suspended') return { label: 'Activar', nextStatus: 'active' };
+    return { label: 'Desactivar', nextStatus: 'disabled' };
+  };
+
   const renderCards = (items) => {
     grid.innerHTML = '';
 
@@ -73,6 +95,7 @@
       const logo = tenant.logo_url
         ? `<img src="${tenant.logo_url}" alt="Logo ${tenant.name || 'tenant'}" class="ff-tenant-card__logo" loading="lazy" />`
         : `<div class="ff-tenant-card__logo ff-tenant-card__logo--placeholder"><i class="ph ph-buildings"></i></div>`;
+      const action = actionForTenant(tenant);
 
       card.className = 'ff-tenant-card';
       card.innerHTML = `
@@ -91,28 +114,16 @@
           <span>Usuarios: <b>${tenant.metrics?.users || 0}</b></span>
         </div>
 
-        <button type="button" class="ff-btn ff-btn--ghost" data-action="detail" data-tenant-id="${tenant.id}">
-          Ver detalle / Administrar
-        </button>
+        <div class="ff-filters__actions">
+          <a href="/app/platform/tenants/${tenant.id}" class="ff-btn ff-btn--ghost">Ver detalle</a>
+          <button type="button" class="ff-btn ff-btn--primary" data-action="status-change" data-tenant-id="${tenant.id}" data-next-status="${action.nextStatus}" data-action-label="${action.label}">
+            ${action.label}
+          </button>
+        </div>
       `;
 
       grid.appendChild(card);
     });
-  };
-
-  const openDetailModal = (tenantId) => {
-    const tenant = state.items.find((item) => item.id === tenantId);
-    if (!tenant) return;
-
-    detailTitle.textContent = `Detalle · ${tenant.name || 'Gestoría'}`;
-    detailContent.innerHTML = `
-      <p><b>Estado:</b> ${tenant.status || '-'}</p>
-      <p><b>Plan:</b> ${tenant.plan || '-'}</p>
-      <p><b>Empresas:</b> ${tenant.metrics?.companies || 0}</p>
-      <p><b>Usuarios:</b> ${tenant.metrics?.users || 0}</p>
-      <p><b>ID:</b> <code>${tenant.id}</code></p>
-    `;
-    detailModal.classList.add('is-open');
   };
 
   const loadTenants = async () => {
@@ -133,6 +144,26 @@
         return;
       }
       setMessage('No se pudieron cargar las gestorías.', true);
+    }
+  };
+
+  const submitStatusChange = async () => {
+    if (!state.pendingAction) return;
+    const { tenantId, nextStatus } = state.pendingAction;
+    try {
+      confirmButton.disabled = true;
+      await window.apiFetch(`/platform/tenants/${tenantId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      closeConfirmModal();
+      window.showToast('success', 'Estado actualizado correctamente.');
+      await loadTenants();
+    } catch (error) {
+      window.handleApiError(error, { defaultMessage: 'No se pudo actualizar el estado del tenant.' });
+    } finally {
+      confirmButton.disabled = false;
     }
   };
 
@@ -159,10 +190,15 @@
   });
 
   grid.addEventListener('click', (event) => {
-    const trigger = event.target.closest('button[data-action="detail"]');
+    const trigger = event.target.closest('button[data-action="status-change"]');
     if (!trigger) return;
-    openDetailModal(trigger.dataset.tenantId);
+    const tenant = state.items.find((item) => item.id === trigger.dataset.tenantId);
+    if (!tenant) return;
+    openConfirmModal(tenant, trigger.dataset.nextStatus, trigger.dataset.actionLabel || 'Cambiar estado');
   });
+
+  confirmButton?.addEventListener('click', submitStatusChange);
+  cancelButton?.addEventListener('click', closeConfirmModal);
 
   loadTenants();
 })();

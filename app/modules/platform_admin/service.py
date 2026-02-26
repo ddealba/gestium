@@ -53,6 +53,48 @@ class PlatformAdminService:
         ]
         return items, total
 
+
+    def get_tenant_detail(self, tenant_id: str) -> dict:
+        tenant = self.repository.get_client(tenant_id)
+        if tenant is None:
+            raise NotFound("tenant_not_found")
+
+        company_count = self.repository.count_companies_by_client_ids([tenant.id]).get(tenant.id, 0)
+        user_count = self.repository.count_users_by_client_ids([tenant.id]).get(tenant.id, 0)
+
+        companies = self.repository.list_companies_for_client(tenant.id)
+        users = self.repository.list_users_for_client(tenant.id)
+
+        return {
+            "id": tenant.id,
+            "name": tenant.name,
+            "status": tenant.status,
+            "plan": tenant.plan,
+            "logo_url": getattr(tenant, "logo_url", None),
+            "created_at": tenant.created_at.isoformat() if tenant.created_at else None,
+            "metrics": {
+                "companies": int(company_count),
+                "users": int(user_count),
+            },
+            "companies": [
+                {
+                    "id": company.id,
+                    "name": company.name,
+                    "tax_id": company.tax_id,
+                    "status": company.status,
+                }
+                for company in companies
+            ],
+            "users": [
+                {
+                    "id": user.id,
+                    "email": user.email,
+                    "status": user.status,
+                }
+                for user in users
+            ],
+        }
+
     def create_tenant(self, payload: dict) -> Client:
         client_values = {
             "name": payload["name"],

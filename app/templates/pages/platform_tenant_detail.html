@@ -1,0 +1,34 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Platform · Detalle tenant · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head ff-page-head">
+    <h2 id="platform-tenant-detail-title">Detalle de gestoría</h2>
+    <a class="ff-btn ff-btn--ghost" href="/app/platform/tenants">Volver</a>
+  </div>
+  <div class="ff-card__body">
+    <p id="platform-tenant-detail-message" class="ff-form-message" aria-live="polite"></p>
+
+    <div id="platform-tenant-detail-basic"></div>
+
+    <section style="margin-top: 1.25rem;">
+      <h3>Empresas</h3>
+      <div id="platform-tenant-detail-companies"></div>
+    </section>
+
+    <section style="margin-top: 1.25rem;">
+      <h3>Usuarios</h3>
+      <div id="platform-tenant-detail-users"></div>
+    </section>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  window.platformTenantDetailTenantId = {{ tenant_id|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/pages/platform_tenant_detail.js', v=ui_version) }}"></script>
+{% endblock %}

@@ -122,3 +122,88 @@ def test_created_tenant_persists_and_appears_with_metrics(app, client):
         assert updated["status"] == "suspended"
 
         db.drop_all()
+
+
+def test_super_admin_can_get_tenant_detail(app, client):
+    with app.app_context():
+        db.create_all()
+        root_tenant = _create_client("Root Tenant")
+        detail_tenant = _create_client("Tenant Detalle", status="suspended", plan="pro")
+        seed_rbac()
+
+        super_admin_user = _create_user(root_tenant.id, "super.detail@example.com")
+        super_admin_role = Role.query.filter_by(name="Super Admin", scope="platform", client_id=None).one()
+        UserRoleRepository(db.session).assign_role(super_admin_user.id, super_admin_role.id)
+
+        db.session.add(Company(client_id=detail_tenant.id, name="Empresa Detalle", tax_id="TID-DET", status="active"))
+        db.session.add(User(client_id=detail_tenant.id, email="user.detalle@example.com", status="active"))
+        db.session.commit()
+
+        response = client.get(f"/platform/tenants/{detail_tenant.id}", headers=_auth_header(super_admin_user))
+        assert response.status_code == 200
+
+        tenant = response.get_json()["tenant"]
+        assert tenant["id"] == detail_tenant.id
+        assert tenant["status"] == "suspended"
+        assert tenant["metrics"]["companies"] == 1
+        assert tenant["metrics"]["users"] == 1
+        assert len(tenant["companies"]) == 1
+        assert len(tenant["users"]) == 1
+
+        db.drop_all()
+
+
+def test_tenant_admin_cannot_change_tenant_status(app, client):
+    with app.app_context():
+        db.create_all()
+        tenant = _create_client("Tenant A", status="active")
+        seed_rbac()
+
+        tenant_admin_user = _create_user(tenant.id, "tenant.admin2@example.com")
+        tenant_admin_role = Role.query.filter_by(name="Admin Cliente", scope="tenant", client_id=tenant.id).one()
+        UserRoleRepository(db.session).assign_role(tenant_admin_user.id, tenant_admin_role.id)
+        db.session.commit()
+
+        response = client.patch(
+            f"/platform/tenants/{tenant.id}",
+            headers=_auth_header(tenant_admin_user),
+            json={"status": "suspended"},
+        )
+        assert response.status_code == 403
+
+        persisted = Client.query.filter_by(id=tenant.id).one()
+        assert persisted.status == "active"
+
+        db.drop_all()
+
+
+def test_updated_tenant_status_is_reflected_in_list(app, client):
+    with app.app_context():
+        db.create_all()
+        root_tenant = _create_client("Root Tenant")
+        managed_tenant = _create_client("Tenant Estado", status="active")
+        seed_rbac()
+
+        super_admin_user = _create_user(root_tenant.id, "super.state@example.com")
+        super_admin_role = Role.query.filter_by(name="Super Admin", scope="platform", client_id=None).one()
+        UserRoleRepository(db.session).assign_role(super_admin_user.id, super_admin_role.id)
+        db.session.commit()
+
+        patch_response = client.patch(
+            f"/platform/tenants/{managed_tenant.id}",
+            headers=_auth_header(super_admin_user),
+            json={"status": "disabled"},
+        )
+        assert patch_response.status_code == 200
+
+        list_response = client.get(
+            "/platform/tenants?q=Estado",
+            headers=_auth_header(super_admin_user),
+        )
+        assert list_response.status_code == 200
+        items = list_response.get_json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == managed_tenant.id
+        assert items[0]["status"] == "disabled"
+
+        db.drop_all()
