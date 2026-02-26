@@ -175,3 +175,14 @@ def app_platform_tenant_new():
         active_nav="platform_tenants",
         page_id="platform_tenant_new",
     )
+
+
+@bp.get("/app/platform/tenants/<tenant_id>")
+def app_platform_tenant_detail(tenant_id: str):
+    """Render super-admin tenant detail page."""
+    return render_template(
+        "pages/platform_tenant_detail.html",
+        active_nav="platform_tenants",
+        page_id="platform_tenant_detail",
+        tenant_id=tenant_id,
+    )

@@ -85,3 +85,19 @@ class ClientRepositoryPlatform:
             .all()
         )
         return {client_id: count for client_id, count in rows}
+
+    def list_companies_for_client(self, client_id: str) -> list[Company]:
+        return (
+            self.session.query(Company)
+            .filter(Company.client_id == client_id)
+            .order_by(Company.created_at.desc())
+            .all()
+        )
+
+    def list_users_for_client(self, client_id: str) -> list[User]:
+        return (
+            self.session.query(User)
+            .filter(User.client_id == client_id)
+            .order_by(User.created_at.desc())
+            .all()
+        )

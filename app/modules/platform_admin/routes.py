@@ -44,6 +44,16 @@ def list_tenants():
     })
 
 
+
+
+@bp.get("/platform/tenants/<tenant_id>")
+@auth_required
+@require_permission("platform.super_admin")
+def get_tenant_detail(tenant_id: str):
+    service = PlatformAdminService()
+    tenant = service.get_tenant_detail(tenant_id)
+    return ok({"tenant": tenant})
+
 @bp.post("/platform/tenants")
 @auth_required
 @require_permission("platform.super_admin")
