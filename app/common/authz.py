@@ -55,6 +55,15 @@ class AuthorizationService:
         permissions = self.get_user_permissions(user.id, user.client_id)
         return permission_code in permissions
 
+    def is_super_admin(self, user) -> bool:
+        """Return True when the user is global Super Admin or has explicit permission."""
+        if user is None:
+            return False
+        if self._user_is_super_admin(user.id):
+            return True
+        permissions = self.get_user_permissions(user.id, user.client_id)
+        return "platform.super_admin" in permissions
+
     def _user_is_super_admin(self, user_id: str) -> bool:
         cache = self._get_request_cache()
         cache_key = ("super_admin", user_id)
