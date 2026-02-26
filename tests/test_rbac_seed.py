@@ -42,6 +42,7 @@ def test_seed_rbac_creates_permissions_and_roles(app):
             "document.extraction.read",
             "document.extraction.write",
             "audit.read",
+            "platform.super_admin",
             "platform.clients.manage",
             "platform.metrics.read",
         }

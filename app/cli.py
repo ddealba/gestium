@@ -52,6 +52,7 @@ RBAC_PERMISSIONS: dict[str, str] = {
     "document.extraction.read": "Read document extractions",
     "document.extraction.write": "Manage document extractions",
     "audit.read": "Read audit logs",
+    "platform.super_admin": "Access platform super admin endpoints",
     "platform.clients.manage": "Manage platform clients",
     "platform.metrics.read": "Read platform metrics",
 }
@@ -252,14 +253,21 @@ def seed_smoke() -> dict[str, Client | Company | User]:
     admin_a = _get_or_create_user(client_a, "adminA@test.com", "Passw0rd!", user_service)
     viewer_a = _get_or_create_user(client_a, "viewerA@test.com", "Passw0rd!", user_service)
     admin_b = _get_or_create_user(client_b, "adminB@test.com", "Passw0rd!", user_service)
+    super_admin_user = _get_or_create_user(client_a, "superadmin@test.com", "Passw0rd!", user_service)
 
     admin_role_a = _get_or_create_role(client_a, "Admin Cliente", role_repository)
     operative_role_a = _get_or_create_role(client_a, "Operativo", role_repository)
     admin_role_b = _get_or_create_role(client_b, "Admin Cliente", role_repository)
+    platform_super_admin_role = Role.query.filter_by(
+        name="Super Admin",
+        scope="platform",
+        client_id=None,
+    ).one()
 
     _assign_role(admin_a, admin_role_a)
     _assign_role(viewer_a, operative_role_a)
     _assign_role(admin_b, admin_role_b)
+    _assign_role(super_admin_user, platform_super_admin_role)
 
     company_a1 = _get_or_create_company(client_a, "A1", "A1", SMOKE_COMPANY_A1_ID)
     company_a2 = _get_or_create_company(client_a, "A2", "A2", SMOKE_COMPANY_A2_ID)
@@ -303,6 +311,7 @@ def seed_smoke() -> dict[str, Client | Company | User]:
     click.echo("  adminA@test.com / Passw0rd!")
     click.echo("  viewerA@test.com / Passw0rd!")
     click.echo("  adminB@test.com / Passw0rd!")
+    click.echo("  superadmin@test.com / Passw0rd!")
 
     return {
         "client_a": client_a,
@@ -313,6 +322,7 @@ def seed_smoke() -> dict[str, Client | Company | User]:
         "admin_a": admin_a,
         "viewer_a": viewer_a,
         "admin_b": admin_b,
+        "super_admin": super_admin_user,
     }
 
 
