@@ -13,6 +13,10 @@
 
   const isSuperAdmin = () => sessionStorage.getItem(SUPER_ADMIN_KEY) === 'true';
 
+  const shouldShowTenantMenu = () => !isSuperAdmin() || hasTenantSelection();
+
+  const shouldShowPlatformMenu = () => isSuperAdmin() && !hasTenantSelection();
+
   const clearSelectedTenant = () => {
     sessionStorage.removeItem(TENANT_ID_KEY);
     sessionStorage.removeItem(TENANT_NAME_KEY);
@@ -28,6 +32,30 @@
     if (!shouldShow) return;
 
     tenantNameLabel.textContent = getTenantName() || 'Tenant';
+  };
+
+  const renderSidebarByContext = () => {
+    const navItems = document.querySelectorAll('.ff-nav [data-nav-scope]');
+    navItems.forEach((item) => {
+      const scope = item.dataset.navScope;
+      let visible = true;
+
+      if (scope === 'tenant') {
+        visible = shouldShowTenantMenu();
+      } else if (scope === 'platform') {
+        visible = shouldShowPlatformMenu();
+      } else if (scope === 'platform_optional') {
+        visible = shouldShowPlatformMenu();
+      }
+
+      item.hidden = !visible;
+    });
+
+    const navGroups = document.querySelectorAll('.ff-nav__group');
+    navGroups.forEach((group) => {
+      const visibleChildren = group.querySelectorAll('.ff-nav__subitem:not([hidden])');
+      group.hidden = visibleChildren.length === 0;
+    });
   };
 
   const redirectToTenantSelection = () => {
@@ -70,6 +98,7 @@
     }
 
     if (requireTenantSelection()) return;
+    renderSidebarByContext();
     renderTenantContextBanner();
   };
 
@@ -83,6 +112,7 @@
     clearSelectedTenant,
     hasTenantSelection,
     isSuperAdmin,
+    renderSidebarByContext,
     renderTenantContextBanner,
     requireTenantSelection,
   };

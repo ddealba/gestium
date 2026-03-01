@@ -7,6 +7,105 @@ from flask import Blueprint, redirect, render_template
 bp = Blueprint("web", __name__)
 
 
+def _build_nav_items() -> list[dict]:
+    """Build default sidebar navigation metadata."""
+    return [
+        {
+            "page_id": "dashboard",
+            "endpoint": "web.app_dashboard",
+            "label": "Dashboard",
+            "icon": "ph-squares-four",
+            "active": False,
+            "badge": None,
+            "scope": "tenant",
+        },
+        {
+            "page_id": "companies",
+            "endpoint": "web.app_companies",
+            "label": "Empresas",
+            "icon": "ph-buildings",
+            "active": False,
+            "badge": None,
+            "scope": "tenant",
+        },
+        {
+            "page_id": "employees",
+            "endpoint": "web.app_employees",
+            "label": "Empleados",
+            "icon": "ph-identification-card",
+            "active": False,
+            "badge": None,
+            "scope": "tenant",
+        },
+        {
+            "page_id": "cases",
+            "endpoint": "web.app_cases",
+            "label": "Expedientes",
+            "icon": "ph-folders",
+            "active": False,
+            "badge": None,
+            "scope": "tenant",
+        },
+        {
+            "page_id": "documents",
+            "endpoint": "web.app_documents",
+            "label": "Documentos",
+            "icon": "ph-files",
+            "active": False,
+            "badge": None,
+            "scope": "tenant",
+        },
+        {
+            "page_id": "admin",
+            "label": "Administración",
+            "icon": "ph-shield-check",
+            "active": False,
+            "badge": None,
+            "scope": "tenant",
+            "children": [
+                {
+                    "page_id": "admin_users",
+                    "endpoint": "web.app_admin_users",
+                    "label": "Usuarios",
+                    "required_permissions": ["tenant.user.read", "tenant.users.manage"],
+                    "scope": "tenant",
+                },
+                {
+                    "page_id": "admin_access",
+                    "endpoint": "web.app_admin_access",
+                    "label": "Accesos por empresa",
+                    "required_permissions": ["acl.read", "acl.manage"],
+                    "scope": "tenant",
+                },
+            ],
+        },
+        {
+            "page_id": "platform",
+            "label": "Plataforma",
+            "icon": "ph-buildings",
+            "active": False,
+            "badge": None,
+            "scope": "platform",
+            "children": [
+                {
+                    "page_id": "platform_tenants",
+                    "endpoint": "web.app_platform_tenants",
+                    "label": "Gestorías (Tenants)",
+                    "required_permissions": ["platform.super_admin"],
+                    "scope": "platform",
+                },
+                {
+                    "page_id": "admin_audit",
+                    "endpoint": "web.app_admin_audit",
+                    "label": "Auditoría global",
+                    "required_permissions": ["platform.super_admin"],
+                    "scope": "platform_optional",
+                },
+            ],
+        },
+    ]
+
+
 @bp.app_context_processor
 def inject_layout_context() -> dict:
     """Shared layout context for the server-rendered frontend."""
@@ -18,66 +117,7 @@ def inject_layout_context() -> dict:
         "user_role": "Operador",
         "user_initials": "US",
         "notifications_count": 0,
-        "nav_items": [
-            {
-                "page_id": "dashboard",
-                "endpoint": "web.app_dashboard",
-                "label": "Dashboard",
-                "icon": "ph-squares-four",
-                "active": False,
-                "badge": None,
-            },
-            {
-                "page_id": "companies",
-                "endpoint": "web.app_companies",
-                "label": "Empresas",
-                "icon": "ph-buildings",
-                "active": False,
-                "badge": None,
-            },
-            {
-                "page_id": "admin",
-                "label": "Admin",
-                "icon": "ph-shield-check",
-                "active": False,
-                "badge": None,
-                "children": [
-                    {
-                        "page_id": "admin_users",
-                        "endpoint": "web.app_admin_users",
-                        "label": "Usuarios",
-                        "required_permissions": ["tenant.user.read", "tenant.users.manage"],
-                    },
-                    {
-                        "page_id": "admin_access",
-                        "endpoint": "web.app_admin_access",
-                        "label": "Accesos por empresa",
-                        "required_permissions": ["acl.read", "acl.manage"],
-                    },
-                    {
-                        "page_id": "admin_audit",
-                        "endpoint": "web.app_admin_audit",
-                        "label": "Auditoría",
-                        "required_permissions": ["tenant.user.read", "tenant.users.manage"],
-                    },
-                ],
-            },
-            {
-                "page_id": "platform",
-                "label": "Platform",
-                "icon": "ph-buildings",
-                "active": False,
-                "badge": None,
-                "children": [
-                    {
-                        "page_id": "platform_tenants",
-                        "endpoint": "web.app_platform_tenants",
-                        "label": "Gestorías",
-                        "required_permissions": ["platform.super_admin"],
-                    },
-                ],
-            },
-        ],
+        "nav_items": _build_nav_items(),
     }
 
 
@@ -116,6 +156,12 @@ def app_company_employees(company_id: str):
     )
 
 
+@bp.get("/app/employees")
+def app_employees():
+    """Render tenant-level employees page."""
+    return render_template("pages/employees.html", active_nav="employees", page_id="employees")
+
+
 @bp.get("/app/companies/<company_id>/cases")
 def app_company_cases(company_id: str):
     """Render cases page for a company."""
@@ -125,6 +171,12 @@ def app_company_cases(company_id: str):
         page_id="companies",
         company_id=company_id,
     )
+
+
+@bp.get("/app/cases")
+def app_cases():
+    """Render tenant-level cases page."""
+    return render_template("pages/cases.html", active_nav="cases", page_id="cases")
 
 
 @bp.get("/app/companies/<company_id>/cases/<case_id>")
@@ -137,6 +189,12 @@ def app_case_detail(company_id: str, case_id: str):
         company_id=company_id,
         case_id=case_id,
     )
+
+
+@bp.get("/app/documents")
+def app_documents():
+    """Render tenant-level documents page."""
+    return render_template("pages/documentos.html", active_nav="documents", page_id="documents")
 
 
 @bp.get("/app/admin/users")
