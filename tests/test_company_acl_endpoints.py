@@ -165,3 +165,26 @@ def test_create_company_assigns_admin_access(client, db_session):
 
     assert access is not None
     assert access.access_level == "admin"
+
+
+def test_super_admin_list_companies_ignores_acl_restrictions(client, db_session):
+    tenant = create_client(db_session)
+    super_admin_user = create_user(db_session, tenant.id, email="super.admin@example.com")
+    seed_rbac()
+
+    super_admin_role = Role.query.filter_by(name="Super Admin", scope="platform", client_id=None).one()
+    UserRoleRepository(db_session).assign_role(super_admin_user.id, super_admin_role.id)
+    db_session.commit()
+
+    company_a = create_company(db_session, tenant.id, "Alpha", "A-123")
+    company_b = create_company(db_session, tenant.id, "Beta", "B-456")
+
+    response = client.get(
+        "/companies",
+        headers={**auth_header_for(super_admin_user), "X-Admin-Tenant": tenant.id},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert {company["id"] for company in payload["items"]} == {company_a.id, company_b.id}
+    assert payload["total"] == 2
