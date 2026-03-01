@@ -10,7 +10,8 @@
   <nav class="ff-nav">
     {% for item in nav_items %}
       {% if item.children %}
-        <div class="ff-nav__group {{ 'is-active' if item.active or item.page_id == active_nav else '' }}">
+        <div class="ff-nav__group {{ 'is-active' if item.active or item.page_id == active_nav else '' }}"
+             data-nav-scope="{{ item.scope|default('tenant') }}">
           <div class="ff-nav__item ff-nav__item--group">
             <span class="ff-nav__icon"><i class="ph {{ item.icon }}"></i></span>
             {{ item.label }}
@@ -19,6 +20,7 @@
             {% for child in item.children %}
               <a class="ff-nav__subitem {{ 'is-active' if child.page_id == active_nav else '' }}"
                  data-nav="{{ child.page_id }}"
+                 data-nav-scope="{{ child.scope|default(item.scope|default('tenant')) }}"
                  {% if child.required_permissions %}
                  data-required-permissions="{{ child.required_permissions|join(',') }}"
                  {% endif %}
@@ -31,6 +33,7 @@
       {% else %}
         <a class="ff-nav__item {{ 'is-active' if item.active or item.page_id == active_nav else '' }}"
            data-nav="{{ item.page_id }}"
+           data-nav-scope="{{ item.scope|default('tenant') }}"
            href="{{ url_for(item.endpoint) }}">
           <span class="ff-nav__icon"><i class="ph {{ item.icon }}"></i></span>
           {{ item.label }}
