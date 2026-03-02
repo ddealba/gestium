@@ -94,6 +94,8 @@
   };
 
   const bootstrapTenantContext = async () => {
+    renderSidebarByContext();
+
     if (!window.auth?.me) {
       renderTenantContextBanner();
       return;
@@ -108,7 +110,10 @@
       }
     }
 
-    if (requireTenantSelection()) return;
+    if (requireTenantSelection()) {
+      renderSidebarByContext();
+      return;
+    }
     renderSidebarByContext();
     renderTenantContextBanner();
   };
