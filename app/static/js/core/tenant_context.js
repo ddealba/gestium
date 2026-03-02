@@ -13,9 +13,20 @@
 
   const isSuperAdmin = () => sessionStorage.getItem(SUPER_ADMIN_KEY) === 'true';
 
-  const shouldShowTenantMenu = () => !isSuperAdmin() || (hasTenantSelection() && !isPlatformPage());
+  const hasResolvedSuperAdminFlag = () => sessionStorage.getItem(SUPER_ADMIN_KEY) !== null;
 
-  const shouldShowPlatformMenu = () => isSuperAdmin() && (!hasTenantSelection() || isPlatformPage());
+  const shouldShowTenantMenu = () => {
+    if (isPlatformPage()) return false;
+    if (!hasResolvedSuperAdminFlag()) return false;
+    return !isSuperAdmin() || hasTenantSelection();
+  };
+
+  const shouldShowPlatformMenu = () => {
+    if (!hasResolvedSuperAdminFlag()) {
+      return isPlatformPage();
+    }
+    return isSuperAdmin() && (!hasTenantSelection() || isPlatformPage());
+  };
 
   const clearSelectedTenant = () => {
     sessionStorage.removeItem(TENANT_ID_KEY);
