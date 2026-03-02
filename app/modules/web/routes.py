@@ -110,7 +110,7 @@ def _build_nav_items() -> list[dict]:
 def inject_layout_context() -> dict:
     """Shared layout context for the server-rendered frontend."""
     return {
-        "ui_version": "1",
+        "ui_version": "2",
         "current_year": datetime.now().year,
         "tenant_name": "Gestium",
         "user_name": "Usuario",
