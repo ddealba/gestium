@@ -60,12 +60,15 @@
       }
 
       item.hidden = !visible;
+      item.style.display = visible ? '' : 'none';
     });
 
     const navGroups = document.querySelectorAll('.ff-nav__group');
     navGroups.forEach((group) => {
       const visibleChildren = group.querySelectorAll('.ff-nav__subitem:not([hidden])');
-      group.hidden = visibleChildren.length === 0;
+      const isVisible = visibleChildren.length > 0;
+      group.hidden = !isVisible;
+      group.style.display = isVisible ? '' : 'none';
     });
   };
 
