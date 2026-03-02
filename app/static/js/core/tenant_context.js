@@ -13,9 +13,9 @@
 
   const isSuperAdmin = () => sessionStorage.getItem(SUPER_ADMIN_KEY) === 'true';
 
-  const shouldShowTenantMenu = () => !isSuperAdmin() || hasTenantSelection();
+  const shouldShowTenantMenu = () => !isSuperAdmin() || (hasTenantSelection() && !isPlatformPage());
 
-  const shouldShowPlatformMenu = () => isSuperAdmin() && !hasTenantSelection();
+  const shouldShowPlatformMenu = () => isSuperAdmin() && (!hasTenantSelection() || isPlatformPage());
 
   const clearSelectedTenant = () => {
     sessionStorage.removeItem(TENANT_ID_KEY);
