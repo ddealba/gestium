@@ -29,6 +29,10 @@
       setMessage('Login correcto. Redirigiendo…');
       const me = await window.auth.me();
       sessionStorage.setItem('is_super_admin', String(Boolean(me?.is_super_admin)));
+      if (me?.is_super_admin) {
+        sessionStorage.removeItem('admin_selected_tenant_id');
+        sessionStorage.removeItem('admin_selected_tenant_name');
+      }
       window.location.href = me?.is_super_admin ? '/app/platform/tenants' : '/app/companies';
     } catch (error) {
       window.handleApiError(error, { defaultMessage: 'No se pudo iniciar sesión.' });
