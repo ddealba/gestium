@@ -18,14 +18,16 @@
   const shouldShowTenantMenu = () => {
     if (isPlatformPage()) return false;
     if (!hasResolvedSuperAdminFlag()) return false;
-    return !isSuperAdmin();
+    if (!isSuperAdmin()) return true;
+    return hasTenantSelection();
   };
 
   const shouldShowPlatformMenu = () => {
     if (!hasResolvedSuperAdminFlag()) {
       return isPlatformPage();
     }
-    return isSuperAdmin();
+    if (!isSuperAdmin()) return false;
+    return !hasTenantSelection() || isPlatformPage();
   };
 
   const clearSelectedTenant = () => {
