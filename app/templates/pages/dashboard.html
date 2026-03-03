@@ -1,84 +1,48 @@
 {% extends "layouts/app.html" %}
-{% from "components/ui_macros.html" import tag %}
 
 {% block title %}Dashboard · Gestium{% endblock %}
 {% block page_header %}Dashboard{% endblock %}
 
 {% block content %}
-<section class="ff-grid">
-  <div class="ff-col-3">
-    <div class="ff-card">
-      <div class="ff-stat">
-        <div class="ff-stat__left">
-          <div class="ff-ring" style="--p:.62;--c:var(--ff-primary)"></div>
-          <div>
-            <div class="ff-stat__value">2200</div>
-            <div class="ff-stat__label">Sales</div>
-            <div style="margin-top:10px;">{{ tag("+20% mes","warn") }}</div>
-          </div>
-        </div>
-        <i class="ph ph-arrow-up-right" style="font-size:18px;opacity:.45"></i>
-      </div>
-    </div>
-  </div>
-
-  <div class="ff-col-3">
-    <div class="ff-card">
-      <div class="ff-stat">
-        <div class="ff-stat__left">
-          <div class="ff-ring" style="--p:.72;--c:var(--ff-success)"></div>
-          <div>
-            <div class="ff-stat__value">4400</div>
-            <div class="ff-stat__label">Orders</div>
-            <div style="margin-top:10px;">{{ tag("+30% mes","success") }}</div>
-          </div>
-        </div>
-        <i class="ph ph-arrow-up-right" style="font-size:18px;opacity:.45"></i>
-      </div>
-    </div>
-  </div>
-
-  <div class="ff-col-3">
-    <div class="ff-card">
-      <div class="ff-stat">
-        <div class="ff-stat__left">
-          <div class="ff-ring" style="--p:.66;--c:var(--ff-secondary)"></div>
-          <div>
-            <div class="ff-stat__value">6600</div>
-            <div class="ff-stat__label">Invoices</div>
-            <div style="margin-top:10px;">{{ tag("+60% mes","blue") }}</div>
-          </div>
-        </div>
-        <i class="ph ph-arrow-up-right" style="font-size:18px;opacity:.45"></i>
-      </div>
-    </div>
-  </div>
-
-  <div class="ff-col-3">
-    <div class="ff-card ff-card--brand">
-      <div class="ff-stat">
-        <div class="ff-stat__left">
-          <div class="ff-ring" style="--p:.80;--c:#ff8b3d"></div>
-          <div>
-            <div class="ff-stat__value">8800</div>
-            <div class="ff-stat__label" style="color:rgba(255,255,255,.75)">Payments</div>
-            <div style="margin-top:10px;">{{ tag("+90% mes","warn") }}</div>
-          </div>
-        </div>
-        <i class="ph ph-arrow-up-right" style="font-size:18px;opacity:.65"></i>
-      </div>
-      <div class="ff-watermark"><i class="ph ph-circles-three"></i></div>
-    </div>
-  </div>
-
+<section class="ff-grid" id="dashboard-page">
   <div class="ff-col-12">
+    <p id="dashboard-loading" class="ff-muted">Cargando dashboard…</p>
+  </div>
+
+  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__head"><span>Casos activos</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-active-cases">0</div><small class="ff-muted" id="kpi-cases-last-days">0 en ventana</small></div></div></div>
+  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__head"><span>Casos vencidos</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-overdue-cases">0</div><small class="ff-muted" id="kpi-due-today">0 vencen hoy</small></div></div></div>
+  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__head"><span>Docs pendientes</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-pending">0</div><small class="ff-muted" id="kpi-docs-last-days">0 subidos en ventana</small></div></div></div>
+  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__head"><span>Sin extracción</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-no-extraction">0</div><small class="ff-muted"><span id="kpi-coverage">0</span>% cobertura</small></div></div></div>
+
+  <div class="ff-col-4">
+    <div class="ff-card"><div class="ff-card__head"><span>Casos por estado</span></div><div class="ff-card__body"><div id="chart-cases-by-status"></div></div></div>
+  </div>
+  <div class="ff-col-4">
+    <div class="ff-card"><div class="ff-card__head"><span>Documentos por estado</span></div><div class="ff-card__body"><div id="chart-docs-by-status"></div></div></div>
+  </div>
+  <div class="ff-col-4">
+    <div class="ff-card"><div class="ff-card__head"><span>Cobertura extracción</span></div><div class="ff-card__body"><div id="chart-extract-coverage"></div></div></div>
+  </div>
+
+  <div class="ff-col-7">
     <div class="ff-card">
-      <div class="ff-card__head">
-        <span>Sales</span>
-        <span class="ff-pill"><i class="ph ph-calendar"></i> 2026</span>
-      </div>
+      <div class="ff-card__head"><span>Top casos vencidos</span></div>
       <div class="ff-card__body">
-        <div data-ff-chart="sales"></div>
+        <table class="ff-table" id="dashboard-overdue-table">
+          <thead><tr><th>Expediente</th><th>Empresa</th><th>Estado</th><th>Vencimiento</th><th>Responsable</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p id="overdue-empty" class="ff-empty" hidden>Aún no hay casos vencidos.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ff-col-5">
+    <div class="ff-card">
+      <div class="ff-card__head"><span>Actividad reciente</span></div>
+      <div class="ff-card__body">
+        <ul id="dashboard-activity" style="display:grid;gap:12px;list-style:none;padding:0;margin:0;"></ul>
+        <p id="activity-empty" class="ff-empty" hidden>Aún no hay datos de actividad.</p>
       </div>
     </div>
   </div>
@@ -87,5 +51,5 @@
 
 {% block page_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script src="{{ url_for('static', filename='js/ui.charts.js', v=ui_version) }}"></script>
+<script src="{{ url_for('static', filename='js/pages/dashboard.js', v=ui_version) }}"></script>
 {% endblock %}
