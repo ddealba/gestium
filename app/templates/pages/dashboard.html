@@ -28,10 +28,12 @@
     <div class="ff-card">
       <div class="ff-card__head"><span>Top casos vencidos</span></div>
       <div class="ff-card__body">
-        <table class="ff-table" id="dashboard-overdue-table">
-          <thead><tr><th>Expediente</th><th>Empresa</th><th>Estado</th><th>Vencimiento</th><th>Responsable</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="ff-table-wrap">
+          <table class="ff-table" id="dashboard-overdue-table">
+            <thead><tr><th>Expediente</th><th>Empresa</th><th>Estado</th><th>Vencimiento</th><th>Responsable</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <p id="overdue-empty" class="ff-empty" hidden>Aún no hay casos vencidos.</p>
       </div>
     </div>
@@ -41,7 +43,7 @@
     <div class="ff-card">
       <div class="ff-card__head"><span>Actividad reciente</span></div>
       <div class="ff-card__body">
-        <ul id="dashboard-activity" style="display:grid;gap:12px;list-style:none;padding:0;margin:0;"></ul>
+        <ul id="dashboard-activity" class="ff-timeline"></ul>
         <p id="activity-empty" class="ff-empty" hidden>Aún no hay datos de actividad.</p>
       </div>
     </div>

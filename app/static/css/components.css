@@ -1,11 +1,13 @@
 .ff-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
 .ff-col-12{grid-column:span 12}
 .ff-col-8{grid-column:span 8}
+.ff-col-7{grid-column:span 7}
 .ff-col-6{grid-column:span 6}
+.ff-col-5{grid-column:span 5}
 .ff-col-4{grid-column:span 4}
 .ff-col-3{grid-column:span 3}
 @media(max-width:1080px){
-  .ff-col-8,.ff-col-6,.ff-col-4,.ff-col-3{grid-column:span 12}
+  .ff-col-8,.ff-col-7,.ff-col-6,.ff-col-5,.ff-col-4,.ff-col-3{grid-column:span 12}
 }
 
 .ff-card{
