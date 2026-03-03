@@ -1,0 +1,275 @@
+"""Repository layer for dashboard summary queries."""
+
+from __future__ import annotations
+
+from datetime import date, datetime
+
+from sqlalchemy import and_, distinct, func, not_
+
+from app.extensions import db
+from app.models.case import Case
+from app.models.case_event import CaseEvent
+from app.models.company import Company
+from app.models.document import Document
+from app.models.document_extraction import DocumentExtraction
+from app.models.user import User
+
+ACTIVE_CASE_STATUSES = ("open", "in_progress", "waiting")
+TERMINAL_CASE_STATUSES = ("done", "cancelled")
+CASE_STATUS_ORDER = ["open", "in_progress", "waiting", "done", "cancelled"]
+DOC_STATUS_ORDER = ["pending", "processed", "archived"]
+
+
+class DashboardRepository:
+    """Data access for tenant dashboard aggregates."""
+
+    def __init__(self, session: db.Session | None = None) -> None:
+        self.session = session or db.session
+
+    def count_active_cases(self, client_id: str) -> int:
+        return (
+            self.session.query(func.count(Case.id))
+            .filter(Case.client_id == client_id, Case.status.in_(ACTIVE_CASE_STATUSES))
+            .scalar()
+            or 0
+        )
+
+    def count_overdue_cases(self, client_id: str, today: date) -> int:
+        return (
+            self.session.query(func.count(Case.id))
+            .filter(
+                Case.client_id == client_id,
+                Case.due_date.isnot(None),
+                Case.due_date < today,
+                not_(Case.status.in_(TERMINAL_CASE_STATUSES)),
+            )
+            .scalar()
+            or 0
+        )
+
+    def count_due_today(self, client_id: str, today: date) -> int:
+        return (
+            self.session.query(func.count(Case.id))
+            .filter(
+                Case.client_id == client_id,
+                Case.due_date == today,
+                not_(Case.status.in_(TERMINAL_CASE_STATUSES)),
+            )
+            .scalar()
+            or 0
+        )
+
+    def count_docs_pending(self, client_id: str) -> int:
+        return (
+            self.session.query(func.count(Document.id))
+            .filter(Document.client_id == client_id, Document.status == "pending")
+            .scalar()
+            or 0
+        )
+
+    def count_total_docs(self, client_id: str) -> int:
+        return (
+            self.session.query(func.count(Document.id))
+            .filter(Document.client_id == client_id)
+            .scalar()
+            or 0
+        )
+
+    def count_docs_with_extraction(self, client_id: str) -> int:
+        return (
+            self.session.query(func.count(distinct(DocumentExtraction.document_id)))
+            .filter(DocumentExtraction.client_id == client_id)
+            .scalar()
+            or 0
+        )
+
+    def count_cases_created_since(self, client_id: str, start_ts: datetime) -> int:
+        return (
+            self.session.query(func.count(Case.id))
+            .filter(Case.client_id == client_id, Case.created_at >= start_ts)
+            .scalar()
+            or 0
+        )
+
+    def count_docs_uploaded_since(self, client_id: str, start_ts: datetime) -> int:
+        return (
+            self.session.query(func.count(Document.id))
+            .filter(Document.client_id == client_id, Document.created_at >= start_ts)
+            .scalar()
+            or 0
+        )
+
+    def cases_by_status(self, client_id: str) -> dict[str, int]:
+        rows = (
+            self.session.query(Case.status, func.count(Case.id))
+            .filter(Case.client_id == client_id)
+            .group_by(Case.status)
+            .all()
+        )
+        return {status: count for status, count in rows}
+
+    def docs_by_status(self, client_id: str) -> dict[str, int]:
+        rows = (
+            self.session.query(Document.status, func.count(Document.id))
+            .filter(Document.client_id == client_id)
+            .group_by(Document.status)
+            .all()
+        )
+        return {status: count for status, count in rows}
+
+    def overdue_cases(self, client_id: str, today: date, limit: int) -> list[dict]:
+        rows = (
+            self.session.query(
+                Case.id,
+                Case.title,
+                Case.type,
+                Case.status,
+                Case.due_date,
+                Company.id,
+                Company.name,
+                Case.responsible_user_id,
+                User.email,
+            )
+            .join(Company, Company.id == Case.company_id)
+            .outerjoin(User, User.id == Case.responsible_user_id)
+            .filter(
+                Case.client_id == client_id,
+                Case.due_date.isnot(None),
+                Case.due_date < today,
+                not_(Case.status.in_(TERMINAL_CASE_STATUSES)),
+            )
+            .order_by(Case.due_date.asc(), Case.created_at.asc())
+            .limit(max(limit, 1))
+            .all()
+        )
+
+        return [
+            {
+                "case_id": case_id,
+                "title": title,
+                "case_type": case_type,
+                "status": status,
+                "due_date": due_date.isoformat() if due_date else None,
+                "company_id": company_id,
+                "company_name": company_name,
+                "responsible_user_id": responsible_user_id,
+                "responsible_email": responsible_email,
+            }
+            for (
+                case_id,
+                title,
+                case_type,
+                status,
+                due_date,
+                company_id,
+                company_name,
+                responsible_user_id,
+                responsible_email,
+            ) in rows
+        ]
+
+    def case_events_for_activity(self, client_id: str, limit: int) -> list[dict]:
+        rows = (
+            self.session.query(
+                CaseEvent.created_at,
+                CaseEvent.event_type,
+                CaseEvent.payload,
+                CaseEvent.case_id,
+                CaseEvent.company_id,
+                Company.name,
+                Case.title,
+            )
+            .join(Case, and_(Case.id == CaseEvent.case_id, Case.client_id == client_id))
+            .join(Company, and_(Company.id == CaseEvent.company_id, Company.client_id == client_id))
+            .filter(CaseEvent.client_id == client_id)
+            .order_by(CaseEvent.created_at.desc())
+            .limit(max(limit, 1) * 3)
+            .all()
+        )
+
+        items: list[dict] = []
+        for ts, event_type, payload, case_id, company_id, company_name, case_title in rows:
+            payload = payload or {}
+            kind = "case_status_changed"
+            title = f"Expediente actualizado: {case_title}"
+            if event_type == "status_change":
+                if payload.get("from") is None and payload.get("to") == "open":
+                    kind = "case_created"
+                    title = f"Expediente creado: {case_title}"
+                else:
+                    to_status = payload.get("to") or "actualizado"
+                    kind = "case_status_changed"
+                    title = f"Estado cambiado a {to_status}: {case_title}"
+            elif event_type == "attachment":
+                kind = "document_uploaded"
+                title = payload.get("filename") or f"Documento adjunto en: {case_title}"
+            elif event_type == "comment":
+                kind = "case_status_changed"
+                title = f"Nuevo comentario en: {case_title}"
+
+            items.append(
+                {
+                    "ts": ts.isoformat() if ts else None,
+                    "kind": kind,
+                    "title": title,
+                    "company_id": company_id,
+                    "company_name": company_name,
+                    "case_id": case_id,
+                    "document_id": payload.get("document_id"),
+                    "_sort_ts": ts,
+                }
+            )
+        return items
+
+    def documents_for_activity(self, client_id: str, limit: int) -> list[dict]:
+        rows = (
+            self.session.query(Document.created_at, Document.id, Document.case_id, Document.company_id, Company.name)
+            .join(Company, and_(Company.id == Document.company_id, Company.client_id == client_id))
+            .filter(Document.client_id == client_id)
+            .order_by(Document.created_at.desc())
+            .limit(max(limit, 1))
+            .all()
+        )
+        return [
+            {
+                "ts": ts.isoformat() if ts else None,
+                "kind": "document_uploaded",
+                "title": "Documento subido",
+                "company_id": company_id,
+                "company_name": company_name,
+                "case_id": case_id,
+                "document_id": document_id,
+                "_sort_ts": ts,
+            }
+            for ts, document_id, case_id, company_id, company_name in rows
+        ]
+
+    def extractions_for_activity(self, client_id: str, limit: int) -> list[dict]:
+        rows = (
+            self.session.query(
+                DocumentExtraction.created_at,
+                DocumentExtraction.document_id,
+                DocumentExtraction.case_id,
+                DocumentExtraction.company_id,
+                Company.name,
+            )
+            .join(Company, and_(Company.id == DocumentExtraction.company_id, Company.client_id == client_id))
+            .filter(DocumentExtraction.client_id == client_id)
+            .order_by(DocumentExtraction.created_at.desc())
+            .limit(max(limit, 1))
+            .all()
+        )
+
+        return [
+            {
+                "ts": ts.isoformat() if ts else None,
+                "kind": "extraction_created",
+                "title": "Extracción generada",
+                "company_id": company_id,
+                "company_name": company_name,
+                "case_id": case_id,
+                "document_id": document_id,
+                "_sort_ts": ts,
+            }
+            for ts, document_id, case_id, company_id, company_name in rows
+        ]
