@@ -317,3 +317,51 @@
 #dashboard-page .ff-timeline a {
   font-weight: 600;
 }
+
+.ff-employees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.ff-employee-card {
+  border: 1px solid rgba(25, 33, 61, 0.08);
+  border-radius: 16px;
+  background: var(--ff-surface);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+}
+
+.ff-employee-card__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #334155;
+  flex-shrink: 0;
+}
+
+.ff-employee-card__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.ff-employee-card__content h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ff-employee-card__content p,
+.ff-employee-card__content small {
+  margin: 0;
+  color: var(--ff-muted);
+}
+
+.ff-employee-card__status {
+  display: flex;
+  align-items: center;
+}

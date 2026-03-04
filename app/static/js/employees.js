@@ -1,11 +1,10 @@
 (function () {
-  const table = document.getElementById('employees-table');
-  if (!table) return;
+  const list = document.getElementById('employees-list');
+  if (!list) return;
 
   if (window.tenantContext?.requireTenantSelection?.()) return;
 
-  const companyId = table.dataset.companyId;
-  const tbody = table.querySelector('tbody');
+  const companyId = list.dataset.companyId;
   const message = document.getElementById('employees-message');
   const refreshButton = document.getElementById('refresh-employees');
   const qInput = document.getElementById('employees-q');
@@ -18,7 +17,10 @@
 
   const state = { limit: 20, offset: 0, total: 0 };
 
+  const avatarPalette = ['#f6d6d3', '#d7e8fb', '#d8f4df', '#f8e6c7', '#eadbfb', '#d9f2f3'];
+
   const setMessage = (text, isError = false) => {
+    if (!message) return;
     message.textContent = text;
     message.classList.toggle('is-error', isError);
   };
@@ -28,25 +30,78 @@
     if (nextButton) nextButton.disabled = state.offset + state.limit >= state.total;
   };
 
-  const formatDate = (value) => value || '-';
+  const formatDate = (value) => {
+    if (!value) return 'Sin fecha';
+    const parsed = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return new Intl.DateTimeFormat('es-ES').format(parsed);
+  };
+
+  const escapeHtml = (value) => {
+    if (!value) return '';
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  };
+
+  const initialsFromName = (name) => {
+    const parts = (name || '')
+      .split(' ')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (!parts.length) return '??';
+    return parts.map((part) => part[0].toUpperCase()).join('');
+  };
+
+  const buildAvatar = (employee, index) => {
+    const initials = initialsFromName(employee.full_name);
+    const paletteIndex = index % avatarPalette.length;
+    return `
+      <div class="ff-employee-card__avatar" style="background:${avatarPalette[paletteIndex]};">
+        <span>${escapeHtml(initials)}</span>
+      </div>
+    `;
+  };
+
+  const statusMeta = (status) => {
+    if (status === 'active') {
+      return { label: 'Activo', className: 'ff-tag--success' };
+    }
+    if (status === 'terminated') {
+      return { label: 'Terminado', className: 'ff-tag--warn' };
+    }
+    return { label: status || 'Sin estado', className: 'ff-tag--blue' };
+  };
 
   const renderEmployees = (employees) => {
-    tbody.innerHTML = '';
+    list.innerHTML = '';
 
     if (!employees.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="ff-empty">No hay empleados para esta empresa.</td></tr>';
+      list.innerHTML = '<p class="ff-empty" style="grid-column:1 / -1;">No hay empleados para esta empresa.</p>';
       return;
     }
 
-    employees.forEach((employee) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${employee.full_name || '-'}</td>
-        <td>${employee.employee_ref || '-'}</td>
-        <td>${formatDate(employee.start_date)}</td>
-        <td><span class="ff-tag ${employee.status === 'active' ? 'ff-tag--success' : 'ff-tag--warn'}">${employee.status || '-'}</span></td>
+    employees.forEach((employee, index) => {
+      const meta = statusMeta(employee.status);
+      const card = document.createElement('article');
+      card.className = 'ff-employee-card';
+      card.innerHTML = `
+        ${buildAvatar(employee, index)}
+        <div class="ff-employee-card__content">
+          <h3>${escapeHtml(employee.full_name || 'Sin nombre')}</h3>
+          <p>${escapeHtml(employee.employee_ref || 'Sin referencia')}</p>
+          <small>Alta: ${escapeHtml(formatDate(employee.start_date))}</small>
+        </div>
+        <div class="ff-employee-card__status">
+          <span class="ff-tag ${meta.className}">${meta.label}</span>
+        </div>
       `;
-      tbody.appendChild(row);
+      list.appendChild(card);
     });
   };
 
@@ -66,6 +121,13 @@
   };
 
   const loadEmployees = async () => {
+    if (!companyId) {
+      setMessage('Selecciona una empresa para ver sus empleados.');
+      renderEmployees([]);
+      updatePaginationButtons();
+      return;
+    }
+
     setMessage('Cargando empleados…');
     try {
       const data = await window.apiFetch(`/companies/${companyId}/employees?${buildQuery()}`);
