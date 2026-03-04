@@ -26,6 +26,11 @@
   <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--info"><div class="ff-card__head"><span>Docs pendientes</span><span class="ff-kpi-card__icon">🧾</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-pending">0</div><small class="ff-muted" id="kpi-docs-last-days">0 subidos en ventana</small></div></div></div>
   <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--success"><div class="ff-card__head"><span>Sin extracción</span><span class="ff-kpi-card__icon">🤖</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-no-extraction">0</div><small class="ff-muted"><span id="kpi-coverage">0</span>% cobertura</small></div></div></div>
 
+
+  <div class="ff-col-4"><div class="ff-card ff-kpi-card"><div class="ff-card__head"><span>Empresas activas</span><span class="ff-kpi-card__icon">🏢</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-companies-active">0</div><small class="ff-muted">Empresas del cliente</small></div></div></div>
+  <div class="ff-col-4"><div class="ff-card ff-kpi-card ff-kpi-card--info"><div class="ff-card__head"><span>Empresas con expedientes</span><span class="ff-kpi-card__icon">📂</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-companies-open-cases">0</div><small class="ff-muted">Empresas con casos activos</small></div></div></div>
+  <div class="ff-col-4"><div class="ff-card ff-kpi-card ff-kpi-card--success"><div class="ff-card__head"><span>Empleados</span><span class="ff-kpi-card__icon">👥</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-employees-total">0</div><small class="ff-muted">Personas gestionadas · <span id="kpi-my-cases">0</span> mis casos</small></div></div></div>
+
   <div class="ff-col-4">
     <div class="ff-card"><div class="ff-card__head"><span>Casos por estado</span></div><div class="ff-card__body"><div id="chart-cases-by-status"></div></div></div>
   </div>
@@ -33,10 +38,10 @@
     <div class="ff-card"><div class="ff-card__head"><span>Documentos por estado</span></div><div class="ff-card__body"><div id="chart-docs-by-status"></div></div></div>
   </div>
   <div class="ff-col-4">
-    <div class="ff-card"><div class="ff-card__head"><span>Cobertura extracción</span></div><div class="ff-card__body"><div id="chart-extract-coverage"></div></div></div>
+    <div class="ff-card"><div class="ff-card__head"><span>Empleados por empresa</span></div><div class="ff-card__body"><div id="chart-employees-by-company"></div></div></div>
   </div>
 
-  <div class="ff-col-7">
+  <div class="ff-col-6">
     <div class="ff-card">
       <div class="ff-card__head"><span>Top casos vencidos</span></div>
       <div class="ff-card__body">
@@ -51,7 +56,28 @@
     </div>
   </div>
 
-  <div class="ff-col-5">
+
+
+  <div class="ff-col-6">
+    <div class="ff-card">
+      <div class="ff-card__head"><span>Mis casos</span></div>
+      <div class="ff-card__body">
+        <div class="ff-table-wrap">
+          <table class="ff-table" id="dashboard-my-cases-table">
+            <thead><tr><th>Caso</th><th>Empresa</th><th>Estado</th><th>Vencimiento</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="my-cases-empty" class="ff-empty" hidden>No tienes casos asignados.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ff-col-12">
+    <div class="ff-card"><div class="ff-card__head"><span>Cobertura extracción</span></div><div class="ff-card__body"><div id="chart-extract-coverage"></div></div></div>
+  </div>
+
+  <div class="ff-col-12">
     <div class="ff-card">
       <div class="ff-card__head"><span>Actividad reciente</span></div>
       <div class="ff-card__body">
@@ -60,6 +86,7 @@
       </div>
     </div>
   </div>
+
 </section>
 {% endblock %}
 

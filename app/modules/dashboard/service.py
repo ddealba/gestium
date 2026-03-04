@@ -20,9 +20,11 @@ class DashboardService:
     def get_summary(
         self,
         client_id: str,
+        user_id: str,
         days: int = 14,
         overdue_limit: int = 8,
         activity_limit: int = 12,
+        my_cases_limit: int = 5,
     ) -> dict:
         today = date.today()
         now = datetime.now(timezone.utc)
@@ -56,6 +58,10 @@ class DashboardService:
                 "docs_pending": self.repository.count_docs_pending(client_id),
                 "docs_no_extraction": docs_no_extraction,
                 "extract_coverage_pct": extract_coverage_pct,
+                "my_cases": self.repository.count_my_active_cases(client_id, user_id),
+                "companies_active": self.repository.count_active_companies(client_id),
+                "companies_with_open_cases": self.repository.count_companies_with_open_cases(client_id),
+                "employees_total": self.repository.count_total_active_employees(client_id),
                 "cases_created_last_days": self.repository.count_cases_created_since(client_id, since_ts),
                 "docs_uploaded_last_days": self.repository.count_docs_uploaded_since(client_id, since_ts),
                 "due_today": self.repository.count_due_today(client_id, today),
@@ -68,6 +74,8 @@ class DashboardService:
                 "labels": DOC_STATUS_ORDER,
                 "values": [int(docs_by_status_map.get(status, 0)) for status in DOC_STATUS_ORDER],
             },
+            "employees_by_company": self.repository.employees_by_company(client_id, limit=6),
             "overdue_cases": self.repository.overdue_cases(client_id, today, overdue_limit),
+            "my_cases_list": self.repository.my_cases(client_id, user_id, my_cases_limit),
             "activity": activity,
         }

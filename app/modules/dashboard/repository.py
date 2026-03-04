@@ -12,6 +12,7 @@ from app.models.case_event import CaseEvent
 from app.models.company import Company
 from app.models.document import Document
 from app.models.document_extraction import DocumentExtraction
+from app.models.employee import Employee
 from app.models.user import User
 
 ACTIVE_CASE_STATUSES = ("open", "in_progress", "waiting")
@@ -63,6 +64,48 @@ class DashboardRepository:
         return (
             self.session.query(func.count(Document.id))
             .filter(Document.client_id == client_id, Document.status == "pending")
+            .scalar()
+            or 0
+        )
+
+    def count_my_active_cases(self, client_id: str, user_id: str) -> int:
+        return (
+            self.session.query(func.count(Case.id))
+            .filter(
+                Case.client_id == client_id,
+                Case.responsible_user_id == user_id,
+                Case.status.in_(ACTIVE_CASE_STATUSES),
+            )
+            .scalar()
+            or 0
+        )
+
+    def count_active_companies(self, client_id: str) -> int:
+        return (
+            self.session.query(func.count(Company.id))
+            .filter(Company.client_id == client_id, Company.status == "active")
+            .scalar()
+            or 0
+        )
+
+    def count_companies_with_open_cases(self, client_id: str) -> int:
+        return (
+            self.session.query(func.count(distinct(Case.company_id)))
+            .join(Company, Company.id == Case.company_id)
+            .filter(
+                Company.client_id == client_id,
+                Case.client_id == client_id,
+                Case.status.in_(ACTIVE_CASE_STATUSES),
+            )
+            .scalar()
+            or 0
+        )
+
+    def count_total_active_employees(self, client_id: str) -> int:
+        return (
+            self.session.query(func.count(Employee.id))
+            .join(Company, Company.id == Employee.company_id)
+            .filter(Company.client_id == client_id, Employee.status == "active")
             .scalar()
             or 0
         )
@@ -167,6 +210,47 @@ class DashboardRepository:
                 responsible_email,
             ) in rows
         ]
+
+    def my_cases(self, client_id: str, user_id: str, limit: int) -> list[dict]:
+        rows = (
+            self.session.query(Case.id, Case.title, Case.company_id, Company.name, Case.status, Case.due_date)
+            .join(Company, Company.id == Case.company_id)
+            .filter(
+                Case.client_id == client_id,
+                Case.responsible_user_id == user_id,
+                Case.status.in_(ACTIVE_CASE_STATUSES),
+            )
+            .order_by(Case.due_date.asc().nullslast(), Case.created_at.asc())
+            .limit(max(limit, 1))
+            .all()
+        )
+
+        return [
+            {
+                "case_id": case_id,
+                "title": title,
+                "company_id": company_id,
+                "company_name": company_name,
+                "status": status,
+                "due_date": due_date.isoformat() if due_date else None,
+            }
+            for case_id, title, company_id, company_name, status, due_date in rows
+        ]
+
+    def employees_by_company(self, client_id: str, limit: int = 6) -> dict[str, list]:
+        rows = (
+            self.session.query(Company.name, func.count(Employee.id))
+            .join(Employee, Employee.company_id == Company.id)
+            .filter(Company.client_id == client_id)
+            .group_by(Company.name)
+            .order_by(func.count(Employee.id).desc(), Company.name.asc())
+            .limit(max(limit, 1))
+            .all()
+        )
+        return {
+            "labels": [name for name, _ in rows],
+            "values": [int(total) for _, total in rows],
+        }
 
     def case_events_for_activity(self, client_id: str, limit: int) -> list[dict]:
         rows = (
