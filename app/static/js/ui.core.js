@@ -19,6 +19,34 @@
   const page=document.body.getAttribute('data-page');
   if(page) qsa(`[data-nav="${page}"]`).forEach(a=>a.classList.add('is-active'));
 
+
+  const setSidebarGroupExpanded=(group,expanded)=>{
+    const trigger=qs('.ff-nav__item--group',group);
+    if(!trigger) return;
+    group.classList.toggle('is-expanded',expanded);
+    trigger.setAttribute('aria-expanded',expanded?'true':'false');
+  };
+
+  const initSidebarGroups=()=>{
+    qsa('.ff-nav__group').forEach(group=>{
+      const trigger=qs('.ff-nav__item--group',group);
+      if(!trigger) return;
+
+      const expandByDefault=group.classList.contains('is-active');
+      setSidebarGroupExpanded(group,expandByDefault);
+
+      const toggle=()=>setSidebarGroupExpanded(group,!group.classList.contains('is-expanded'));
+      trigger.addEventListener('click',toggle);
+      trigger.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter' || e.key===' '){
+          e.preventDefault();
+          toggle();
+        }
+      });
+    });
+  };
+
+  initSidebarGroups();
   // Sidebar permission-aware nav visibility
   const applyPermissionsToSidebar=(permissions)=>{
     const set=new Set(permissions||[]);
