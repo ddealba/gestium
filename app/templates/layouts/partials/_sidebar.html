@@ -18,7 +18,7 @@
             <span class="ff-nav__icon"><i class="ph {{ item.icon }}"></i></span>
             <span>{{ item.label }}</span>
             <span class="ff-nav__caret" aria-hidden="true">
-              <i class="ph ph-caret-right"></i>
+              <i class="ph {{ 'ph-caret-down' if item.active or item.page_id == active_nav else 'ph-caret-right' }}"></i>
             </span>
           </div>
           <div class="ff-nav__subnav">
