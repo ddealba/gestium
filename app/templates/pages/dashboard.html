@@ -9,10 +9,22 @@
     <p id="dashboard-loading" class="ff-muted">Cargando dashboard…</p>
   </div>
 
-  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__head"><span>Casos activos</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-active-cases">0</div><small class="ff-muted" id="kpi-cases-last-days">0 en ventana</small></div></div></div>
-  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__head"><span>Casos vencidos</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-overdue-cases">0</div><small class="ff-muted" id="kpi-due-today">0 vencen hoy</small></div></div></div>
-  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__head"><span>Docs pendientes</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-pending">0</div><small class="ff-muted" id="kpi-docs-last-days">0 subidos en ventana</small></div></div></div>
-  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__head"><span>Sin extracción</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-no-extraction">0</div><small class="ff-muted"><span id="kpi-coverage">0</span>% cobertura</small></div></div></div>
+  <div class="ff-col-12">
+    <div class="ff-card ff-dashboard-hero">
+      <div class="ff-dashboard-hero__orb ff-dashboard-hero__orb--a"></div>
+      <div class="ff-dashboard-hero__orb ff-dashboard-hero__orb--b"></div>
+      <div class="ff-card__body">
+        <p class="ff-dashboard-hero__eyebrow">Visión general</p>
+        <h2>Resumen operativo en tiempo real</h2>
+        <p class="ff-muted">Supervisa expedientes, vencimientos y carga documental de un vistazo para tomar decisiones más rápidas.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ff-col-3"><div class="ff-card ff-kpi-card"><div class="ff-card__head"><span>Casos activos</span><span class="ff-kpi-card__icon">📁</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-active-cases">0</div><small class="ff-muted" id="kpi-cases-last-days">0 en ventana</small></div></div></div>
+  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--danger"><div class="ff-card__head"><span>Casos vencidos</span><span class="ff-kpi-card__icon">⏰</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-overdue-cases">0</div><small class="ff-muted" id="kpi-due-today">0 vencen hoy</small></div></div></div>
+  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--info"><div class="ff-card__head"><span>Docs pendientes</span><span class="ff-kpi-card__icon">🧾</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-pending">0</div><small class="ff-muted" id="kpi-docs-last-days">0 subidos en ventana</small></div></div></div>
+  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--success"><div class="ff-card__head"><span>Sin extracción</span><span class="ff-kpi-card__icon">🤖</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-no-extraction">0</div><small class="ff-muted"><span id="kpi-coverage">0</span>% cobertura</small></div></div></div>
 
   <div class="ff-col-4">
     <div class="ff-card"><div class="ff-card__head"><span>Casos por estado</span></div><div class="ff-card__body"><div id="chart-cases-by-status"></div></div></div>

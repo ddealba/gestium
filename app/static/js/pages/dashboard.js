@@ -87,11 +87,12 @@
     overdueEmpty.hidden = true;
     items.forEach((item) => {
       const tr = document.createElement('tr');
+      tr.classList.add('ff-row-overdue');
       const href = `/app/companies/${item.company_id}/cases/${item.case_id}`;
       tr.innerHTML = `
         <td><a href="${href}">${item.title || item.case_id}</a></td>
         <td>${item.company_name || '-'}</td>
-        <td>${item.status || '-'}</td>
+        <td><span class="ff-tag ff-tag--danger">${item.status || '-'}</span></td>
         <td>${fmtDate(item.due_date)}</td>
         <td>${item.responsible_email || '-'}</td>
       `;
@@ -109,13 +110,15 @@
 
     items.forEach((item) => {
       const li = document.createElement('li');
+      li.classList.add('ff-timeline__item');
       const href = item.case_id
         ? `/app/companies/${item.company_id}/cases/${item.case_id}`
         : item.document_id
           ? `/app/documents`
           : null;
+      const icon = item.document_id ? '📄' : item.case_id ? '📌' : '📝';
       li.innerHTML = `
-        <div style="font-weight:600;">${item.kind || 'actividad'}</div>
+        <div class="ff-timeline__meta"><span>${icon}</span><span>${item.kind || 'actividad'}</span></div>
         <div>${href ? `<a href="${href}">${item.title || '-'}</a>` : item.title || '-'}</div>
         <small class="ff-muted">${item.company_name || '-'} · ${fmtDateTime(item.ts)}</small>
       `;
