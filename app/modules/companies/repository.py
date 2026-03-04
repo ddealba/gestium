@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from werkzeug.exceptions import BadRequest
-from sqlalchemy import false, or_
+from sqlalchemy import false, func, or_
 
 from app.extensions import db
 from app.models.company import Company
+from app.models.employee import Employee
 
 VALID_SORT_FIELDS = {"name", "created_at", "status"}
 VALID_ORDERS = {"asc", "desc"}
@@ -108,3 +109,15 @@ class CompanyRepository:
             .all()
         )
         return items, total_count
+
+    def employee_counts_by_company(self, company_ids: list[str]) -> dict[str, int]:
+        if not company_ids:
+            return {}
+
+        rows = (
+            self.session.query(Employee.company_id, func.count(Employee.id))
+            .filter(Employee.company_id.in_(company_ids))
+            .group_by(Employee.company_id)
+            .all()
+        )
+        return {company_id: total for company_id, total in rows}
