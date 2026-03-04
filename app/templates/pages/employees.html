@@ -44,19 +44,7 @@
             <button id="employees-clear-filters" class="ff-btn ff-btn--ghost" type="button">Limpiar</button>
           </div>
         </div>
-        <div class="ff-table-wrap">
-          <table class="ff-table" id="employees-table" data-company-id="{{ company_id }}">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Referencia</th>
-                <th>Alta</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <div id="employees-list" class="ff-employees-grid" data-company-id="{{ company_id }}"></div>
         <div class="ff-filters__actions" style="margin-top: 1rem;">
           <button id="employees-prev" class="ff-btn ff-btn--ghost" type="button">Anterior</button>
           <button id="employees-next" class="ff-btn ff-btn--ghost" type="button">Siguiente</button>
