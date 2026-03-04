@@ -11,6 +11,7 @@ from app.models.client import Client
 from app.models.company import Company
 from app.models.document import Document
 from app.models.document_extraction import DocumentExtraction
+from app.models.employee import Employee
 from app.models.role import Role
 from app.models.user import User
 from app.repositories.user_role_repository import UserRoleRepository
@@ -70,6 +71,7 @@ def test_dashboard_summary_returns_200_for_user_with_permission(client, db_sessi
         status="open",
         due_date=date.today() - timedelta(days=1),
         created_at=datetime.now(timezone.utc),
+        responsible_user_id=user.id,
     )
     db.session.add(case)
     db.session.flush()
@@ -84,6 +86,15 @@ def test_dashboard_summary_returns_200_for_user_with_permission(client, db_sessi
         status="pending",
     )
     db.session.add(doc)
+    db.session.add(
+        Employee(
+            client_id=tenant.id,
+            company_id=company.id,
+            full_name="Empleado Uno",
+            start_date=date.today() - timedelta(days=5),
+            status="active",
+        )
+    )
     db.session.commit()
 
     response = client.get("/dashboard/summary", headers=_auth_header(user))
@@ -92,6 +103,10 @@ def test_dashboard_summary_returns_200_for_user_with_permission(client, db_sessi
     payload = response.get_json()
     assert payload["kpis"]["active_cases"] == 1
     assert payload["kpis"]["docs_pending"] == 1
+    assert payload["kpis"]["companies_active"] == 1
+    assert payload["kpis"]["companies_with_open_cases"] == 1
+    assert payload["kpis"]["employees_total"] == 1
+    assert payload["kpis"]["my_cases"] == 1
 
 
 def test_dashboard_summary_super_admin_without_tenant_context_returns_400(client, db_session):
@@ -133,7 +148,14 @@ def test_dashboard_summary_isolated_by_tenant(client, db_session):
     db.session.add_all([company_a, company_b])
     db.session.flush()
 
-    case_a = Case(client_id=tenant_a.id, company_id=company_a.id, type="x", title="A", status="open")
+    case_a = Case(
+        client_id=tenant_a.id,
+        company_id=company_a.id,
+        type="x",
+        title="A",
+        status="open",
+        responsible_user_id=user_a.id,
+    )
     case_b = Case(client_id=tenant_b.id, company_id=company_b.id, type="x", title="B", status="open")
     db.session.add_all([case_a, case_b])
     db.session.flush()
@@ -160,6 +182,16 @@ def test_dashboard_summary_isolated_by_tenant(client, db_session):
         status="success",
     )
     db.session.add(extraction_b)
+
+    db.session.add(
+        Employee(
+            client_id=tenant_b.id,
+            company_id=company_b.id,
+            full_name="Empleado B",
+            start_date=date.today(),
+            status="active",
+        )
+    )
     db.session.commit()
 
     response = client.get("/dashboard/summary", headers=_auth_header(user_a))
@@ -169,3 +201,112 @@ def test_dashboard_summary_isolated_by_tenant(client, db_session):
     assert payload["kpis"]["active_cases"] == 1
     assert payload["kpis"]["docs_pending"] == 0
     assert payload["kpis"]["docs_no_extraction"] == 0
+    assert payload["kpis"]["employees_total"] == 0
+    assert payload["employees_by_company"] == {"labels": [], "values": []}
+
+
+def test_dashboard_summary_employees_and_companies_and_my_cases(client, db_session):
+    tenant = _create_client("Tenant Metrics")
+    seed_rbac()
+
+    user = _create_user(tenant.id, "owner@example.com")
+    another_user = _create_user(tenant.id, "other@example.com")
+    _assign_role(user, "Admin Cliente")
+
+    company_a = Company(client_id=tenant.id, name="Empresa A", tax_id="M-1", status="active")
+    company_b = Company(client_id=tenant.id, name="Empresa B", tax_id="M-2", status="active")
+    company_c = Company(client_id=tenant.id, name="Empresa C", tax_id="M-3", status="inactive")
+    db.session.add_all([company_a, company_b, company_c])
+    db.session.flush()
+
+    db.session.add_all(
+        [
+            Case(
+                client_id=tenant.id,
+                company_id=company_a.id,
+                type="laboral",
+                title="Caso 1",
+                status="open",
+                responsible_user_id=user.id,
+                due_date=date.today() + timedelta(days=2),
+            ),
+            Case(
+                client_id=tenant.id,
+                company_id=company_b.id,
+                type="laboral",
+                title="Caso 2",
+                status="in_progress",
+                responsible_user_id=user.id,
+                due_date=date.today() + timedelta(days=1),
+            ),
+            Case(
+                client_id=tenant.id,
+                company_id=company_b.id,
+                type="laboral",
+                title="Caso 3",
+                status="waiting",
+                responsible_user_id=another_user.id,
+            ),
+            Case(
+                client_id=tenant.id,
+                company_id=company_c.id,
+                type="laboral",
+                title="Caso Cerrado",
+                status="done",
+                responsible_user_id=user.id,
+            ),
+        ]
+    )
+
+    db.session.add_all(
+        [
+            Employee(client_id=tenant.id, company_id=company_a.id, full_name="A1", start_date=date.today(), status="active"),
+            Employee(client_id=tenant.id, company_id=company_a.id, full_name="A2", start_date=date.today(), status="active"),
+            Employee(client_id=tenant.id, company_id=company_b.id, full_name="B1", start_date=date.today(), status="active"),
+            Employee(client_id=tenant.id, company_id=company_c.id, full_name="C1", start_date=date.today(), status="terminated", end_date=date.today()),
+        ]
+    )
+    db.session.commit()
+
+    response = client.get("/dashboard/summary", headers=_auth_header(user))
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["kpis"]["my_cases"] == 2
+    assert payload["kpis"]["companies_active"] == 2
+    assert payload["kpis"]["companies_with_open_cases"] == 2
+    assert payload["kpis"]["employees_total"] == 3
+    assert payload["employees_by_company"]["labels"] == ["Empresa A", "Empresa B", "Empresa C"]
+    assert payload["employees_by_company"]["values"] == [2, 1, 1]
+    assert [item["title"] for item in payload["my_cases_list"]] == ["Caso 2", "Caso 1"]
+
+
+def test_dashboard_summary_my_cases_empty(client, db_session):
+    tenant = _create_client("Tenant Empty Cases")
+    seed_rbac()
+
+    user = _create_user(tenant.id, "empty@example.com")
+    _assign_role(user, "Admin Cliente")
+
+    company = Company(client_id=tenant.id, name="Empresa", tax_id="E-1", status="active")
+    db.session.add(company)
+    db.session.flush()
+
+    db.session.add(
+        Case(
+            client_id=tenant.id,
+            company_id=company.id,
+            type="laboral",
+            title="Caso de otro usuario",
+            status="open",
+            responsible_user_id=str(uuid.uuid4()),
+        )
+    )
+    db.session.commit()
+
+    response = client.get("/dashboard/summary", headers=_auth_header(user))
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["kpis"]["my_cases"] == 0
+    assert payload["my_cases_list"] == []

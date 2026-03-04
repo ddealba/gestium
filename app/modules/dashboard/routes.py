@@ -34,8 +34,10 @@ def get_dashboard_summary():
     service = DashboardService()
     payload = service.get_summary(
         client_id=str(g.client_id),
+        user_id=str(g.user.id),
         days=_parse_int_arg("days", 14),
         overdue_limit=_parse_int_arg("overdue_limit", 8),
         activity_limit=_parse_int_arg("activity_limit", 12),
+        my_cases_limit=_parse_int_arg("my_cases_limit", 5),
     )
     return ok(payload)
