@@ -22,9 +22,14 @@
 
   const setSidebarGroupExpanded=(group,expanded)=>{
     const trigger=qs('.ff-nav__item--group',group);
+    const caretIcon=qs('.ff-nav__caret .ph',group);
     if(!trigger) return;
     group.classList.toggle('is-expanded',expanded);
     trigger.setAttribute('aria-expanded',expanded?'true':'false');
+    if(caretIcon){
+      caretIcon.classList.toggle('ph-caret-down',expanded);
+      caretIcon.classList.toggle('ph-caret-right',!expanded);
+    }
   };
 
   const initSidebarGroups=()=>{
@@ -32,7 +37,7 @@
       const trigger=qs('.ff-nav__item--group',group);
       if(!trigger) return;
 
-      const expandByDefault=group.classList.contains('is-active');
+      const expandByDefault=false;
       setSidebarGroupExpanded(group,expandByDefault);
 
       const toggle=()=>setSidebarGroupExpanded(group,!group.classList.contains('is-expanded'));
