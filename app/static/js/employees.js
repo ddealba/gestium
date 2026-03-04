@@ -4,7 +4,7 @@
 
   if (window.tenantContext?.requireTenantSelection?.()) return;
 
-  const companyId = list.dataset.companyId;
+  let companyId = list.dataset.companyId;
   const message = document.getElementById('employees-message');
   const refreshButton = document.getElementById('refresh-employees');
   const qInput = document.getElementById('employees-q');
@@ -122,7 +122,16 @@
 
   const loadEmployees = async () => {
     if (!companyId) {
-      setMessage('Selecciona una empresa para ver sus empleados.');
+      try {
+        const companiesResponse = await window.apiFetch('/companies?limit=1&offset=0&sort=created_at&order=desc');
+        companyId = companiesResponse?.items?.[0]?.id || '';
+      } catch (error) {
+        window.handleApiError(error, { defaultMessage: 'No se pudieron cargar las empresas.' });
+      }
+    }
+
+    if (!companyId) {
+      setMessage('No hay empresas disponibles para mostrar empleados.');
       renderEmployees([]);
       updatePaginationButtons();
       return;
