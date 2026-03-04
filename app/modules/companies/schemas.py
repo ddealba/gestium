@@ -86,6 +86,8 @@ class CompanyResponseSchema:
             "name": company.name,
             "tax_id": company.tax_id,
             "status": company.status,
+            "logo_url": getattr(company, "logo_url", None),
+            "employee_count": getattr(company, "employee_count", 0),
             "created_at": _format_datetime(company.created_at),
             "updated_at": _format_datetime(company.updated_at),
         }

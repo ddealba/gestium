@@ -36,7 +36,7 @@ class CompanyService:
         offset: int = 0,
     ) -> tuple[list[Company], int]:
         allowed_company_ids = self.access_service.get_allowed_company_ids(user_id, client_id)
-        return self.repository.list_by_client(
+        companies, total = self.repository.list_by_client(
             client_id=client_id,
             allowed_company_ids=allowed_company_ids,
             status=status,
@@ -46,6 +46,11 @@ class CompanyService:
             limit=limit,
             offset=offset,
         )
+        company_ids = [company.id for company in companies]
+        employee_counts = self.repository.employee_counts_by_company(company_ids)
+        for company in companies:
+            company.employee_count = employee_counts.get(company.id, 0)
+        return companies, total
 
     def get_company(self, client_id: str, company_id: str) -> Company:
         company = self.repository.get_by_id(company_id, client_id)

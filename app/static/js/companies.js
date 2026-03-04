@@ -1,10 +1,9 @@
 (function () {
-  const table = document.getElementById('companies-table');
-  if (!table) return;
+  const grid = document.getElementById('companies-grid');
+  if (!grid) return;
 
   if (window.tenantContext?.requireTenantSelection?.()) return;
 
-  const tbody = table.querySelector('tbody');
   const message = document.getElementById('companies-message');
   const refreshButton = document.getElementById('refresh-companies');
   const qInput = document.getElementById('companies-q');
@@ -93,27 +92,62 @@
     }
   };
 
+  const renderCompanyLogo = (company) => {
+    if (company.logo_url) {
+      return `<img src="${company.logo_url}" alt="Logo ${company.name || 'empresa'}" class="ff-tenant-card__logo" loading="lazy" />`;
+    }
+
+    const initials = (company.name || '?')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join('');
+
+    return `<div class="ff-tenant-card__logo ff-tenant-card__logo--placeholder"><span>${initials}</span></div>`;
+  };
+
+  const formatDate = (value) => {
+    if (!value) return '-';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return '-';
+    return new Intl.DateTimeFormat('es-ES').format(parsed);
+  };
+
   const renderCompanies = (companies) => {
-    tbody.innerHTML = '';
+    grid.innerHTML = '';
 
     if (!companies.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="ff-empty">No hay empresas disponibles.</td></tr>';
+      grid.innerHTML = '<p class="ff-empty" style="grid-column: 1 / -1;">No hay empresas disponibles.</p>';
       return;
     }
 
     companies.forEach((company) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${company.name || '-'}</td>
-        <td>${company.tax_id || '-'}</td>
-        <td><span class="ff-tag ${company.status === 'active' ? 'ff-tag--success' : 'ff-tag--warn'}">${company.status || '-'}</span></td>
-        <td>
+      const card = document.createElement('article');
+      card.className = 'ff-tenant-card';
+      card.innerHTML = `
+        <div class="ff-tenant-card__top">
+          ${renderCompanyLogo(company)}
+          <div>
+            <h3>${company.name || '-'}</h3>
+            <span class="ff-tag ${company.status === 'active' ? 'ff-tag--success' : 'ff-tag--warn'}">${company.status || '-'}</span>
+          </div>
+        </div>
+
+        <p class="ff-muted">NIF: <b>${company.tax_id || '-'}</b></p>
+
+        <div class="ff-tenant-card__metrics">
+          <span>Empleados: <b>${company.employee_count || 0}</b></span>
+          <span>Alta: <b>${formatDate(company.created_at)}</b></span>
+        </div>
+
+        <div class="ff-filters__actions">
           <a class="ff-btn ff-btn--ghost ff-btn--sm" href="/app/companies/${company.id}/cases">Cases</a>
           <a class="ff-btn ff-btn--ghost ff-btn--sm" href="/app/companies/${company.id}/employees">Ver empleados</a>
           <button class="ff-btn ff-btn--ghost ff-btn--sm" data-action="manage-access" data-company-id="${company.id}" data-company-name="${company.name || '-'}">Gestionar accesos</button>
-        </td>
+        </div>
       `;
-      tbody.appendChild(row);
+      grid.appendChild(card);
     });
   };
 
@@ -133,7 +167,7 @@
     }
   };
 
-  tbody.addEventListener('click', (event) => {
+  grid.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-action="manage-access"]');
     if (!button) return;
     loadAccess(button.dataset.companyId, button.dataset.companyName || 'Empresa');

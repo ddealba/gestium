@@ -160,6 +160,10 @@
   color: var(--ff-primary);
 }
 
+.ff-tenant-card__logo--placeholder span {
+  font-weight: 700;
+}
+
 .ff-tenant-card__metrics {
   display: flex;
   justify-content: space-between;
