@@ -1,0 +1,167 @@
+"""Frontoffice routes (/portal)."""
+
+from __future__ import annotations
+
+from flask import Blueprint, g, render_template, request
+
+from app.common.decorators import auth_required, require_user_type
+from app.common.jwt import create_access_token
+from app.common.responses import ok
+from app.common.tenant import tenant_required
+from app.modules.audit.audit_service import AuditService
+from app.modules.auth.service import AuthService
+from app.modules.frontoffice.service import FrontofficeService
+
+bp = Blueprint("frontoffice", __name__)
+
+
+@bp.get("/portal/login")
+def portal_login_page():
+    return render_template("frontoffice/login.html")
+
+
+@bp.post("/portal/login")
+def portal_login():
+    payload = request.get_json(silent=True) or request.form.to_dict() or {}
+    email = payload.get("email")
+    password = payload.get("password")
+    client_id = payload.get("client_id")
+
+    service = AuthService()
+    user_id, resolved_client_id = service.authenticate(email, password, client_id, "portal")
+    token = create_access_token(user_id, resolved_client_id)
+
+    AuditService().log_action(
+        client_id=str(resolved_client_id),
+        actor_user_id=str(user_id),
+        action="portal_login",
+        entity_type="portal_session",
+        entity_id=str(user_id),
+        metadata={"path": request.path, "method": request.method},
+    )
+
+    return ok(
+        {
+            "access_token": token,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        }
+    )
+
+
+@bp.get("/portal")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_home():
+    service = FrontofficeService()
+    documents = service.get_portal_documents(g.user, str(g.client_id))
+    cases = service.get_portal_cases(g.user, str(g.client_id))
+    companies = service.get_portal_companies(g.user, str(g.client_id))
+    return render_template(
+        "frontoffice/home.html",
+        summary={
+            "documents_count": len(documents),
+            "cases_count": len(cases),
+            "companies_count": len(companies),
+            "recent_documents": documents[:5],
+            "recent_cases": cases[:5],
+        },
+    )
+
+
+@bp.get("/portal/profile")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_profile():
+    service = FrontofficeService()
+    profile = service.get_portal_profile(g.user, str(g.client_id))
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="portal_profile_viewed",
+        entity_type="person",
+        entity_id=str(g.user.person_id),
+    )
+    return render_template("frontoffice/profile.html", profile=profile)
+
+
+@bp.get("/portal/documents")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_documents():
+    service = FrontofficeService()
+    documents = service.get_portal_documents(g.user, str(g.client_id))
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="portal_document_viewed",
+        entity_type="person",
+        entity_id=str(g.user.person_id),
+    )
+    return render_template("frontoffice/documents.html", documents=documents)
+
+
+@bp.get("/portal/cases")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_cases():
+    service = FrontofficeService()
+    cases = service.get_portal_cases(g.user, str(g.client_id))
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="portal_case_viewed",
+        entity_type="person",
+        entity_id=str(g.user.person_id),
+    )
+    return render_template("frontoffice/cases.html", cases=cases)
+
+
+@bp.get("/portal/companies")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_companies():
+    service = FrontofficeService()
+    companies = service.get_portal_companies(g.user, str(g.client_id))
+    return render_template("frontoffice/companies.html", companies=companies)
+
+
+@bp.get("/portal/api/me")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_api_me():
+    payload = FrontofficeService().get_portal_profile(g.user, str(g.client_id))
+    return ok(payload)
+
+
+@bp.get("/portal/api/my-documents")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_api_documents():
+    payload = FrontofficeService().get_portal_documents(g.user, str(g.client_id))
+    return ok(payload)
+
+
+@bp.get("/portal/api/my-cases")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_api_cases():
+    payload = FrontofficeService().get_portal_cases(g.user, str(g.client_id))
+    return ok(payload)
+
+
+@bp.get("/portal/api/my-companies")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_api_companies():
+    payload = FrontofficeService().get_portal_companies(g.user, str(g.client_id))
+    return ok(payload)

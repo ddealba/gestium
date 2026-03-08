@@ -1,0 +1,14 @@
+{% extends "frontoffice/base.html" %}
+{% block title %}Portal · Inicio{% endblock %}
+{% block content %}
+<h1>Resumen</h1>
+<div class="cards">
+  <div class="card"><strong>Mis documentos</strong><div>{{ summary.documents_count }}</div></div>
+  <div class="card"><strong>Mis expedientes</strong><div>{{ summary.cases_count }}</div></div>
+  <div class="card"><strong>Mis empresas</strong><div>{{ summary.companies_count }}</div></div>
+</div>
+<h2>Últimos documentos</h2>
+<table><thead><tr><th>Nombre</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
+<h2>Últimos expedientes</h2>
+<table><thead><tr><th>Título</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_cases %}<tr><td>{{ item.title }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

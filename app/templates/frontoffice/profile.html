@@ -1,0 +1,12 @@
+{% extends "frontoffice/base.html" %}
+{% block content %}
+<h1>Mi perfil</h1>
+<ul>
+  <li>Nombre: {{ profile.first_name }} {{ profile.last_name }}</li>
+  <li>Documento: {{ profile.document_number }}</li>
+  <li>Email: {{ profile.email }}</li>
+  <li>Teléfono: {{ profile.phone }}</li>
+  <li>Dirección: {{ profile.address }}</li>
+  <li>Estado: {{ profile.status }}</li>
+</ul>
+{% endblock %}
