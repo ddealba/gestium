@@ -27,9 +27,24 @@ class User(BaseModel):
         index=True,
         default="invited",
     )
+    user_type = db.Column(
+        db.Enum("internal", "portal", name="user_type"),
+        nullable=False,
+        index=True,
+        default="internal",
+    )
+    person_id = db.Column(db.String(36), db.ForeignKey("persons.id"), nullable=True, index=True)
 
     client = db.relationship("Client", backref=db.backref("users", lazy="dynamic"))
+    person = db.relationship(
+        "Person",
+        foreign_keys=[person_id],
+        backref=db.backref("portal_users", lazy="dynamic"),
+    )
     roles = db.relationship("Role", secondary=user_roles, back_populates="users")
 
     def __repr__(self) -> str:
-        return f"<User id={self.id} client_id={self.client_id} email={self.email} status={self.status}>"
+        return (
+            f"<User id={self.id} client_id={self.client_id} email={self.email} "
+            f"status={self.status} user_type={self.user_type} person_id={self.person_id}>"
+        )

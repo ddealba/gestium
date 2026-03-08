@@ -70,6 +70,26 @@ def require_permission(code: str):
     return decorator
 
 
+def require_user_type(*allowed_types: str):
+    """Ensure current authenticated user belongs to one of the allowed user types."""
+
+    normalized = {value.strip().lower() for value in allowed_types if value}
+
+    def decorator(func: Callable[..., Any]):
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any):
+            if not getattr(g, "user", None):
+                raise Unauthorized("missing_token")
+            current_type = (getattr(g.user, "user_type", None) or "internal").strip().lower()
+            if normalized and current_type not in normalized:
+                raise Forbidden("invalid_user_type")
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def require_company_access(required_level: str, company_id_arg: str | None = None):
     """Ensure the request user has the required company ACL access level."""
 

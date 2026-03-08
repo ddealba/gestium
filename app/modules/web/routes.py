@@ -4,6 +4,9 @@ from datetime import datetime
 
 from flask import Blueprint, redirect, render_template
 
+from app.common.decorators import auth_required, require_user_type
+from app.common.tenant import tenant_required
+
 bp = Blueprint("web", __name__)
 
 
@@ -131,6 +134,9 @@ def inject_layout_context() -> dict:
 
 
 @bp.get("/app")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_index():
     """Redirect to protected app landing (guard handles unauthenticated users)."""
     return redirect("/app/companies")
@@ -143,18 +149,27 @@ def app_login():
 
 
 @bp.get("/app/dashboard")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_dashboard():
     """Render dashboard page (optional route)."""
     return render_template("pages/dashboard.html", active_nav="dashboard", page_id="dashboard")
 
 
 @bp.get("/app/companies")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_companies():
     """Render companies page."""
     return render_template("pages/companies.html", active_nav="companies", page_id="companies")
 
 
 @bp.get("/app/companies/<company_id>/employees")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_company_employees(company_id: str):
     """Render employees page for a company."""
     return render_template(
@@ -166,12 +181,18 @@ def app_company_employees(company_id: str):
 
 
 @bp.get("/app/employees")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_employees():
     """Render tenant-level employees page."""
     return render_template("pages/employees.html", active_nav="employees", page_id="employees")
 
 
 @bp.get("/app/companies/<company_id>/cases")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_company_cases(company_id: str):
     """Render cases page for a company."""
     return render_template(
@@ -185,18 +206,27 @@ def app_company_cases(company_id: str):
 
 
 @bp.get("/app/persons")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_persons():
     """Render tenant-level persons page."""
     return render_template("persons/list.html", active_nav="persons", page_id="persons")
 
 
 @bp.get("/app/persons/new")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_person_new():
     """Render person creation form page."""
     return render_template("persons/form.html", active_nav="persons", page_id="persons")
 
 
 @bp.get("/app/persons/<person_id>")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_person_detail(person_id: str):
     """Render person detail page."""
     return render_template(
@@ -208,12 +238,18 @@ def app_person_detail(person_id: str):
 
 
 @bp.get("/app/cases")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_cases():
     """Render tenant-level cases page."""
     return render_template("pages/cases.html", active_nav="cases", page_id="cases")
 
 
 @bp.get("/app/companies/<company_id>/cases/<case_id>")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_case_detail(company_id: str, case_id: str):
     """Render case detail page."""
     return render_template(
@@ -228,6 +264,9 @@ def app_case_detail(company_id: str, case_id: str):
 
 
 @bp.get("/app/cases/<case_id>")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_case_detail_tenant(case_id: str):
     """Render tenant-level case detail page."""
     return render_template(
@@ -240,30 +279,45 @@ def app_case_detail_tenant(case_id: str):
 
 
 @bp.get("/app/documents")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_documents():
     """Render tenant-level documents page."""
     return render_template("pages/documentos.html", active_nav="documents", page_id="documents")
 
 
 @bp.get("/app/admin/users")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_admin_users():
     """Render tenant admin users page."""
     return render_template("pages/admin_users.html", active_nav="admin_users", page_id="admin_users")
 
 
 @bp.get("/app/admin/access")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_admin_access():
     """Render tenant admin company access page."""
     return render_template("pages/admin_access.html", active_nav="admin_access", page_id="admin_access")
 
 
 @bp.get("/app/admin/audit")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_admin_audit():
     """Render tenant admin audit page."""
     return render_template("pages/admin_audit.html", active_nav="admin_audit", page_id="admin_audit")
 
 
 @bp.get("/app/platform/tenants")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_platform_tenants():
     """Render super-admin tenant cards page."""
     return render_template(
@@ -274,6 +328,9 @@ def app_platform_tenants():
 
 
 @bp.get("/app/platform/tenants/new")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_platform_tenant_new():
     """Render super-admin create tenant page."""
     return render_template(
@@ -284,6 +341,9 @@ def app_platform_tenant_new():
 
 
 @bp.get("/app/platform/tenants/<tenant_id>")
+@auth_required
+@tenant_required
+@require_user_type("internal")
 def app_platform_tenant_detail(tenant_id: str):
     """Render super-admin tenant detail page."""
     return render_template(

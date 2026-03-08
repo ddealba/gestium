@@ -1,0 +1,5 @@
+{% extends "frontoffice/base.html" %}
+{% block content %}
+<h1>Mis empresas</h1>
+<table><thead><tr><th>Empresa</th><th>Relación</th></tr></thead><tbody>{% for item in companies %}<tr><td>{{ item.company_name }}</td><td>{{ item.relation_type }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

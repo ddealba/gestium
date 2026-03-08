@@ -19,12 +19,21 @@ class AuthService:
         self.user_repository = user_repository or UserRepository()
         self.user_service = user_service or UserService(self.user_repository)
 
-    def authenticate(self, email: str, password: str, client_id: str | None) -> tuple[str, str]:
+    def authenticate(
+        self,
+        email: str,
+        password: str,
+        client_id: str | None,
+        user_type: str | None = None,
+    ) -> tuple[str, str]:
         if not email:
             raise BadRequest("email_required")
         if not password:
             raise BadRequest("password_required")
         normalized_email = self.user_service.normalize_email(email)
+        normalized_user_type = (user_type or "internal").strip().lower()
+        if normalized_user_type not in {"internal", "portal"}:
+            raise BadRequest("invalid_user_type")
 
         resolved_client_id = client_id
         if resolved_client_id:
@@ -36,6 +45,8 @@ class AuthService:
             user = users[0] if users else None
             resolved_client_id = user.client_id if user is not None else None
         if user is None or not self.user_service.verify_password(user, password):
+            raise Unauthorized("invalid_credentials")
+        if (user.user_type or "internal") != normalized_user_type:
             raise Unauthorized("invalid_credentials")
         if user.status != "active":
             raise Forbidden("user_inactive")

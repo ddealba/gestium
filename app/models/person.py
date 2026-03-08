@@ -40,7 +40,11 @@ class Person(BaseModel):
     created_by = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=True, index=True)
 
     client = db.relationship("Client", backref=db.backref("persons", lazy="dynamic"))
-    creator = db.relationship("User", backref=db.backref("created_persons", lazy="dynamic"))
+    creator = db.relationship(
+        "User",
+        foreign_keys=[created_by],
+        backref=db.backref("created_persons", lazy="dynamic"),
+    )
 
     def __repr__(self) -> str:
         return (

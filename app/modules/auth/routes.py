@@ -62,9 +62,10 @@ def login_user():
     email = payload.get("email")
     password = payload.get("password")
     client_id = payload.get("client_id")
+    user_type = payload.get("user_type")
 
     service = AuthService()
-    user_id, resolved_client_id = service.authenticate(email, password, client_id)
+    user_id, resolved_client_id = service.authenticate(email, password, client_id, user_type)
     token = create_access_token(user_id, resolved_client_id)
 
     return ok(
@@ -87,6 +88,8 @@ def get_current_user():
             "email": user.email,
             "client_id": user.client_id,
             "status": user.status,
+            "user_type": user.user_type,
+            "person_id": user.person_id,
             "is_super_admin": authz.is_super_admin(user),
         }
     )

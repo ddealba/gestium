@@ -1,0 +1,5 @@
+{% extends "frontoffice/base.html" %}
+{% block content %}
+<h1>Mis expedientes</h1>
+<table><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in cases %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

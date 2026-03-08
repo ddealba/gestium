@@ -1,3 +1,7 @@
+from app.common.jwt import create_access_token
+from app.extensions import db
+from app.models.client import Client
+from app.models.user import User
 from app.modules.web.routes import _build_nav_items
 
 
@@ -25,15 +29,35 @@ def test_tenant_level_menu_entries_present():
     assert {"admin_users", "admin_access"}.issubset(admin_children)
 
 
-def test_new_tenant_level_routes_render(client):
-    response = client.get('/app/employees')
-    assert response.status_code == 200
+def test_new_tenant_level_routes_render(client, app):
+    with app.app_context():
+        db.create_all()
+        tenant = Client(name="Tenant Web", status="active")
+        db.session.add(tenant)
+        db.session.flush()
+        user = User(
+            client_id=tenant.id,
+            email="web@example.com",
+            status="active",
+            user_type="internal",
+            password_hash="x",
+        )
+        db.session.add(user)
+        db.session.commit()
 
-    response = client.get('/app/persons')
-    assert response.status_code == 200
+        token = create_access_token(user.id, tenant.id)
+        headers = {"Authorization": f"Bearer {token}"}
 
-    response = client.get('/app/cases')
-    assert response.status_code == 200
+        response = client.get('/app/employees', headers=headers)
+        assert response.status_code == 200
 
-    response = client.get('/app/documents')
-    assert response.status_code == 200
+        response = client.get('/app/persons', headers=headers)
+        assert response.status_code == 200
+
+        response = client.get('/app/cases', headers=headers)
+        assert response.status_code == 200
+
+        response = client.get('/app/documents', headers=headers)
+        assert response.status_code == 200
+
+        db.drop_all()

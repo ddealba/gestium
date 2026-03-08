@@ -1,0 +1,5 @@
+{% extends "frontoffice/base.html" %}
+{% block content %}
+<h1>Mis documentos</h1>
+<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}
