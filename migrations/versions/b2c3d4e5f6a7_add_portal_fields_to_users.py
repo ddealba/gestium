@@ -1,7 +1,7 @@
 """add portal fields to users
 
 Revision ID: b2c3d4e5f6a7
-Revises: e7f8a9b0c1d2, a9b8c7d6e5f4
+Revises: a9b8c7d6e5f4
 Create Date: 2026-03-08 00:00:00.000000
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = "b2c3d4e5f6a7"
-down_revision = ("e7f8a9b0c1d2", "a9b8c7d6e5f4")
+down_revision = "a9b8c7d6e5f4"
 branch_labels = None
 depends_on = None
 
