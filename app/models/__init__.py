@@ -8,6 +8,7 @@ from app.models.document import Document
 from app.models.document_extraction import DocumentExtraction
 from app.models.employee import Employee
 from app.models.permission import Permission
+from app.models.person import Person
 from app.models.role import Role
 from app.models.user import User
 from app.models.user_company_access import UserCompanyAccess
@@ -22,6 +23,7 @@ __all__ = [
     "DocumentExtraction",
     "Employee",
     "Permission",
+    "Person",
     "Role",
     "User",
     "UserCompanyAccess",

@@ -1,0 +1,38 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Personas · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head ff-page-head">
+    <h2>Personas</h2>
+    <a href="{{ url_for('web.app_person_new') }}" class="ff-btn ff-btn--primary">Nueva persona</a>
+  </div>
+  <div class="ff-card__body">
+    <div class="ff-filters">
+      <div>
+        <label class="ff-label" for="persons-search">Buscador</label>
+        <input id="persons-search" class="ff-input" type="text" placeholder="Nombre, apellidos, documento o email" />
+      </div>
+    </div>
+    <div class="ff-table-wrap" style="margin-top:1rem;">
+      <table class="ff-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Documento</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th>Fecha creación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="persons-table-body">
+          <tr><td colspan="7" class="ff-muted">Cargando personas...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

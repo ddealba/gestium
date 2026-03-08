@@ -1,0 +1,24 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Nueva persona · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head ff-page-head">
+    <h2>Alta rápida de persona</h2>
+  </div>
+  <div class="ff-card__body">
+    <form class="ff-form" id="person-form">
+      <label>Nombre<input class="ff-input" name="first_name" required /></label>
+      <label>Apellidos<input class="ff-input" name="last_name" required /></label>
+      <label>Documento<input class="ff-input" name="document_number" required /></label>
+      <label>Email<input class="ff-input" type="email" name="email" /></label>
+      <label>Teléfono<input class="ff-input" name="phone" /></label>
+      <div class="ff-filters__actions">
+        <button class="ff-btn ff-btn--primary" type="submit">Guardar</button>
+      </div>
+      <small class="ff-muted">Estado inicial: <strong>draft</strong>.</small>
+    </form>
+  </div>
+</section>
+{% endblock %}
