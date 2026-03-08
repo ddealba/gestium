@@ -15,12 +15,15 @@ class Document(BaseModel):
     __table_args__ = (
         db.Index("ix_documents_client_company_case", "client_id", "company_id", "case_id"),
         db.Index("ix_documents_client_status", "client_id", "status"),
+        db.Index("ix_documents_client_person_employee", "client_id", "person_id", "employee_id"),
     )
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     client_id = db.Column(db.String(36), db.ForeignKey("clients.id"), nullable=False, index=True)
-    company_id = db.Column(db.String(36), db.ForeignKey("companies.id"), nullable=False, index=True)
-    case_id = db.Column(db.String(36), db.ForeignKey("cases.id"), nullable=False, index=True)
+    company_id = db.Column(db.String(36), db.ForeignKey("companies.id"), nullable=True, index=True)
+    case_id = db.Column(db.String(36), db.ForeignKey("cases.id"), nullable=True, index=True)
+    person_id = db.Column(db.String(36), db.ForeignKey("persons.id"), nullable=True, index=True)
+    employee_id = db.Column(db.String(36), db.ForeignKey("employees.id"), nullable=True, index=True)
     uploaded_by_user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=True, index=True)
 
     original_filename = db.Column(db.String(255), nullable=False)
@@ -37,6 +40,8 @@ class Document(BaseModel):
 
     company = db.relationship("Company", backref=db.backref("documents", lazy="dynamic"))
     case = db.relationship("Case", backref=db.backref("documents", lazy="dynamic"))
+    person = db.relationship("Person", backref=db.backref("documents", lazy="dynamic"))
+    employee = db.relationship("Employee", backref=db.backref("documents", lazy="dynamic"))
     uploaded_by_user = db.relationship("User", backref=db.backref("uploaded_documents", lazy="dynamic"))
 
     def __repr__(self) -> str:

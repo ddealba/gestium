@@ -40,8 +40,8 @@ def _guess_extension(file: FileStorage) -> str:
 def save_upload(
     file: FileStorage,
     client_id: str,
-    company_id: str,
-    case_id: str,
+    company_id: str | None = None,
+    case_id: str | None = None,
 ) -> tuple[str, int, str | None, str]:
     """Save uploaded file to tenant-safe path under configured root."""
     original_filename = secure_filename(file.filename or "")
@@ -52,7 +52,9 @@ def save_upload(
     unique_filename = f"{uuid4()}.{extension}"
 
     root_path = _document_storage_root()
-    target_directory = root_path / str(client_id) / str(company_id) / str(case_id)
+    company_segment = str(company_id) if company_id else "_no_company"
+    case_segment = str(case_id) if case_id else "_no_case"
+    target_directory = root_path / str(client_id) / company_segment / case_segment
     target_directory.mkdir(parents=True, exist_ok=True)
 
     full_path = target_directory / unique_filename

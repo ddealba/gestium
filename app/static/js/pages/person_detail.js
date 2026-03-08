@@ -10,11 +10,34 @@
   const formWrap = document.getElementById('person-relation-form-wrap');
   const form = document.getElementById('person-relation-form');
   const message = document.getElementById('person-relation-message');
+  const documentsTable = document.getElementById('person-documents-table');
 
   const renderPerson = (person) => {
     basic.innerHTML = `<b>${person.full_name || '-'}</b> · ${person.document_number || '-'}`;
     contact.innerHTML = `${person.email || '-'} · ${person.phone || '-'}`;
     status.innerHTML = `<span class="ff-tag ${person.status === 'active' ? 'ff-tag--success' : 'ff-tag--warn'}">${person.status || '-'}</span>`;
+  };
+
+
+
+  const renderDocuments = (items) => {
+    if (!documentsTable) return;
+    if (!items?.length) {
+      documentsTable.innerHTML = '<tr><td colspan="5" class="ff-muted">Sin documentos registrados.</td></tr>';
+      return;
+    }
+
+    documentsTable.innerHTML = items
+      .map(
+        (item) => `<tr>
+          <td>${item.original_filename || '-'}</td>
+          <td>${item.doc_type || '-'}</td>
+          <td>${item.status || '-'}</td>
+          <td>${item.created_at || '-'}</td>
+          <td><a class="ff-btn ff-btn--ghost ff-btn--sm" href="/documents/${item.id}/download">Descargar</a></td>
+        </tr>`,
+      )
+      .join('');
   };
 
   const renderRelations = (items) => {
@@ -44,6 +67,8 @@
     renderPerson(personData?.person || {});
     const relationsData = await window.apiFetch(`/persons/${personId}/companies`);
     renderRelations(relationsData?.items || []);
+    const documentsData = await window.apiFetch(`/documents?person_id=${personId}&limit=50&offset=0`);
+    renderDocuments(documentsData?.items || []);
   };
 
   document.getElementById('person-relation-add').addEventListener('click', () => {

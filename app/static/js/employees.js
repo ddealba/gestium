@@ -14,6 +14,8 @@
   const clearFiltersButton = document.getElementById('employees-clear-filters');
   const prevButton = document.getElementById('employees-prev');
   const nextButton = document.getElementById('employees-next');
+  const employeeDocumentsTable = document.getElementById('employee-documents-table');
+  const employeeDocumentsMessage = document.getElementById('employee-documents-message');
 
   const state = { limit: 20, offset: 0, total: 0 };
 
@@ -90,6 +92,7 @@
       const meta = statusMeta(employee.status);
       const card = document.createElement('article');
       card.className = 'ff-employee-card';
+      card.dataset.employeeId = employee.id;
       card.innerHTML = `
         ${buildAvatar(employee, index)}
         <div class="ff-employee-card__content">
@@ -104,6 +107,32 @@
       `;
       list.appendChild(card);
     });
+  };
+
+
+
+  const renderEmployeeDocuments = (items) => {
+    if (!employeeDocumentsTable) return;
+    if (!items?.length) {
+      employeeDocumentsTable.innerHTML = '<tr><td colspan="4" class="ff-muted">Sin documentos laborales.</td></tr>';
+      return;
+    }
+    employeeDocumentsTable.innerHTML = items
+      .map((item) => `<tr><td>${escapeHtml(item.original_filename || '-')}</td><td>${escapeHtml(item.doc_type || '-')}</td><td>${escapeHtml(item.status || '-')}</td><td>${escapeHtml(item.created_at || '-')}</td></tr>`)
+      .join('');
+  };
+
+  const loadEmployeeDocuments = async (employeeId) => {
+    if (!employeeId) return;
+    if (employeeDocumentsMessage) employeeDocumentsMessage.textContent = 'Cargando documentos laborales…';
+    try {
+      const data = await window.apiFetch(`/documents?employee_id=${employeeId}&limit=50&offset=0`);
+      renderEmployeeDocuments(data?.items || []);
+      if (employeeDocumentsMessage) employeeDocumentsMessage.textContent = '';
+    } catch (error) {
+      window.handleApiError(error, { defaultMessage: 'No se pudieron cargar los documentos laborales.' });
+      if (employeeDocumentsMessage) employeeDocumentsMessage.textContent = 'No se pudieron cargar los documentos laborales.';
+    }
   };
 
   const buildQuery = () => {
@@ -174,6 +203,13 @@
   nextButton?.addEventListener('click', () => {
     state.offset += state.limit;
     loadEmployees();
+  });
+
+
+  list.addEventListener('click', (event) => {
+    const card = event.target.closest('.ff-employee-card[data-employee-id]');
+    if (!card) return;
+    loadEmployeeDocuments(card.dataset.employeeId);
   });
 
   refreshButton?.addEventListener('click', loadEmployees);

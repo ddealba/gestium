@@ -115,12 +115,21 @@
             <i class="ph ph-file-text"></i>
             <select id="case-document-type" name="doc_type" class="ff-input">
               <option value="">Sin tipo</option>
+              <option value="payslip">Nómina</option>
+              <option value="employment_contract">Contrato laboral</option>
               <option value="dni">DNI</option>
-              <option value="contrato">Contrato</option>
-              <option value="resolucion">Resolución</option>
-              <option value="otro">Otro</option>
+              <option value="invoice">Factura</option>
+              <option value="tax_document">Documento fiscal</option>
+              <option value="personal_document">Documento personal</option>
+              <option value="company_document">Documento empresa</option>
+              <option value="other">Otro</option>
             </select>
           </div>
+          <label class="ff-label" for="case-document-person-id">Person ID (opcional)</label>
+          <input id="case-document-person-id" name="person_id" type="text" class="ff-input" />
+
+          <label class="ff-label" for="case-document-employee-id">Employee ID (opcional)</label>
+          <input id="case-document-employee-id" name="employee_id" type="text" class="ff-input" />
 
           <p id="case-document-upload-message" class="ff-form-message" aria-live="polite"></p>
           <button type="submit" id="case-document-upload-button" class="ff-btn ff-btn--primary">Subir</button>
