@@ -59,7 +59,7 @@
   };
 
   const buildAvatar = (employee, index) => {
-    const initials = initialsFromName(employee.full_name);
+    const initials = initialsFromName(employee.person_full_name || employee.full_name);
     const paletteIndex = index % avatarPalette.length;
     return `
       <div class="ff-employee-card__avatar" style="background:${avatarPalette[paletteIndex]};">
@@ -93,8 +93,9 @@
       card.innerHTML = `
         ${buildAvatar(employee, index)}
         <div class="ff-employee-card__content">
-          <h3>${escapeHtml(employee.full_name || 'Sin nombre')}</h3>
-          <p>${escapeHtml(employee.employee_ref || 'Sin referencia')}</p>
+          <h3>${escapeHtml(employee.person_full_name || employee.full_name || 'Sin nombre')}</h3>
+          <p>${escapeHtml(employee.person_document_number || 'Sin documento')}</p>
+          <small>${escapeHtml(employee.person_id ? (employee.employee_ref || 'Empleado vinculado') : 'Sin persona vinculada')}</small>
           <small>Alta: ${escapeHtml(formatDate(employee.start_date))}</small>
         </div>
         <div class="ff-employee-card__status">

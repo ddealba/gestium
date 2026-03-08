@@ -66,7 +66,7 @@ def create_employee(company_id: str):
     payload = request.get_json(silent=True) or {}
     create_payload = EmployeeCreateRequest.from_dict(payload)
     service = EmployeeService()
-    employee = service.create_employee(str(g.client_id), company_id, create_payload)
+    employee = service.create_employee(str(g.client_id), company_id, create_payload, actor_user_id=str(g.user.id))
     db.session.commit()
     return ok({"employee": EmployeeResponseSchema.dump(employee)}, status_code=201)
 
@@ -91,7 +91,13 @@ def update_employee(company_id: str, employee_id: str):
     payload = request.get_json(silent=True) or {}
     update_payload = EmployeeUpdateRequest.from_dict(payload)
     service = EmployeeService()
-    employee = service.update_employee(str(g.client_id), company_id, employee_id, update_payload)
+    employee = service.update_employee(
+        str(g.client_id),
+        company_id,
+        employee_id,
+        update_payload,
+        actor_user_id=str(g.user.id),
+    )
     db.session.commit()
     return ok({"employee": EmployeeResponseSchema.dump(employee)})
 
@@ -105,6 +111,12 @@ def terminate_employee(company_id: str, employee_id: str):
     payload = request.get_json(silent=True) or {}
     terminate_payload = EmployeeTerminateRequest.from_dict(payload)
     service = EmployeeService()
-    employee = service.terminate_employee(str(g.client_id), company_id, employee_id, terminate_payload)
+    employee = service.terminate_employee(
+        str(g.client_id),
+        company_id,
+        employee_id,
+        terminate_payload,
+        actor_user_id=str(g.user.id),
+    )
     db.session.commit()
     return ok({"employee": EmployeeResponseSchema.dump(employee)})
