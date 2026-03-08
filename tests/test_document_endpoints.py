@@ -10,6 +10,8 @@ from app.extensions import db
 from app.models.client import Client
 from app.models.company import Company
 from app.models.document_extraction import DocumentExtraction
+from app.models.employee import Employee
+from app.models.person import Person
 from app.models.role import Role
 from app.models.user import User
 from app.modules.cases.service import CaseService
@@ -46,6 +48,36 @@ def create_company(db_session, client_id: str, name: str = "Alpha", tax_id: str 
     db_session.add(company)
     db_session.commit()
     return company
+
+
+def create_person(db_session, client_id: str, idx: str = "1") -> Person:
+    person = Person(
+        client_id=client_id,
+        first_name=f"Nombre{idx}",
+        last_name=f"Apellido{idx}",
+        document_number=f"DOC-{idx}",
+        status="active",
+    )
+    db_session.add(person)
+    db_session.commit()
+    return person
+
+
+def create_employee(db_session, client_id: str, company_id: str, person_id: str | None = None) -> Employee:
+    from datetime import date
+
+    employee = Employee(
+        client_id=client_id,
+        company_id=company_id,
+        person_id=person_id,
+        full_name="Empleado Test",
+        employee_ref="EMP-1",
+        status="active",
+        start_date=date.today(),
+    )
+    db_session.add(employee)
+    db_session.commit()
+    return employee
 
 
 def auth_header_for(user: User) -> dict[str, str]:
@@ -541,3 +573,183 @@ def test_list_documents_supports_has_extraction_filter(client, app, db_session, 
         without_items = without_response.get_json()["items"]
         assert len(without_items) == 1
         assert without_items[0]["has_extraction"] is False
+
+
+def test_upload_document_with_person_id(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id)
+        person = create_person(db_session, tenant.id, "p1")
+        assign_role(db_session, user, "Operativo")
+
+        response = client.post(
+            "/documents",
+            headers=auth_header_for(user),
+            data={
+                "person_id": person.id,
+                "doc_type": "dni",
+                "file": (BytesIO(b"%PDF-1.4 personal"), "dni.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 201
+        assert response.get_json()["document"]["person_id"] == person.id
+
+
+def test_upload_document_with_employee_infers_person(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id)
+        company = create_company(db_session, tenant.id)
+        person = create_person(db_session, tenant.id, "p2")
+        employee = create_employee(db_session, tenant.id, company.id, person.id)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company, "operator")
+
+        response = client.post(
+            "/documents",
+            headers=auth_header_for(user),
+            data={
+                "employee_id": employee.id,
+                "company_id": company.id,
+                "doc_type": "payslip",
+                "file": (BytesIO(b"%PDF-1.4 payslip"), "pay.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 201
+        doc = response.get_json()["document"]
+        assert doc["employee_id"] == employee.id
+        assert doc["person_id"] == person.id
+
+
+def test_upload_document_employee_person_mismatch_returns_400(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id)
+        company = create_company(db_session, tenant.id)
+        person_a = create_person(db_session, tenant.id, "pa")
+        person_b = create_person(db_session, tenant.id, "pb")
+        employee = create_employee(db_session, tenant.id, company.id, person_a.id)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company, "operator")
+
+        response = client.post(
+            "/documents",
+            headers=auth_header_for(user),
+            data={
+                "company_id": company.id,
+                "employee_id": employee.id,
+                "person_id": person_b.id,
+                "file": (BytesIO(b"%PDF-1.4 bad"), "bad.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 400
+
+
+def test_upload_document_employee_company_mismatch_returns_400(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id)
+        company_a = create_company(db_session, tenant.id, name="A", tax_id="TA")
+        company_b = create_company(db_session, tenant.id, name="B", tax_id="TB")
+        employee = create_employee(db_session, tenant.id, company_a.id, None)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company_a, "operator")
+        assign_access(db_session, user, company_b, "operator")
+
+        response = client.post(
+            "/documents",
+            headers=auth_header_for(user),
+            data={
+                "company_id": company_b.id,
+                "employee_id": employee.id,
+                "file": (BytesIO(b"%PDF-1.4 bad"), "bad2.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 400
+
+
+def test_list_documents_by_person_and_employee(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant = create_client(db_session)
+        seed_rbac()
+        user = create_user(db_session, tenant.id)
+        company = create_company(db_session, tenant.id)
+        person = create_person(db_session, tenant.id, "pf")
+        employee = create_employee(db_session, tenant.id, company.id, person.id)
+        assign_role(db_session, user, "Operativo")
+        assign_access(db_session, user, company, "operator")
+
+        upload = lambda **data: client.post(
+            "/documents",
+            headers=auth_header_for(user),
+            data={**data, "file": (BytesIO(b"%PDF-1.4 ok"), f"{uuid4()}.pdf", "application/pdf")},
+            content_type="multipart/form-data",
+        )
+
+        upload(company_id=company.id, person_id=person.id, doc_type="personal_document")
+        upload(company_id=company.id, employee_id=employee.id, doc_type="payslip")
+
+        by_person = client.get(f"/documents?person_id={person.id}", headers=auth_header_for(user))
+        assert by_person.status_code == 200
+        assert len(by_person.get_json()["items"]) >= 2
+
+        by_employee = client.get(f"/documents?employee_id={employee.id}", headers=auth_header_for(user))
+        assert by_employee.status_code == 200
+        assert len(by_employee.get_json()["items"]) == 1
+
+
+def test_documents_listing_keeps_tenant_isolation(client, app, db_session, tmp_path):
+    with app.app_context():
+        app.config["DOCUMENT_STORAGE_ROOT"] = str(tmp_path)
+        app.config["ALLOWED_DOCUMENT_MIME"] = ("pdf",)
+
+        tenant_a = create_client(db_session)
+        tenant_b = create_client(db_session)
+        seed_rbac()
+        user_a = create_user(db_session, tenant_a.id, email="a@a.com")
+        user_b = create_user(db_session, tenant_b.id, email="b@b.com")
+        assign_role(db_session, user_a, "Operativo")
+        assign_role(db_session, user_b, "Operativo")
+
+        person_a = create_person(db_session, tenant_a.id, "ta")
+        client.post(
+            "/documents",
+            headers=auth_header_for(user_a),
+            data={
+                "person_id": person_a.id,
+                "doc_type": "personal_document",
+                "file": (BytesIO(b"%PDF-1.4 secret"), "secret.pdf", "application/pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+
+        response = client.get(f"/documents?person_id={person_a.id}", headers=auth_header_for(user_b))
+        assert response.status_code == 200
+        assert response.get_json()["total"] == 0

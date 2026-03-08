@@ -112,7 +112,7 @@
       row.innerHTML = `
         <td>${document.original_filename || '-'}</td>
         <td>${document.doc_type || '-'}</td>
-        <td><span class="ff-tag">${document.status || '-'}</span></td>
+        <td><span class="ff-tag">${document.status || '-'}</span><br><small>${document.person_id || '-'} / ${document.employee_id || '-'}</small></td>
         <td><span class="ff-tag">${extractionText}</span></td>
         <td>${formatDocDate(document.created_at)}</td>
         <td>
@@ -355,6 +355,16 @@
     const docType = documentUploadForm.elements.doc_type?.value;
     if (docType) {
       formData.append('doc_type', docType);
+    }
+
+    const personId = documentUploadForm.elements.person_id?.value?.trim();
+    if (personId) {
+      formData.append('person_id', personId);
+    }
+
+    const employeeId = documentUploadForm.elements.employee_id?.value?.trim();
+    if (employeeId) {
+      formData.append('employee_id', employeeId);
     }
 
     setMessage(documentUploadMessage, 'Subiendo documento…');

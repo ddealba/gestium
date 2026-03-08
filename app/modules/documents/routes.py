@@ -44,6 +44,9 @@ def _parse_optional_bool_arg(name: str) -> bool | None:
 @require_company_access("operator", company_id_arg="company_id")
 def upload_document(company_id: str, case_id: str):
     doc_type = request.form.get("doc_type")
+    status = request.form.get("status") or "pending"
+    person_id = request.form.get("person_id")
+    employee_id = request.form.get("employee_id")
     file = request.files.get("file")
 
     if file is None:
@@ -57,6 +60,34 @@ def upload_document(company_id: str, case_id: str):
         actor_user_id=str(g.user.id),
         file=file,
         doc_type=doc_type,
+        status=status,
+        person_id=person_id,
+        employee_id=employee_id,
+    )
+    db.session.commit()
+    return ok(UploadResponseSchema.dump(document), status_code=201)
+
+
+@bp.post("/documents")
+@auth_required
+@tenant_required
+@require_permission("document.upload")
+def upload_flexible_document():
+    file = request.files.get("file")
+    if file is None:
+        raise BadRequest("file_required")
+
+    service = DocumentModuleService()
+    document = service.upload_document(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        file=file,
+        company_id=request.form.get("company_id") or None,
+        case_id=request.form.get("case_id") or None,
+        person_id=request.form.get("person_id") or None,
+        employee_id=request.form.get("employee_id") or None,
+        doc_type=request.form.get("doc_type"),
+        status=request.form.get("status") or "pending",
     )
     db.session.commit()
     return ok(UploadResponseSchema.dump(document), status_code=201)
@@ -75,6 +106,35 @@ def list_case_documents(company_id: str, case_id: str):
         client_id=str(g.client_id),
         company_id=company_id,
         case_id=case_id,
+        person_id=request.args.get("person_id") or None,
+        employee_id=request.args.get("employee_id") or None,
+        doc_type=request.args.get("doc_type"),
+        status=request.args.get("status"),
+        q=request.args.get("q"),
+        sort=request.args.get("sort") or "created_at",
+        order=request.args.get("order") or "desc",
+        limit=limit,
+        offset=offset,
+        has_extraction=_parse_optional_bool_arg("has_extraction"),
+    )
+    return ok(DocumentListResponseSchema.dump(documents, total=total, limit=limit, offset=offset))
+
+
+@bp.get("/documents")
+@auth_required
+@tenant_required
+@require_permission("document.read")
+def list_documents():
+    service = DocumentModuleService()
+    limit = _parse_int_arg("limit", 20)
+    offset = _parse_int_arg("offset", 0)
+    documents, total = service.list_documents(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        company_id=request.args.get("company_id") or None,
+        case_id=request.args.get("case_id") or None,
+        person_id=request.args.get("person_id") or None,
+        employee_id=request.args.get("employee_id") or None,
         doc_type=request.args.get("doc_type"),
         status=request.args.get("status"),
         q=request.args.get("q"),

@@ -37,11 +37,13 @@ class DocumentRepository:
         self.session.flush()
         return document
 
-    def list_by_case(
+    def list_documents(
         self,
         client_id: str,
-        company_id: str,
-        case_id: str,
+        company_id: str | None = None,
+        case_id: str | None = None,
+        person_id: str | None = None,
+        employee_id: str | None = None,
         doc_type: str | None = None,
         status: str | None = None,
         q: str | None = None,
@@ -64,12 +66,20 @@ class DocumentRepository:
                 extraction_subquery.c.document_id.is_not(None).label("has_extraction"),
             )
             .outerjoin(extraction_subquery, extraction_subquery.c.document_id == Document.id)
-            .filter(
-            Document.client_id == client_id,
-            Document.company_id == company_id,
-            Document.case_id == case_id,
-            )
+            .filter(Document.client_id == client_id)
         )
+
+        if company_id is not None:
+            query = query.filter(Document.company_id == company_id)
+
+        if case_id is not None:
+            query = query.filter(Document.case_id == case_id)
+
+        if person_id is not None:
+            query = query.filter(Document.person_id == person_id)
+
+        if employee_id is not None:
+            query = query.filter(Document.employee_id == employee_id)
 
         if doc_type:
             query = query.filter(Document.doc_type == doc_type)
@@ -110,6 +120,50 @@ class DocumentRepository:
             document.has_extraction = bool(has_extraction_flag)
             items.append(document)
         return items, total_count
+
+    def list_by_case(
+        self,
+        client_id: str,
+        company_id: str,
+        case_id: str,
+        doc_type: str | None = None,
+        status: str | None = None,
+        q: str | None = None,
+        sort: str = "created_at",
+        order: str = "desc",
+        limit: int = 20,
+        offset: int = 0,
+        has_extraction: bool | None = None,
+    ) -> tuple[list[Document], int]:
+        return self.list_documents(
+            client_id=client_id,
+            company_id=company_id,
+            case_id=case_id,
+            doc_type=doc_type,
+            status=status,
+            q=q,
+            sort=sort,
+            order=order,
+            limit=limit,
+            offset=offset,
+            has_extraction=has_extraction,
+        )
+
+    def list_documents_by_person(
+        self,
+        client_id: str,
+        person_id: str,
+        **kwargs,
+    ) -> tuple[list[Document], int]:
+        return self.list_documents(client_id=client_id, person_id=person_id, **kwargs)
+
+    def list_documents_by_employee(
+        self,
+        client_id: str,
+        employee_id: str,
+        **kwargs,
+    ) -> tuple[list[Document], int]:
+        return self.list_documents(client_id=client_id, employee_id=employee_id, **kwargs)
 
     @staticmethod
     def filter_by_allowed_companies(query, allowed_company_ids: set[str]):

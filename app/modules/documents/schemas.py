@@ -13,11 +13,20 @@ def _format_datetime(value: datetime | None) -> str | None:
     return value.isoformat()
 
 
+def _person_full_name(document: Document) -> str | None:
+    person = getattr(document, "person", None)
+    if person is None:
+        return None
+    return f"{person.first_name} {person.last_name}".strip()
+
+
 class DocumentResponseSchema:
     """Serializer for document metadata responses."""
 
     @staticmethod
     def dump(document: Document) -> dict:
+        company = getattr(document, "company", None)
+        employee = getattr(document, "employee", None)
         return {
             "id": document.id,
             "original_filename": document.original_filename,
@@ -27,6 +36,13 @@ class DocumentResponseSchema:
             "uploaded_by_user_id": document.uploaded_by_user_id,
             "doc_type": document.doc_type,
             "size_bytes": document.size_bytes,
+            "company_id": document.company_id,
+            "company_name": company.name if company else None,
+            "case_id": document.case_id,
+            "person_id": document.person_id,
+            "person_full_name": _person_full_name(document),
+            "employee_id": document.employee_id,
+            "employee_status": employee.status if employee else None,
         }
 
     @classmethod
