@@ -1,7 +1,7 @@
 """add person and employee to documents
 
 Revision ID: f1a2b3c4d5e6
-Revises: b1c2d3e4f5a6
+Revises: e7f8a9b0c1d2
 Create Date: 2026-03-08 00:00:00.000000
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = "f1a2b3c4d5e6"
-down_revision = "b1c2d3e4f5a6"
+down_revision = "e7f8a9b0c1d2"
 branch_labels = None
 depends_on = None
 
