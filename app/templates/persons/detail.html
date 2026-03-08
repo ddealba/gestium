@@ -99,6 +99,68 @@
       </table>
     </div>
 
+
+    <h3 style="margin-top:1rem;">Solicitudes</h3>
+    <div class="ff-table-wrap">
+      <table class="ff-table">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Fecha límite</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="person-requests-table">
+          <tr><td colspan="5" class="ff-muted">Cargando solicitudes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 style="margin-top:1rem;">Crear solicitud</h4>
+    <form id="person-request-form" class="ff-form">
+      <label>Tipo
+        <select class="ff-input" name="request_type">
+          <option value="upload_document">upload_document</option>
+          <option value="complete_profile">complete_profile</option>
+          <option value="confirm_information">confirm_information</option>
+          <option value="provide_data">provide_data</option>
+          <option value="other">other</option>
+        </select>
+      </label>
+      <label>Título
+        <input class="ff-input" name="title" required />
+      </label>
+      <label>Descripción
+        <textarea class="ff-input" name="description" rows="2"></textarea>
+      </label>
+      <label>Fecha límite
+        <input class="ff-input" type="date" name="due_date" />
+      </label>
+      <label>Tipo resolución
+        <select class="ff-input" name="resolution_type">
+          <option value="document_upload">document_upload</option>
+          <option value="form_submission">form_submission</option>
+          <option value="confirm_information">confirm_information</option>
+          <option value="manual_review">manual_review</option>
+        </select>
+      </label>
+      <label>Expediente (opcional)
+        <input class="ff-input" name="case_id" />
+      </label>
+      <label>Empresa (opcional)
+        <input class="ff-input" name="company_id" />
+      </label>
+      <label>Empleado (opcional)
+        <input class="ff-input" name="employee_id" />
+      </label>
+      <div class="ff-filters__actions">
+        <button class="ff-btn ff-btn--primary" type="submit">Crear solicitud</button>
+      </div>
+      <p id="person-request-message" class="ff-form-message"></p>
+    </form>
+
   </div>
 </section>
 {% endblock %}
