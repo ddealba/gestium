@@ -3,7 +3,7 @@
 {% block title %}Detalle persona · Gestium{% endblock %}
 
 {% block content %}
-<section class="ff-card">
+<section class="ff-card" id="person-detail-root" data-person-id="{{ person_id }}">
   <div class="ff-card__head ff-page-head">
     <h2>Detalle de persona</h2>
     <a href="{{ url_for('web.app_persons') }}" class="ff-btn ff-btn--ghost">Volver</a>
@@ -15,8 +15,58 @@
     <div id="person-contact" class="ff-muted">Cargando...</div>
     <h3 style="margin-top:1rem;">Estado</h3>
     <div id="person-status" class="ff-muted">Cargando...</div>
-    <h3 style="margin-top:1rem;">Auditoría</h3>
-    <div id="person-audit" class="ff-muted">Próximamente</div>
+
+    <div class="ff-page-head" style="margin-top:1rem;">
+      <h3>Empresas relacionadas</h3>
+      <button id="person-relation-add" class="ff-btn ff-btn--primary ff-btn--sm" type="button">Añadir relación</button>
+    </div>
+    <div class="ff-table-wrap">
+      <table class="ff-table">
+        <thead>
+          <tr>
+            <th>Empresa</th>
+            <th>Tipo de relación</th>
+            <th>Estado</th>
+            <th>Fecha inicio</th>
+            <th>Fecha fin</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="person-relations-table">
+          <tr><td colspan="6" class="ff-muted">Cargando relaciones...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="person-relation-form-wrap" style="display:none; margin-top:1rem;">
+      <form id="person-relation-form" class="ff-form">
+        <label>Empresa (ID)
+          <input class="ff-input" name="company_id" required />
+        </label>
+        <label>Tipo de relación
+          <select class="ff-input" name="relation_type">
+            <option value="owner">owner</option>
+            <option value="employee">employee</option>
+            <option value="other">other</option>
+          </select>
+        </label>
+        <label>Fecha inicio
+          <input class="ff-input" type="date" name="start_date" required />
+        </label>
+        <label>Notas
+          <textarea class="ff-input" name="notes" rows="2"></textarea>
+        </label>
+        <div class="ff-filters__actions">
+          <button class="ff-btn ff-btn--primary" type="submit">Guardar</button>
+          <button id="person-relation-cancel" class="ff-btn ff-btn--ghost" type="button">Cancelar</button>
+        </div>
+      </form>
+      <p id="person-relation-message" class="ff-form-message"></p>
+    </div>
   </div>
 </section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/person_detail.js', v=ui_version) }}"></script>
 {% endblock %}
