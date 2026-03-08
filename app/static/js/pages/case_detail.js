@@ -34,6 +34,10 @@
   const extractionManualMessage = document.getElementById('extraction-manual-message');
   let canWriteDocuments = false;
 
+  const caseBaseEndpoint = () => (companyId ? `/companies/${companyId}/cases/${caseId}` : `/cases/${caseId}`);
+  const caseEventsEndpoint = () => (companyId ? `/companies/${companyId}/cases/${caseId}/events` : null);
+  const caseCommentEndpoint = () => (companyId ? `/companies/${companyId}/cases/${caseId}/events/comment` : null);
+
   let caseDocuments = [];
   const documentsState = { limit: 20, offset: 0, total: 0 };
 
@@ -156,7 +160,7 @@
   const loadCaseDetail = async () => {
     setMessage(detailMessage, 'Cargando detalle…');
     try {
-      const data = await window.apiFetch(`/companies/${companyId}/cases/${caseId}`);
+      const data = await window.apiFetch(caseBaseEndpoint());
       renderDetail(data?.case || {});
       setMessage(detailMessage, '');
     } catch (error) {
@@ -165,9 +169,16 @@
   };
 
   const loadCaseEvents = async () => {
+    const endpoint = caseEventsEndpoint();
+    if (!endpoint) {
+      setMessage(eventsMessage, 'Eventos no disponibles para expedientes personales.');
+      renderEvents([]);
+      return;
+    }
+
     setMessage(eventsMessage, 'Cargando eventos…');
     try {
-      const data = await window.apiFetch(`/companies/${companyId}/cases/${caseId}/events`);
+      const data = await window.apiFetch(endpoint);
       renderEvents(data?.events || []);
       setMessage(eventsMessage, '');
     } catch (error) {
@@ -324,8 +335,14 @@
 
     setMessage(commentMessage, 'Guardando comentario…');
 
+    const endpoint = caseCommentEndpoint();
+    if (!endpoint) {
+      setMessage(commentMessage, 'Comentarios no disponibles para expedientes personales.', true);
+      return;
+    }
+
     try {
-      await window.apiFetch(`/companies/${companyId}/cases/${caseId}/events/comment`, {
+      await window.apiFetch(endpoint, {
         method: 'POST',
         body: { comment },
       });

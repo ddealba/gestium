@@ -11,6 +11,7 @@
   const form = document.getElementById('person-relation-form');
   const message = document.getElementById('person-relation-message');
   const documentsTable = document.getElementById('person-documents-table');
+  const casesTable = document.getElementById('person-cases-table');
 
   const renderPerson = (person) => {
     basic.innerHTML = `<b>${person.full_name || '-'}</b> · ${person.document_number || '-'}`;
@@ -35,6 +36,26 @@
           <td>${item.status || '-'}</td>
           <td>${item.created_at || '-'}</td>
           <td><a class="ff-btn ff-btn--ghost ff-btn--sm" href="/documents/${item.id}/download">Descargar</a></td>
+        </tr>`,
+      )
+      .join('');
+  };
+
+
+  const renderCases = (items) => {
+    if (!casesTable) return;
+    if (!items?.length) {
+      casesTable.innerHTML = '<tr><td colspan="4" class="ff-muted">Sin expedientes registrados.</td></tr>';
+      return;
+    }
+
+    casesTable.innerHTML = items
+      .map(
+        (item) => `<tr>
+          <td>${item.title || '-'}</td>
+          <td>${item.type || '-'}</td>
+          <td>${item.company_name || '-'}</td>
+          <td>${item.status || '-'}</td>
         </tr>`,
       )
       .join('');
@@ -69,6 +90,8 @@
     renderRelations(relationsData?.items || []);
     const documentsData = await window.apiFetch(`/documents?person_id=${personId}&limit=50&offset=0`);
     renderDocuments(documentsData?.items || []);
+    const casesData = await window.apiFetch(`/cases?person_id=${personId}&limit=50&offset=0`);
+    renderCases(casesData?.cases || []);
   };
 
   document.getElementById('person-relation-add').addEventListener('click', () => {

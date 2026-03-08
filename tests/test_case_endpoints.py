@@ -5,6 +5,7 @@ from app.common.jwt import create_access_token
 from app.extensions import db
 from app.models.client import Client
 from app.models.company import Company
+from app.models.person import Person
 from app.models.role import Role
 from app.models.user import User
 from app.repositories.user_company_access_repository import UserCompanyAccessRepository
@@ -21,7 +22,7 @@ def db_session(app):
 
 
 def create_client(db_session) -> Client:
-    client = Client(name="Acme")
+    client = Client(name=f"Acme-{__import__("uuid").uuid4().hex[:8]}")
     db_session.add(client)
     db_session.commit()
     return client
@@ -40,6 +41,20 @@ def create_company(db_session, client_id: str, name: str, tax_id: str) -> Compan
     db_session.commit()
     return company
 
+
+
+
+def create_person(db_session, client_id: str, document_number: str = "12345678") -> Person:
+    person = Person(
+        client_id=client_id,
+        first_name="Maria",
+        last_name="Lopez",
+        document_number=document_number,
+        status="active",
+    )
+    db_session.add(person)
+    db_session.commit()
+    return person
 
 def auth_header_for(user: User) -> dict[str, str]:
     token = create_access_token(user.id, user.client_id)
@@ -261,3 +276,149 @@ def test_list_cases_invalid_sort_or_order_returns_400(client, db_session):
     )
     assert invalid_order_response.status_code == 400
     assert invalid_order_response.get_json()["message"] == "invalid_order"
+
+
+def test_create_case_with_person_only(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id)
+    person = create_person(db_session, tenant.id)
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+
+    response = client.post(
+        "/cases",
+        headers=auth_header_for(user),
+        json={"type": "consulta", "title": "Consulta individual", "person_id": person.id},
+    )
+
+    assert response.status_code == 201
+    body = response.get_json()["case"]
+    assert body["person_id"] == person.id
+    assert body["company_id"] is None
+
+
+def test_create_case_with_company_only_and_mixed(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id)
+    company = create_company(db_session, tenant.id, "Alpha", "A-123")
+    person = create_person(db_session, tenant.id, document_number="999")
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+    assign_access(db_session, user, company, "admin")
+
+    response_company = client.post(
+        "/cases",
+        headers=auth_header_for(user),
+        json={"type": "fiscal", "title": "Cambio domicilio", "company_id": company.id},
+    )
+    assert response_company.status_code == 201
+
+    response_mixed = client.post(
+        "/cases",
+        headers=auth_header_for(user),
+        json={
+            "type": "employment",
+            "title": "Alta trabajador",
+            "company_id": company.id,
+            "person_id": person.id,
+        },
+    )
+    assert response_mixed.status_code == 201
+    assert response_mixed.get_json()["case"]["person_id"] == person.id
+
+
+def test_create_case_requires_company_or_person(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id)
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+
+    response = client.post(
+        "/cases",
+        headers=auth_header_for(user),
+        json={"type": "consulta", "title": "Sin asociación"},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "company_or_person_required"
+
+
+def test_list_cases_filters_by_person_and_company(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id)
+    company_a = create_company(db_session, tenant.id, "Alpha", "A-123")
+    company_b = create_company(db_session, tenant.id, "Beta", "B-123")
+    person_a = create_person(db_session, tenant.id, document_number="111")
+    person_b = create_person(db_session, tenant.id, document_number="222")
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+    assign_access(db_session, user, company_a, "admin")
+    assign_access(db_session, user, company_b, "admin")
+
+    client.post(
+        "/cases",
+        headers=auth_header_for(user),
+        json={"type": "general", "title": "C1", "company_id": company_a.id, "person_id": person_a.id},
+    )
+    client.post(
+        "/cases",
+        headers=auth_header_for(user),
+        json={"type": "general", "title": "C2", "company_id": company_b.id, "person_id": person_b.id},
+    )
+
+    by_person = client.get(f"/cases?person_id={person_a.id}", headers=auth_header_for(user))
+    assert by_person.status_code == 200
+    assert len(by_person.get_json()["cases"]) == 1
+
+    by_company = client.get(f"/cases?company_id={company_b.id}", headers=auth_header_for(user))
+    assert by_company.status_code == 200
+    assert len(by_company.get_json()["cases"]) == 1
+
+
+def test_create_case_rejects_person_from_other_tenant(client, db_session):
+    tenant_a = create_client(db_session)
+    tenant_b = create_client(db_session)
+    user = create_user(db_session, tenant_a.id)
+    foreign_person = create_person(db_session, tenant_b.id, document_number="333")
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+
+    response = client.post(
+        "/cases",
+        headers=auth_header_for(user),
+        json={"type": "consulta", "title": "Cross tenant", "person_id": foreign_person.id},
+    )
+
+    assert response.status_code == 404
+
+
+def test_list_cases_tenant_isolation(client, db_session):
+    tenant_a = create_client(db_session)
+    tenant_b = create_client(db_session)
+    user_a = create_user(db_session, tenant_a.id)
+    company_a = create_company(db_session, tenant_a.id, "Alpha", "A-123")
+    company_b = create_company(db_session, tenant_b.id, "Beta", "B-123")
+    seed_rbac()
+    assign_role(db_session, user_a, "Admin Cliente")
+    assign_access(db_session, user_a, company_a, "admin")
+
+    client.post(
+        f"/companies/{company_a.id}/cases",
+        headers=auth_header_for(user_a),
+        json={"type": "general", "title": "Tenant A"},
+    )
+
+    user_b = create_user(db_session, tenant_b.id, email="other@example.com")
+    assign_role(db_session, user_b, "Admin Cliente")
+    assign_access(db_session, user_b, company_b, "admin")
+    client.post(
+        f"/companies/{company_b.id}/cases",
+        headers=auth_header_for(user_b),
+        json={"type": "general", "title": "Tenant B"},
+    )
+
+    response = client.get("/cases", headers=auth_header_for(user_a))
+    assert response.status_code == 200
+    titles = [item["title"] for item in response.get_json()["cases"]]
+    assert "Tenant A" in titles
+    assert "Tenant B" not in titles

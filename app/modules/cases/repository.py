@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from werkzeug.exceptions import BadRequest
 from sqlalchemy import or_
+from werkzeug.exceptions import BadRequest
 
 from app.extensions import db
 from app.models.case import Case
@@ -31,24 +31,39 @@ class CaseRepository:
             .one_or_none()
         )
 
-    def list_by_company(
+    def list_cases(
         self,
-        company_id: str,
         client_id: str,
+        company_id: str | None = None,
+        person_id: str | None = None,
         status: str | None = None,
+        case_type: str | None = None,
         q: str | None = None,
+        allowed_company_ids: set[str] | None = None,
         sort: str | None = None,
         order: str | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Case]:
-        query = self.session.query(Case).filter(
-            Case.company_id == company_id,
-            Case.client_id == client_id,
-        )
+        query = self.session.query(Case).filter(Case.client_id == client_id)
+
+        if allowed_company_ids is not None:
+            if not allowed_company_ids:
+                query = query.filter(Case.company_id.is_(None))
+            else:
+                query = query.filter(or_(Case.company_id.is_(None), Case.company_id.in_(allowed_company_ids)))
+
+        if company_id is not None:
+            query = query.filter(Case.company_id == company_id)
+
+        if person_id is not None:
+            query = query.filter(Case.person_id == person_id)
 
         if status is not None:
             query = query.filter(Case.status == status)
+
+        if case_type is not None:
+            query = query.filter(Case.type == case_type)
 
         if q is not None:
             q_value = q.strip()

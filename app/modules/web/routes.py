@@ -225,6 +225,20 @@ def app_case_detail(company_id: str, case_id: str):
     )
 
 
+
+
+@bp.get("/app/cases/<case_id>")
+def app_case_detail_tenant(case_id: str):
+    """Render tenant-level case detail page."""
+    return render_template(
+        "pages/case_detail.html",
+        active_nav="cases",
+        page_id="cases",
+        company_id="",
+        case_id=case_id,
+    )
+
+
 @bp.get("/app/documents")
 def app_documents():
     """Render tenant-level documents page."""

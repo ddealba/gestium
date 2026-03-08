@@ -66,6 +66,8 @@ class CaseCreateRequest:
     description: str | None = None
     due_date: date | None = None
     responsible_user_id: str | None = None
+    company_id: str | None = None
+    person_id: str | None = None
 
     @classmethod
     def from_dict(cls, payload: dict) -> "CaseCreateRequest":
@@ -75,6 +77,8 @@ class CaseCreateRequest:
             description=_normalize_optional_str(payload.get("description")),
             due_date=_parse_date(payload.get("due_date"), "due_date"),
             responsible_user_id=_normalize_optional_str(payload.get("responsible_user_id")),
+            company_id=_normalize_optional_str(payload.get("company_id")),
+            person_id=_normalize_optional_str(payload.get("person_id")),
         )
 
 
@@ -86,6 +90,8 @@ class CaseUpdateRequest:
     title: str | None = None
     description: str | None = None
     due_date: date | None = None
+    company_id: str | None = None
+    person_id: str | None = None
 
     @classmethod
     def from_dict(cls, payload: dict) -> "CaseUpdateRequest":
@@ -93,8 +99,10 @@ class CaseUpdateRequest:
         has_title = "title" in payload
         has_description = "description" in payload
         has_due_date = "due_date" in payload
+        has_company_id = "company_id" in payload
+        has_person_id = "person_id" in payload
 
-        if not any((has_type, has_title, has_description, has_due_date)):
+        if not any((has_type, has_title, has_description, has_due_date, has_company_id, has_person_id)):
             raise BadRequest("no_fields_to_update")
 
         return cls(
@@ -110,6 +118,8 @@ class CaseUpdateRequest:
                 _normalize_optional_str(payload.get("description")) if has_description else None
             ),
             due_date=_parse_date(payload.get("due_date"), "due_date") if has_due_date else None,
+            company_id=_normalize_optional_str(payload.get("company_id")) if has_company_id else None,
+            person_id=_normalize_optional_str(payload.get("person_id")) if has_person_id else None,
         )
 
 
@@ -155,10 +165,18 @@ class CaseResponseSchema:
 
     @staticmethod
     def dump(case: Case) -> dict:
+        company_name = case.company.name if getattr(case, "company", None) else None
+        person = getattr(case, "person", None)
+        person_full_name = None
+        if person is not None:
+            person_full_name = f"{person.first_name} {person.last_name}".strip()
         return {
             "id": case.id,
             "client_id": case.client_id,
             "company_id": case.company_id,
+            "company_name": company_name,
+            "person_id": case.person_id,
+            "person_full_name": person_full_name,
             "type": case.type,
             "title": case.title,
             "description": case.description,

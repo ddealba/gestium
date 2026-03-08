@@ -14,12 +14,14 @@ class Case(BaseModel):
     __tablename__ = "cases"
     __table_args__ = (
         db.Index("ix_cases_client_company_status", "client_id", "company_id", "status"),
+        db.Index("ix_cases_client_person_status", "client_id", "person_id", "status"),
         db.Index("ix_cases_client_due_date", "client_id", "due_date"),
     )
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     client_id = db.Column(db.String(36), db.ForeignKey("clients.id"), nullable=False, index=True)
-    company_id = db.Column(db.String(36), db.ForeignKey("companies.id"), nullable=False, index=True)
+    company_id = db.Column(db.String(36), db.ForeignKey("companies.id"), nullable=True, index=True)
+    person_id = db.Column(db.String(36), db.ForeignKey("persons.id"), nullable=True, index=True)
     type = db.Column(db.String(100), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=True)
@@ -33,6 +35,7 @@ class Case(BaseModel):
     due_date = db.Column(db.Date, nullable=True, index=True)
 
     company = db.relationship("Company", backref=db.backref("cases", lazy="dynamic"))
+    person = db.relationship("Person", backref=db.backref("cases", lazy="dynamic"))
 
     def __repr__(self) -> str:
         return (
