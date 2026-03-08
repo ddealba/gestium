@@ -31,10 +31,15 @@ def auth_required(func: Callable[..., Any]):
     def wrapper(*args: Any, **kwargs: Any):
         auth_header = request.headers.get("Authorization", "")
         parts = auth_header.split()
-        if len(parts) != 2 or parts[0].lower() != "bearer":
+        token = None
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+        else:
+            token = request.cookies.get("gestium_access_token")
+        if not token:
             raise Unauthorized("missing_token")
 
-        payload = decode_token(parts[1])
+        payload = decode_token(token)
         user_id = payload.get("sub")
         client_id = payload.get("client_id")
         if not user_id or not client_id:

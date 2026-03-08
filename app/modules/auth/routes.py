@@ -68,13 +68,21 @@ def login_user():
     user_id, resolved_client_id = service.authenticate(email, password, client_id, user_type)
     token = create_access_token(user_id, resolved_client_id)
 
-    return ok(
+    response = ok(
         {
             "access_token": token,
             "token_type": "Bearer",
             "expires_in": 3600,
         }
     )
+    response.set_cookie(
+        "gestium_access_token",
+        token,
+        max_age=3600,
+        httponly=True,
+        samesite="Lax",
+    )
+    return response
 
 
 @bp.get("/auth/me")
