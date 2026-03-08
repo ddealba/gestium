@@ -19,6 +19,7 @@ from app.modules.cases.schemas import (
     CaseUpdateRequest,
 )
 from app.modules.cases.service import CaseService
+from app.services.company_access_service import CompanyAccessService
 
 cases_bp = Blueprint("cases", __name__)
 bp = cases_bp
@@ -75,6 +76,7 @@ def create_case(company_id: str):
             "description": create_payload.description,
             "due_date": create_payload.due_date,
             "responsible_user_id": create_payload.responsible_user_id,
+            "person_id": create_payload.person_id,
         },
     )
     db.session.commit()
@@ -88,7 +90,7 @@ def create_case(company_id: str):
 @require_company_access("viewer")
 def get_case(company_id: str, case_id: str):
     service = CaseService()
-    case = service.get_case(str(g.client_id), company_id, case_id)
+    case = service.get_case(str(g.client_id), case_id, company_id=company_id)
     return ok({"case": CaseResponseSchema.dump(case)})
 
 
@@ -111,11 +113,123 @@ def update_case(company_id: str, case_id: str):
         update_fields["description"] = update_payload.description
     if "due_date" in payload:
         update_fields["due_date"] = update_payload.due_date
+    if "person_id" in payload:
+        update_fields["person_id"] = update_payload.person_id
 
     case = service.update_case(
         client_id=str(g.client_id),
-        company_id=company_id,
         case_id=case_id,
+        company_id=company_id,
+        actor_user_id=str(g.user.id),
+        payload=update_fields,
+    )
+    db.session.commit()
+    return ok({"case": CaseResponseSchema.dump(case)})
+
+
+@cases_bp.get("/cases")
+@auth_required
+@tenant_required
+@require_permission("case.read")
+def list_tenant_cases():
+    service = CaseService()
+    cases = service.list_cases(
+        client_id=str(g.client_id),
+        user_id=str(g.user.id),
+        company_id=request.args.get("company_id"),
+        person_id=request.args.get("person_id"),
+        status=request.args.get("status"),
+        case_type=request.args.get("type"),
+        q=request.args.get("q"),
+        sort=request.args.get("sort"),
+        order=request.args.get("order"),
+        limit=_parse_int_arg("limit", 50),
+        offset=_parse_int_arg("offset", 0),
+    )
+    return ok({"cases": [CaseResponseSchema.dump(case) for case in cases]})
+
+
+@cases_bp.post("/cases")
+@auth_required
+@tenant_required
+@require_permission("case.write")
+def create_tenant_case():
+    payload = request.get_json(silent=True) or {}
+    create_payload = CaseCreateRequest.from_dict(payload)
+
+    if create_payload.company_id:
+        CompanyAccessService().require_access(
+            user_id=str(g.user.id),
+            company_id=create_payload.company_id,
+            client_id=str(g.client_id),
+            required_level="operator",
+        )
+
+    service = CaseService()
+    case = service.create_case(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        payload={
+            "company_id": create_payload.company_id,
+            "person_id": create_payload.person_id,
+            "type": create_payload.case_type,
+            "title": create_payload.title,
+            "description": create_payload.description,
+            "due_date": create_payload.due_date,
+            "responsible_user_id": create_payload.responsible_user_id,
+        },
+    )
+    db.session.commit()
+    return ok({"case": CaseResponseSchema.dump(case)}, status_code=201)
+
+
+@cases_bp.get("/cases/<case_id>")
+@auth_required
+@tenant_required
+@require_permission("case.read")
+def get_tenant_case(case_id: str):
+    service = CaseService()
+    case = service.get_case(str(g.client_id), case_id)
+    if case.company_id:
+        CompanyAccessService().require_access(str(g.user.id), str(case.company_id), str(g.client_id), "viewer")
+    return ok({"case": CaseResponseSchema.dump(case)})
+
+
+@cases_bp.patch("/cases/<case_id>")
+@auth_required
+@tenant_required
+@require_permission("case.write")
+def update_tenant_case(case_id: str):
+    payload = request.get_json(silent=True) or {}
+    update_payload = CaseUpdateRequest.from_dict(payload)
+
+    service = CaseService()
+    case = service.get_case(str(g.client_id), case_id)
+    if case.company_id:
+        CompanyAccessService().require_access(str(g.user.id), str(case.company_id), str(g.client_id), "operator")
+    if update_payload.company_id:
+        CompanyAccessService().require_access(str(g.user.id), update_payload.company_id, str(g.client_id), "operator")
+
+    update_fields: dict = {}
+    if "type" in payload:
+        update_fields["type"] = update_payload.case_type
+    if "title" in payload:
+        update_fields["title"] = update_payload.title
+    if "description" in payload:
+        update_fields["description"] = update_payload.description
+    if "due_date" in payload:
+        update_fields["due_date"] = update_payload.due_date
+    if "status" in payload:
+        update_fields["status"] = payload.get("status")
+    if "company_id" in payload:
+        update_fields["company_id"] = update_payload.company_id
+    if "person_id" in payload:
+        update_fields["person_id"] = update_payload.person_id
+
+    case = service.update_case(
+        client_id=str(g.client_id),
+        case_id=case_id,
+        actor_user_id=str(g.user.id),
         payload=update_fields,
     )
     db.session.commit()

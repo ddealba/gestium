@@ -6,6 +6,7 @@ from app.models.case import Case
 from app.models.case_event import CaseEvent
 from app.models.client import Client
 from app.models.company import Company
+from app.models.person import Person
 from app.models.user import User
 from app.modules.cases.service import CaseService
 
@@ -23,6 +24,20 @@ def _create_company(client_id: str) -> Company:
     db.session.commit()
     return company
 
+
+
+
+def _create_person(client_id: str, document_number: str = "123") -> Person:
+    person = Person(
+        client_id=client_id,
+        first_name="Maria",
+        last_name="Lopez",
+        document_number=document_number,
+        status="active",
+    )
+    db.session.add(person)
+    db.session.commit()
+    return person
 
 def _create_user(client_id: str, email: str) -> User:
     user = User(client_id=client_id, email=email, status="active")
@@ -116,4 +131,43 @@ def test_assign_and_comment_generate_events(app):
         ]
         assert event_types == ["comment", "assignment", "comment"]
 
+        db.drop_all()
+
+
+def test_create_case_with_person_only(app):
+    with app.app_context():
+        db.create_all()
+        tenant = _create_client()
+        person = _create_person(tenant.id)
+        actor = _create_user(tenant.id, "owner@example.com")
+
+        service = CaseService()
+        case = service.create_case(
+            client_id=tenant.id,
+            actor_user_id=actor.id,
+            payload={"title": "Consulta", "person_id": person.id},
+        )
+        db.session.commit()
+
+        assert case.company_id is None
+        assert case.person_id == person.id
+
+        db.drop_all()
+
+
+def test_create_case_requires_company_or_person(app):
+    with app.app_context():
+        db.create_all()
+        tenant = _create_client()
+        actor = _create_user(tenant.id, "owner@example.com")
+
+        service = CaseService()
+        with pytest.raises(BadRequest) as exc_info:
+            service.create_case(
+                client_id=tenant.id,
+                actor_user_id=actor.id,
+                payload={"title": "Invalido"},
+            )
+
+        assert exc_info.value.description == "company_or_person_required"
         db.drop_all()

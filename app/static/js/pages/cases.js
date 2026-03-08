@@ -5,7 +5,7 @@
 
   if (window.tenantContext?.requireTenantSelection?.()) return;
 
-  const companyId = table.dataset.companyId;
+  const companyId = table.dataset.companyId || null;
   const tbody = table.querySelector('tbody');
   const message = document.getElementById('cases-message');
   const createMessage = document.getElementById('create-case-message');
@@ -16,6 +16,12 @@
   const clearFiltersButton = document.getElementById('clear-filters');
 
   const TERMINAL_STATUSES = new Set(['done', 'cancelled']);
+
+  const listEndpoint = () => (companyId ? `/companies/${companyId}/cases` : '/cases');
+
+  const detailUrl = (caseId) => (companyId ? `/app/companies/${companyId}/cases/${caseId}` : `/app/cases/${caseId}`);
+
+  const createEndpoint = () => (companyId ? `/companies/${companyId}/cases` : '/cases');
 
   const setMessage = (el, text, isError = false, isSuccess = false) => {
     el.textContent = text;
@@ -74,7 +80,7 @@
     tbody.innerHTML = '';
 
     if (!cases.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="ff-empty">No hay cases para esta empresa.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="ff-empty">No hay cases para esta empresa.</td></tr>';
       return;
     }
 
@@ -91,8 +97,9 @@
           <span class="ff-tag ${statusClass(item.status)}">${item.status || '-'}</span>
           ${overdue ? '<span class="ff-tag ff-tag--danger">Overdue</span>' : ''}
         </td>
+        <td>${item.person_full_name || '—'}</td>
         <td>${item.due_date || '—'}</td>
-        <td><a class="ff-btn ff-btn--ghost ff-btn--sm" href="/app/companies/${companyId}/cases/${item.id}">Ver detalle</a></td>
+        <td><a class="ff-btn ff-btn--ghost ff-btn--sm" href="${detailUrl(item.id)}">Ver detalle</a></td>
       `;
       tbody.appendChild(row);
     });
@@ -103,7 +110,7 @@
     const { queryString, status, sort, order } = buildQuery();
     updateUrl({ status, sort, order });
     try {
-      const data = await window.apiFetch(`/companies/${companyId}/cases?${queryString}`);
+      const data = await window.apiFetch(`${listEndpoint()}?${queryString}`);
       renderCases(data?.cases || []);
       setMessage(message, '');
     } catch (error) {
@@ -122,6 +129,7 @@
       title: form.elements.title.value.trim(),
       type: form.elements.type.value.trim(),
       description: form.elements.description.value.trim() || null,
+      person_id: form.elements.person_id.value.trim() || null,
       due_date: form.elements.due_date.value || null,
     };
 
@@ -132,7 +140,7 @@
 
     setMessage(createMessage, 'Creando case…');
     try {
-      await window.apiFetch(`/companies/${companyId}/cases`, {
+      await window.apiFetch(createEndpoint(), {
         method: 'POST',
         body: payload,
       });

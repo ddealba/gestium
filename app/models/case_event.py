@@ -19,7 +19,7 @@ class CaseEvent(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     client_id = db.Column(db.String(36), db.ForeignKey("clients.id"), nullable=False, index=True)
     case_id = db.Column(db.String(36), db.ForeignKey("cases.id"), nullable=False, index=True)
-    company_id = db.Column(db.String(36), db.ForeignKey("companies.id"), nullable=False, index=True)
+    company_id = db.Column(db.String(36), db.ForeignKey("companies.id"), nullable=True, index=True)
     actor_user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=True, index=True)
     event_type = db.Column(
         db.Enum("comment", "status_change", "assignment", "attachment", name="case_event_type"),

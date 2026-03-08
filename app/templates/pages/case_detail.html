@@ -8,7 +8,7 @@
     <div class="ff-card">
       <div class="ff-card__head ff-page-head">
         <h2>Detalle de case</h2>
-        <a href="/app/companies/{{ company_id }}/cases" class="ff-btn ff-btn--ghost ff-btn--sm">Volver</a>
+        <a href="{{ ('/app/companies/' ~ company_id ~ '/cases') if company_id else '/app/cases' }}" class="ff-btn ff-btn--ghost ff-btn--sm">Volver</a>
       </div>
       <div class="ff-card__body">
         <p id="case-detail-message" class="ff-form-message" aria-live="polite"></p>
