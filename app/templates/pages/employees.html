@@ -52,9 +52,38 @@
       </div>
     </div>
   </div>
+
+  <div class="ff-col-12">
+    <div class="ff-card" id="company-relations-root" data-company-id="{{ company_id }}">
+      <div class="ff-card__head ff-page-head">
+        <h2>Personas relacionadas</h2>
+      </div>
+      <div class="ff-card__body">
+        <p class="ff-muted">Vista básica de relaciones persona-empresa para backoffice.</p>
+        <div class="ff-table-wrap">
+          <table class="ff-table">
+            <thead>
+              <tr>
+                <th>Persona</th>
+                <th>Documento</th>
+                <th>Tipo de relación</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="company-relations-table">
+              <tr><td colspan="5" class="ff-muted">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </section>
 {% endblock %}
 
 {% block page_scripts %}
 <script src="{{ url_for('static', filename='js/employees.js', v=ui_version) }}"></script>
+<script src="{{ url_for('static', filename='js/pages/company_relations.js', v=ui_version) }}"></script>
 {% endblock %}
