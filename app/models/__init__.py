@@ -10,6 +10,7 @@ from app.models.employee import Employee
 from app.models.permission import Permission
 from app.models.person import Person
 from app.models.person_company_relation import PersonCompanyRelation
+from app.models.person_request import PersonRequest
 from app.models.role import Role
 from app.models.user import User
 from app.models.user_company_access import UserCompanyAccess
@@ -26,6 +27,7 @@ __all__ = [
     "Permission",
     "Person",
     "PersonCompanyRelation",
+    "PersonRequest",
     "Role",
     "User",
     "UserCompanyAccess",

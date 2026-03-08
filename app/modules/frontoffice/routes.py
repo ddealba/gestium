@@ -11,6 +11,8 @@ from app.common.tenant import tenant_required
 from app.modules.audit.audit_service import AuditService
 from app.modules.auth.service import AuthService
 from app.modules.frontoffice.service import FrontofficeService
+from app.modules.person_request.request_schemas import PersonRequestResponseSchema
+from app.modules.person_request.request_service import PersonRequestService
 
 bp = Blueprint("frontoffice", __name__)
 
@@ -56,12 +58,14 @@ def portal_login():
 def portal_home():
     service = FrontofficeService()
     summary = service.get_portal_summary(g.user, str(g.client_id))
+    request_summary = PersonRequestService().portal_dashboard_summary(g.user, str(g.client_id))
     documents = service.get_portal_documents(g.user, str(g.client_id))
     cases = service.get_portal_cases(g.user, str(g.client_id))
     return render_template(
         "frontoffice/home.html",
         summary={
             **summary,
+            **request_summary,
             "recent_documents": documents[:5],
             "recent_cases": cases[:5],
         },
@@ -115,6 +119,24 @@ def portal_cases():
         cases_person=cases_person,
         cases_company=cases_company,
     )
+
+
+@bp.get("/portal/requests")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_requests():
+    items = PersonRequestService().portal_list_requests(g.user, str(g.client_id))
+    return render_template("frontoffice/requests.html", requests=items)
+
+
+@bp.get("/portal/requests/<request_id>")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_request_detail(request_id: str):
+    item = PersonRequestService().portal_get_request(g.user, str(g.client_id), request_id)
+    return render_template("frontoffice/request_detail.html", request_item=PersonRequestResponseSchema.dump(item))
 
 
 @bp.get("/portal/companies")

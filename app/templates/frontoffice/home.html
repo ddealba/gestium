@@ -9,6 +9,9 @@
   <div class="card"><strong>Expedientes personales</strong><div>{{ summary.personal_cases }}</div></div>
   {% if summary.has_company_scope %}<div class="card"><strong>Expedientes empresa</strong><div>{{ summary.company_cases }}</div></div>{% endif %}
   {% if summary.has_company_scope %}<div class="card"><strong>Mis empresas</strong><div>{{ summary.companies_count }}</div></div>{% endif %}
+  <div class="card"><strong>Solicitudes pendientes</strong><div>{{ summary.pending_requests }}</div></div>
+  <div class="card"><strong>Solicitudes vencidas</strong><div>{{ summary.overdue_requests }}</div></div>
+  <div class="card"><strong>Solicitudes resueltas</strong><div>{{ summary.recently_resolved_requests }}</div></div>
 </div>
 <h2>Últimos documentos visibles</h2>
 <table><thead><tr><th>Nombre</th><th>Ámbito</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.scope }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
