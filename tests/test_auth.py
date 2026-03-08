@@ -123,6 +123,37 @@ def test_auth_me_returns_user(client, db_session):
     }
 
 
+
+def test_login_sets_access_token_cookie(client, db_session):
+    tenant = create_client(db_session)
+    create_user(db_session, tenant.id, "cookie@example.com", "supersecret")
+
+    response = client.post(
+        "/auth/login",
+        json={"email": "cookie@example.com", "password": "supersecret", "client_id": tenant.id},
+    )
+
+    assert response.status_code == 200
+    set_cookie = response.headers.get("Set-Cookie", "")
+    assert "gestium_access_token=" in set_cookie
+
+
+def test_auth_me_accepts_cookie_token(client, db_session):
+    tenant = create_client(db_session)
+    user = create_user(db_session, tenant.id, "cookie-me@example.com", "supersecret")
+
+    login_response = client.post(
+        "/auth/login",
+        json={"email": "cookie-me@example.com", "password": "supersecret", "client_id": tenant.id},
+    )
+    token = login_response.get_json()["access_token"]
+
+    client.set_cookie("gestium_access_token", token)
+    response = client.get("/auth/me")
+
+    assert response.status_code == 200
+    assert response.get_json()["id"] == user.id
+
 def test_login_invalid_password(client, db_session):
     tenant = create_client(db_session)
     create_user(db_session, tenant.id, "user@example.com", "supersecret")
