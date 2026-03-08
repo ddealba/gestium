@@ -1,0 +1,22 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Detalle persona · Gestium{% endblock %}
+
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head ff-page-head">
+    <h2>Detalle de persona</h2>
+    <a href="{{ url_for('web.app_persons') }}" class="ff-btn ff-btn--ghost">Volver</a>
+  </div>
+  <div class="ff-card__body">
+    <h3>Datos básicos</h3>
+    <div id="person-basic" class="ff-muted">Cargando...</div>
+    <h3 style="margin-top:1rem;">Datos de contacto</h3>
+    <div id="person-contact" class="ff-muted">Cargando...</div>
+    <h3 style="margin-top:1rem;">Estado</h3>
+    <div id="person-status" class="ff-muted">Cargando...</div>
+    <h3 style="margin-top:1rem;">Auditoría</h3>
+    <div id="person-audit" class="ff-muted">Próximamente</div>
+  </div>
+</section>
+{% endblock %}

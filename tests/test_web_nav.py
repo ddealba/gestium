@@ -18,7 +18,7 @@ def test_tenant_level_menu_entries_present():
     nav_items = _build_nav_items()
 
     page_ids = {item["page_id"] for item in nav_items}
-    assert {"dashboard", "companies", "employees", "cases", "documents", "admin"}.issubset(page_ids)
+    assert {"dashboard", "companies", "employees", "persons", "cases", "documents", "admin"}.issubset(page_ids)
 
     admin_group = next(item for item in nav_items if item["page_id"] == "admin")
     admin_children = {child["page_id"] for child in admin_group["children"]}
@@ -27,6 +27,9 @@ def test_tenant_level_menu_entries_present():
 
 def test_new_tenant_level_routes_render(client):
     response = client.get('/app/employees')
+    assert response.status_code == 200
+
+    response = client.get('/app/persons')
     assert response.status_code == 200
 
     response = client.get('/app/cases')

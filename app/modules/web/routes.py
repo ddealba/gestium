@@ -38,6 +38,15 @@ def _build_nav_items() -> list[dict]:
             "scope": "tenant",
         },
         {
+            "page_id": "persons",
+            "endpoint": "web.app_persons",
+            "label": "Personas",
+            "icon": "ph-user-list",
+            "active": False,
+            "badge": None,
+            "scope": "tenant",
+        },
+        {
             "page_id": "cases",
             "endpoint": "web.app_cases",
             "label": "Expedientes",
@@ -170,6 +179,31 @@ def app_company_cases(company_id: str):
         active_nav="companies",
         page_id="companies",
         company_id=company_id,
+    )
+
+
+
+
+@bp.get("/app/persons")
+def app_persons():
+    """Render tenant-level persons page."""
+    return render_template("persons/list.html", active_nav="persons", page_id="persons")
+
+
+@bp.get("/app/persons/new")
+def app_person_new():
+    """Render person creation form page."""
+    return render_template("persons/form.html", active_nav="persons", page_id="persons")
+
+
+@bp.get("/app/persons/<person_id>")
+def app_person_detail(person_id: str):
+    """Render person detail page."""
+    return render_template(
+        "persons/detail.html",
+        active_nav="persons",
+        page_id="persons",
+        person_id=person_id,
     )
 
 
