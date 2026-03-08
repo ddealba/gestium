@@ -10,6 +10,9 @@ from werkzeug.exceptions import BadRequest
 from app.models.employee import Employee
 
 
+_MISSING = object()
+
+
 def _normalize_full_name(value: str | None) -> str:
     if value is None:
         raise BadRequest("full_name_required")
@@ -24,6 +27,13 @@ def _normalize_employee_ref(value: str | None) -> str | None:
         return None
     ref = value.strip()
     return ref or None
+
+
+def _normalize_person_id(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    return normalized or None
 
 
 def _normalize_status(value: str | None, *, default: str | None = None) -> str:
@@ -72,15 +82,20 @@ def validate_status_dates(status: str, start_date: date, end_date: date | None) 
 class EmployeeCreateRequest:
     """Validated payload for employee creation."""
 
-    full_name: str
+    person_id: str | None
+    full_name: str | None
     employee_ref: str | None
     status: str
     start_date: date
     end_date: date | None
 
+    @property
+    def has_person_link(self) -> bool:
+        return self.person_id is not None
+
     @classmethod
     def from_dict(cls, payload: dict) -> "EmployeeCreateRequest":
-        start_date = _parse_date(payload.get("start_date"), "start_date")
+        start_date = _parse_date(payload.get("start_date") or payload.get("hire_date"), "start_date")
         if start_date is None:
             raise BadRequest("start_date_required")
 
@@ -88,8 +103,14 @@ class EmployeeCreateRequest:
         end_date = _parse_date(payload.get("end_date"), "end_date")
         validate_status_dates(status, start_date, end_date)
 
+        person_id = _normalize_person_id(payload.get("person_id"))
+        full_name = _normalize_employee_ref(payload.get("full_name"))
+        if person_id is None:
+            full_name = _normalize_full_name(payload.get("full_name"))
+
         return cls(
-            full_name=_normalize_full_name(payload.get("full_name")),
+            person_id=person_id,
+            full_name=full_name,
             employee_ref=_normalize_employee_ref(payload.get("employee_ref")),
             status=status,
             start_date=start_date,
@@ -103,6 +124,8 @@ class EmployeeUpdateRequest:
 
     full_name: str | None = None
     employee_ref: str | None = None
+    person_id: str | None = None
+    update_person_id: bool = False
     status: str | None = None
     start_date: date | None = None
     end_date: date | None = None
@@ -114,6 +137,7 @@ class EmployeeUpdateRequest:
         start_date_raw = payload.get("start_date")
         end_date_raw = payload.get("end_date")
         employee_ref_raw = payload.get("employee_ref")
+        person_id_raw = payload.get("person_id", _MISSING)
 
         full_name = None
         if full_name_raw is not None:
@@ -129,18 +153,24 @@ class EmployeeUpdateRequest:
             _normalize_employee_ref(employee_ref_raw) if employee_ref_raw is not None else None
         )
 
+        update_person_id = person_id_raw is not _MISSING
+        person_id = _normalize_person_id(person_id_raw) if update_person_id else None
+
         if (
             full_name is None
             and employee_ref is None
             and status is None
             and start_date is None
             and end_date is None
+            and not update_person_id
         ):
             raise BadRequest("no_fields_to_update")
 
         return cls(
             full_name=full_name,
             employee_ref=employee_ref,
+            person_id=person_id,
+            update_person_id=update_person_id,
             status=status,
             start_date=start_date,
             end_date=end_date,
@@ -170,6 +200,12 @@ class EmployeeResponseSchema:
             "id": employee.id,
             "client_id": employee.client_id,
             "company_id": employee.company_id,
+            "person_id": employee.person_id,
+            "person_full_name": getattr(employee, "person_full_name", None),
+            "person_document_number": getattr(employee, "person_document_number", None),
+            "person_relation_type": getattr(employee, "person_relation_type", None),
+            "person_relation_status": getattr(employee, "person_relation_status", None),
+            "legacy_employee": employee.person_id is None,
             "full_name": employee.full_name,
             "employee_ref": employee.employee_ref,
             "status": employee.status,

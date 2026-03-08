@@ -18,11 +18,13 @@ class Employee(BaseModel):
             "OR (status = 'active' AND end_date IS NULL)",
             name="ck_employees_status_dates",
         ),
+        db.Index("ix_employees_client_company_person", "client_id", "company_id", "person_id"),
     )
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     client_id = db.Column(db.String(36), db.ForeignKey("clients.id"), nullable=False, index=True)
     company_id = db.Column(db.String(36), db.ForeignKey("companies.id"), nullable=False, index=True)
+    person_id = db.Column(db.String(36), db.ForeignKey("persons.id"), nullable=True, index=True)
     full_name = db.Column(db.String(255), nullable=False)
     employee_ref = db.Column(db.String(255), nullable=True)
     status = db.Column(
@@ -34,6 +36,7 @@ class Employee(BaseModel):
     end_date = db.Column(db.Date, nullable=True)
 
     company = db.relationship("Company", backref=db.backref("employees", lazy="dynamic"))
+    person = db.relationship("Person", backref=db.backref("employees", lazy="dynamic"))
 
     def __repr__(self) -> str:
         return (
