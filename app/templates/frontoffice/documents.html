@@ -1,5 +1,17 @@
 {% extends "frontoffice/base.html" %}
 {% block content %}
 <h1>Mis documentos</h1>
-<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
+
+<h2>Personales</h2>
+<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>{% for item in documents_person %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td><td>{{ item.created_at }}</td></tr>{% endfor %}</tbody></table>
+
+{% if documents_employee %}
+<h2>Laborales</h2>
+<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>{% for item in documents_employee %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td><td>{{ item.created_at }}</td></tr>{% endfor %}</tbody></table>
+{% endif %}
+
+{% if documents_company %}
+<h2>Empresa</h2>
+<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in documents_company %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
+{% endif %}
 {% endblock %}

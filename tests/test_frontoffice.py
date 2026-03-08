@@ -1,4 +1,5 @@
 from datetime import date
+import uuid
 
 from app.common.jwt import create_access_token
 from app.extensions import db
@@ -16,22 +17,21 @@ def _auth_header(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
-def test_portal_access_and_data_isolation(client, app):
+def test_portal_access_and_advanced_visibility(client, app):
     with app.app_context():
         db.create_all()
 
-        tenant_a = Client(name="Tenant A", status="active")
-        tenant_b = Client(name="Tenant B", status="active")
-        db.session.add_all([tenant_a, tenant_b])
+        tenant = Client(name=f"Tenant A {uuid.uuid4()}", status="active")
+        db.session.add(tenant)
         db.session.flush()
 
-        company_a = Company(client_id=tenant_a.id, name="Empresa X", tax_id="AX1", status="active")
-        company_b = Company(client_id=tenant_b.id, name="Empresa Y", tax_id="BY1", status="active")
-        db.session.add_all([company_a, company_b])
+        company_owner = Company(client_id=tenant.id, name="Empresa Owner", tax_id="EO1", status="active")
+        company_foreign = Company(client_id=tenant.id, name="Empresa Ajena", tax_id="EA1", status="active")
+        db.session.add_all([company_owner, company_foreign])
         db.session.flush()
 
         person_portal = Person(
-            client_id=tenant_a.id,
+            client_id=tenant.id,
             first_name="Juan",
             last_name="Pérez",
             document_number="12345678A",
@@ -40,37 +40,37 @@ def test_portal_access_and_data_isolation(client, app):
             status="active",
         )
         person_other = Person(
-            client_id=tenant_a.id,
+            client_id=tenant.id,
             first_name="Ana",
             last_name="López",
             document_number="98765432B",
             email="ana@example.com",
             status="active",
         )
-        person_other_tenant = Person(
-            client_id=tenant_b.id,
-            first_name="Mike",
-            last_name="Stone",
-            document_number="ZZZ111",
-            email="mike@example.com",
-            status="active",
-        )
-        db.session.add_all([person_portal, person_other, person_other_tenant])
+        db.session.add_all([person_portal, person_other])
         db.session.flush()
 
         employee_portal = Employee(
-            client_id=tenant_a.id,
-            company_id=company_a.id,
+            client_id=tenant.id,
+            company_id=company_owner.id,
             person_id=person_portal.id,
             full_name="Juan Pérez",
             status="active",
             start_date=date(2025, 1, 1),
         )
-        db.session.add(employee_portal)
+        employee_other = Employee(
+            client_id=tenant.id,
+            company_id=company_owner.id,
+            person_id=person_other.id,
+            full_name="Ana López",
+            status="active",
+            start_date=date(2025, 1, 1),
+        )
+        db.session.add_all([employee_portal, employee_other])
         db.session.flush()
 
         portal_user = User(
-            client_id=tenant_a.id,
+            client_id=tenant.id,
             email="portal@example.com",
             status="active",
             user_type="portal",
@@ -78,7 +78,7 @@ def test_portal_access_and_data_isolation(client, app):
             password_hash="x",
         )
         internal_user = User(
-            client_id=tenant_a.id,
+            client_id=tenant.id,
             email="internal@example.com",
             status="active",
             user_type="internal",
@@ -90,37 +90,45 @@ def test_portal_access_and_data_isolation(client, app):
         db.session.add_all(
             [
                 Document(
-                    client_id=tenant_a.id,
-                    company_id=company_a.id,
+                    client_id=tenant.id,
+                    company_id=company_owner.id,
                     person_id=person_portal.id,
                     original_filename="doc_person.pdf",
                     storage_path="/tmp/a",
                     status="processed",
-                    doc_type="payslip",
+                    doc_type="dni",
                 ),
                 Document(
-                    client_id=tenant_a.id,
-                    company_id=company_a.id,
+                    client_id=tenant.id,
+                    company_id=company_owner.id,
                     employee_id=employee_portal.id,
                     original_filename="doc_employee.pdf",
                     storage_path="/tmp/b",
                     status="processed",
-                    doc_type="contract",
+                    doc_type="payslip",
                 ),
                 Document(
-                    client_id=tenant_a.id,
-                    company_id=company_a.id,
-                    person_id=person_other.id,
-                    original_filename="doc_other.pdf",
+                    client_id=tenant.id,
+                    company_id=company_owner.id,
+                    original_filename="doc_company_owner.pdf",
                     storage_path="/tmp/c",
                     status="processed",
+                    doc_type="company_tax",
                 ),
                 Document(
-                    client_id=tenant_b.id,
-                    company_id=company_b.id,
-                    person_id=person_other_tenant.id,
-                    original_filename="doc_tenant_b.pdf",
+                    client_id=tenant.id,
+                    company_id=company_foreign.id,
+                    original_filename="doc_company_foreign.pdf",
                     storage_path="/tmp/d",
+                    status="processed",
+                    doc_type="company_tax",
+                ),
+                Document(
+                    client_id=tenant.id,
+                    company_id=company_owner.id,
+                    employee_id=employee_other.id,
+                    original_filename="doc_other_employee.pdf",
+                    storage_path="/tmp/e",
                     status="processed",
                 ),
             ]
@@ -129,27 +137,25 @@ def test_portal_access_and_data_isolation(client, app):
         db.session.add_all(
             [
                 Case(
-                    client_id=tenant_a.id,
-                    company_id=company_a.id,
+                    client_id=tenant.id,
+                    company_id=company_owner.id,
                     person_id=person_portal.id,
                     type="employment",
-                    title="Alta de empleado",
+                    title="Caso personal",
                     status="in_progress",
                 ),
                 Case(
-                    client_id=tenant_a.id,
-                    company_id=company_a.id,
-                    person_id=person_other.id,
-                    type="employment",
-                    title="Otro caso",
+                    client_id=tenant.id,
+                    company_id=company_owner.id,
+                    type="tax",
+                    title="Caso empresa owner",
                     status="open",
                 ),
                 Case(
-                    client_id=tenant_b.id,
-                    company_id=company_b.id,
-                    person_id=person_other_tenant.id,
+                    client_id=tenant.id,
+                    company_id=company_foreign.id,
                     type="tax",
-                    title="Caso B",
+                    title="Caso empresa ajena",
                     status="open",
                 ),
             ]
@@ -158,17 +164,17 @@ def test_portal_access_and_data_isolation(client, app):
         db.session.add_all(
             [
                 PersonCompanyRelation(
-                    client_id=tenant_a.id,
+                    client_id=tenant.id,
                     person_id=person_portal.id,
-                    company_id=company_a.id,
-                    relation_type="employee",
+                    company_id=company_owner.id,
+                    relation_type="owner",
                     status="active",
                     start_date=date(2025, 1, 1),
                 ),
                 PersonCompanyRelation(
-                    client_id=tenant_a.id,
+                    client_id=tenant.id,
                     person_id=person_other.id,
-                    company_id=company_a.id,
+                    company_id=company_foreign.id,
                     relation_type="owner",
                     status="active",
                     start_date=date(2025, 1, 1),
@@ -178,14 +184,11 @@ def test_portal_access_and_data_isolation(client, app):
 
         db.session.commit()
 
-        portal_token = create_access_token(portal_user.id, tenant_a.id)
-        internal_token = create_access_token(internal_user.id, tenant_a.id)
+        portal_token = create_access_token(portal_user.id, tenant.id)
+        internal_token = create_access_token(internal_user.id, tenant.id)
 
         response = client.get("/portal", headers=_auth_header(portal_token))
         assert response.status_code == 200
-
-        response = client.get("/app/companies", headers=_auth_header(portal_token))
-        assert response.status_code == 403
 
         response = client.get("/portal", headers=_auth_header(internal_token))
         assert response.status_code == 403
@@ -194,20 +197,95 @@ def test_portal_access_and_data_isolation(client, app):
         assert me.status_code == 200
         assert me.get_json()["person_id"] == person_portal.id
 
-        docs = client.get("/portal/api/my-documents", headers=_auth_header(portal_token))
-        assert docs.status_code == 200
-        doc_names = {item["file_name"] for item in docs.get_json()}
-        assert doc_names == {"doc_person.pdf", "doc_employee.pdf"}
+        summary = client.get("/portal/api/summary", headers=_auth_header(portal_token))
+        assert summary.status_code == 200
+        assert summary.get_json()["person_documents"] == 1
+        assert summary.get_json()["employee_documents"] == 1
+        assert summary.get_json()["company_documents"] == 4
+        assert summary.get_json()["personal_cases"] == 1
+        assert summary.get_json()["company_cases"] == 2
+        assert summary.get_json()["companies_count"] == 1
 
-        cases = client.get("/portal/api/my-cases", headers=_auth_header(portal_token))
-        assert cases.status_code == 200
-        case_titles = {item["title"] for item in cases.get_json()}
-        assert case_titles == {"Alta de empleado"}
+        docs_person = client.get("/portal/api/documents?scope=person", headers=_auth_header(portal_token))
+        assert docs_person.status_code == 200
+        assert {item["file_name"] for item in docs_person.get_json()} == {"doc_person.pdf"}
 
-        companies = client.get("/portal/api/my-companies", headers=_auth_header(portal_token))
+        docs_employee = client.get("/portal/api/documents?scope=employee", headers=_auth_header(portal_token))
+        assert docs_employee.status_code == 200
+        assert {item["file_name"] for item in docs_employee.get_json()} == {"doc_employee.pdf"}
+
+        docs_company = client.get("/portal/api/documents?scope=company", headers=_auth_header(portal_token))
+        assert docs_company.status_code == 200
+        assert {item["file_name"] for item in docs_company.get_json()} == {
+            "doc_person.pdf",
+            "doc_employee.pdf",
+            "doc_company_owner.pdf",
+            "doc_other_employee.pdf",
+        }
+        assert "doc_company_foreign.pdf" not in {item["file_name"] for item in docs_company.get_json()}
+
+        all_docs = client.get("/portal/api/documents", headers=_auth_header(portal_token))
+        assert all_docs.status_code == 200
+        assert {item["file_name"] for item in all_docs.get_json()} == {
+            "doc_person.pdf",
+            "doc_employee.pdf",
+            "doc_company_owner.pdf",
+            "doc_other_employee.pdf",
+        }
+
+        cases_person = client.get("/portal/api/cases?scope=person", headers=_auth_header(portal_token))
+        assert cases_person.status_code == 200
+        assert {item["title"] for item in cases_person.get_json()} == {"Caso personal"}
+
+        cases_company = client.get("/portal/api/cases?scope=company", headers=_auth_header(portal_token))
+        assert cases_company.status_code == 200
+        assert {item["title"] for item in cases_company.get_json()} == {
+            "Caso personal",
+            "Caso empresa owner",
+        }
+
+        companies = client.get("/portal/api/companies", headers=_auth_header(portal_token))
         assert companies.status_code == 200
-        payload = companies.get_json()
-        assert len(payload) == 1
-        assert payload[0]["company_name"] == "Empresa X"
+        assert len(companies.get_json()) == 1
+        assert companies.get_json()[0]["company_name"] == "Empresa Owner"
 
-        db.drop_all()
+        company_detail = client.get(
+            f"/portal/api/companies/{company_owner.id}",
+            headers=_auth_header(portal_token),
+        )
+        assert company_detail.status_code == 200
+
+        forbidden_detail = client.get(
+            f"/portal/api/companies/{company_foreign.id}",
+            headers=_auth_header(portal_token),
+        )
+        assert forbidden_detail.status_code == 403
+
+        company_docs = client.get(
+            f"/portal/api/companies/{company_owner.id}/documents",
+            headers=_auth_header(portal_token),
+        )
+        assert company_docs.status_code == 200
+        assert {item["file_name"] for item in company_docs.get_json()} == {
+            "doc_person.pdf",
+            "doc_employee.pdf",
+            "doc_company_owner.pdf",
+            "doc_other_employee.pdf",
+        }
+
+        company_cases = client.get(
+            f"/portal/api/companies/{company_owner.id}/cases",
+            headers=_auth_header(portal_token),
+        )
+        assert company_cases.status_code == 200
+        assert {item["title"] for item in company_cases.get_json()} == {
+            "Caso personal",
+            "Caso empresa owner",
+        }
+
+        foreign_company_docs = client.get(
+            f"/portal/api/companies/{company_foreign.id}/documents",
+            headers=_auth_header(portal_token),
+        )
+        assert foreign_company_docs.status_code == 403
+

@@ -3,12 +3,15 @@
 {% block content %}
 <h1>Resumen</h1>
 <div class="cards">
-  <div class="card"><strong>Mis documentos</strong><div>{{ summary.documents_count }}</div></div>
-  <div class="card"><strong>Mis expedientes</strong><div>{{ summary.cases_count }}</div></div>
-  <div class="card"><strong>Mis empresas</strong><div>{{ summary.companies_count }}</div></div>
+  <div class="card"><strong>Docs personales</strong><div>{{ summary.person_documents }}</div></div>
+  {% if summary.has_employee_scope %}<div class="card"><strong>Docs laborales</strong><div>{{ summary.employee_documents }}</div></div>{% endif %}
+  {% if summary.has_company_scope %}<div class="card"><strong>Docs empresa</strong><div>{{ summary.company_documents }}</div></div>{% endif %}
+  <div class="card"><strong>Expedientes personales</strong><div>{{ summary.personal_cases }}</div></div>
+  {% if summary.has_company_scope %}<div class="card"><strong>Expedientes empresa</strong><div>{{ summary.company_cases }}</div></div>{% endif %}
+  {% if summary.has_company_scope %}<div class="card"><strong>Mis empresas</strong><div>{{ summary.companies_count }}</div></div>{% endif %}
 </div>
-<h2>Últimos documentos</h2>
-<table><thead><tr><th>Nombre</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
-<h2>Últimos expedientes</h2>
-<table><thead><tr><th>Título</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_cases %}<tr><td>{{ item.title }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
+<h2>Últimos documentos visibles</h2>
+<table><thead><tr><th>Nombre</th><th>Ámbito</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.scope }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
+<h2>Últimos expedientes visibles</h2>
+<table><thead><tr><th>Título</th><th>Ámbito</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_cases %}<tr><td>{{ item.title }}</td><td>{{ item.scope }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
 {% endblock %}

@@ -1,0 +1,11 @@
+{% extends "frontoffice/base.html" %}
+{% block content %}
+<h1>{{ company.name }}</h1>
+<p><strong>NIF:</strong> {{ company.tax_id }} · <strong>Estado:</strong> {{ company.status }}</p>
+
+<h2>Documentos de empresa</h2>
+<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>{% for item in documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
+
+<h2>Expedientes de empresa</h2>
+<table><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>{% for item in cases %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

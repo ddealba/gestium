@@ -1,5 +1,11 @@
 {% extends "frontoffice/base.html" %}
 {% block content %}
 <h1>Mis expedientes</h1>
-<table><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in cases %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
+<h2>Personales</h2>
+<table><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in cases_person %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
+
+{% if cases_company %}
+<h2>Empresa</h2>
+<table><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in cases_company %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
+{% endif %}
 {% endblock %}
