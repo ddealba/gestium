@@ -36,7 +36,7 @@ services:
       - /bin/sh
       - -c
       - >
-        until wget -qO- http://api:5000/health > /dev/null; do sleep 1; done;
+        until wget -qO- http://api:5000/health > /dev/null 2>&1; do sleep 1; done;
         exec newman run /etc/newman/collection.json -e /etc/newman/environment.json
 
 volumes:
