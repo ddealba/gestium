@@ -15,6 +15,9 @@
   const requestsTable = document.getElementById('person-requests-table');
   const requestForm = document.getElementById('person-request-form');
   const requestMessage = document.getElementById('person-request-message');
+  const portalUserStatus = document.getElementById('person-portal-user-status');
+  const portalUserForm = document.getElementById('person-portal-user-form');
+  const portalUserMessage = document.getElementById('person-portal-user-message');
 
   const renderPerson = (person) => {
     basic.innerHTML = `<b>${person.full_name || '-'}</b> · ${person.document_number || '-'}`;
@@ -106,6 +109,16 @@
       .join('');
   };
 
+  const renderPortalUser = (portalUser) => {
+    if (!portalUserStatus || !portalUserForm) return;
+    if (!portalUser) {
+      portalUserStatus.textContent = 'Esta persona todavía no tiene acceso al portal.';
+      return;
+    }
+    portalUserStatus.textContent = `Portal habilitado: ${portalUser.email} (${portalUser.status}).`;
+    portalUserForm.elements.email.value = portalUser.email || '';
+  };
+
   const load = async () => {
     const personData = await window.apiFetch(`/persons/${personId}`);
     renderPerson(personData?.person || {});
@@ -117,6 +130,8 @@
     renderCases(casesData?.cases || []);
     const requestsData = await window.apiFetch(`/persons/${personId}/requests`);
     renderRequests(requestsData?.items || []);
+    const portalData = await window.apiFetch(`/persons/${personId}/portal-user`);
+    renderPortalUser(portalData?.portal_user || null);
   };
 
   document.getElementById('person-relation-add').addEventListener('click', () => {
@@ -204,6 +219,30 @@
       await load();
     } catch (error) {
       requestMessage.textContent = error?.message || 'No se pudo crear la solicitud.';
+    }
+  });
+
+  portalUserForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(portalUserForm);
+    const payload = {
+      email: formData.get('email'),
+      password: formData.get('password'),
+    };
+
+    try {
+      await window.apiFetch(`/persons/${personId}/portal-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      portalUserMessage.textContent = 'Acceso portal actualizado correctamente.';
+      portalUserMessage.classList.remove('is-error');
+      portalUserForm.elements.password.value = '';
+      await load();
+    } catch (error) {
+      portalUserMessage.textContent = error?.message || 'No se pudo crear/actualizar el acceso portal.';
+      portalUserMessage.classList.add('is-error');
     }
   });
 
