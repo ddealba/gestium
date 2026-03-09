@@ -18,7 +18,13 @@
         <button class="ff-btn ff-btn--primary" type="submit">Guardar</button>
       </div>
       <small class="ff-muted">Estado inicial: <strong>draft</strong>.</small>
+      <p id="person-form-message" class="ff-form-message" aria-live="polite"></p>
     </form>
   </div>
 </section>
+{% endblock %}
+
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/person_form.js', v=ui_version) }}"></script>
 {% endblock %}

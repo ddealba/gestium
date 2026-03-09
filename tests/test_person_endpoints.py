@@ -141,3 +141,57 @@ def test_tenant_isolation_for_person_detail(client, db_session):
 
     response = client.get(f"/persons/{person_b.id}", headers=auth_header_for(user_a))
     assert response.status_code == 404
+
+
+def test_upsert_person_portal_user(client, db_session):
+    tenant = create_client(db_session, "Acme")
+    user = create_user(db_session, tenant.id, "admin@acme.com")
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+    person = create_person(db_session, tenant.id, "Ada", "DOC-PORTAL", "ada@example.com")
+
+    response = client.post(
+        f"/persons/{person.id}/portal-user",
+        headers=auth_header_for(user),
+        json={"email": "portal.ada@example.com", "password": "Password123"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()["portal_user"]
+    assert payload["user_type"] == "portal"
+    assert payload["person_id"] == person.id
+    assert payload["status"] == "active"
+
+    user_row = User.query.filter_by(client_id=tenant.id, email="portal.ada@example.com").one()
+    assert user_row.person_id == person.id
+    assert user_row.user_type == "portal"
+
+
+def test_upsert_person_portal_user_conflict(client, db_session):
+    tenant = create_client(db_session, "Acme")
+    user = create_user(db_session, tenant.id, "admin@acme.com")
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+    person_a = create_person(db_session, tenant.id, "Ada", "DOC-A")
+    person_b = create_person(db_session, tenant.id, "Grace", "DOC-B")
+
+    db_session.add(
+        User(
+            client_id=tenant.id,
+            email="portal@acme.com",
+            status="active",
+            user_type="portal",
+            person_id=person_a.id,
+            password_hash="x",
+        )
+    )
+    db_session.commit()
+
+    response = client.post(
+        f"/persons/{person_b.id}/portal-user",
+        headers=auth_header_for(user),
+        json={"email": "portal@acme.com", "password": "Password123"},
+    )
+
+    assert response.status_code == 409
+    assert response.get_json()["message"] == "email_already_in_use"

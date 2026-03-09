@@ -100,6 +100,22 @@
     </div>
 
 
+    <h3 style="margin-top:1rem;">Acceso Frontoffice</h3>
+    <p id="person-portal-user-status" class="ff-muted">Comprobando acceso portal...</p>
+    <form id="person-portal-user-form" class="ff-form">
+      <label>Email acceso portal
+        <input class="ff-input" type="email" name="email" required />
+      </label>
+      <label>Password inicial
+        <input class="ff-input" type="password" name="password" minlength="8" required />
+      </label>
+      <div class="ff-filters__actions">
+        <button class="ff-btn ff-btn--primary" type="submit">Crear / actualizar acceso portal</button>
+      </div>
+      <p id="person-portal-user-message" class="ff-form-message" aria-live="polite"></p>
+    </form>
+
+
     <h3 style="margin-top:1rem;">Solicitudes</h3>
     <div class="ff-table-wrap">
       <table class="ff-table">

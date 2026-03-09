@@ -36,3 +36,8 @@
   </div>
 </section>
 {% endblock %}
+
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/person_list.js', v=ui_version) }}"></script>
+{% endblock %}
