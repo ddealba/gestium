@@ -27,168 +27,191 @@
       </div>
     </section>
 
-    <div class="ff-page-head ff-person-detail__section-head">
-      <h3>Empresas relacionadas</h3>
-      <button id="person-relation-add" class="ff-btn ff-btn--primary ff-btn--sm" type="button">Añadir relación</button>
-    </div>
-    <div class="ff-table-wrap">
-      <table class="ff-table">
-        <thead>
-          <tr>
-            <th>Empresa</th>
-            <th>Tipo de relación</th>
-            <th>Estado</th>
-            <th>Fecha inicio</th>
-            <th>Fecha fin</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="person-relations-table">
-          <tr><td colspan="6" class="ff-muted">Cargando relaciones...</td></tr>
-        </tbody>
-      </table>
-    </div>
+    <p class="ff-person-detail__intro ff-muted">
+      Gestiona cada bloque de información por separado para trabajar con foco y evitar sobrecarga visual.
+    </p>
 
-    <div id="person-relation-form-wrap" class="ff-person-detail__form-wrap" style="display:none;">
-      <form id="person-relation-form" class="ff-form">
-        <label>Empresa (ID)
-          <input class="ff-input" name="company_id" required />
-        </label>
-        <label>Tipo de relación
-          <select class="ff-input" name="relation_type">
-            <option value="owner">owner</option>
-            <option value="employee">employee</option>
-            <option value="other">other</option>
-          </select>
-        </label>
-        <label>Fecha inicio
-          <input class="ff-input" type="date" name="start_date" required />
-        </label>
-        <label>Notas
-          <textarea class="ff-input" name="notes" rows="2"></textarea>
-        </label>
-        <div class="ff-filters__actions">
-          <button class="ff-btn ff-btn--primary" type="submit">Guardar</button>
-          <button id="person-relation-cancel" class="ff-btn ff-btn--ghost" type="button">Cancelar</button>
+    <details class="ff-person-detail__section" open>
+      <summary>Empresas relacionadas</summary>
+      <div class="ff-person-detail__section-content">
+        <div class="ff-page-head ff-person-detail__section-head">
+          <p class="ff-muted">Consulta y actualiza vínculos activos e históricos.</p>
+          <button id="person-relation-add" class="ff-btn ff-btn--primary ff-btn--sm" type="button">Añadir relación</button>
         </div>
-      </form>
-      <p id="person-relation-message" class="ff-form-message"></p>
-    </div>
-  
-    <h3 class="ff-person-detail__section-head">Expedientes</h3>
-    <div class="ff-table-wrap">
-      <table class="ff-table">
-        <thead>
-          <tr>
-            <th>Título</th>
-            <th>Tipo</th>
-            <th>Empresa</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody id="person-cases-table">
-          <tr><td colspan="4" class="ff-muted">Cargando expedientes...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3 class="ff-person-detail__section-head">Documentos</h3>
-    <div class="ff-table-wrap">
-      <table class="ff-table">
-        <thead>
-          <tr>
-            <th>Archivo</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="person-documents-table">
-          <tr><td colspan="5" class="ff-muted">Cargando documentos...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-
-    <section class="ff-person-detail__portal ff-person-detail__section-head">
-      <h3>Acceso Frontoffice</h3>
-      <p id="person-portal-user-status" class="ff-muted">Comprobando acceso portal...</p>
-      <form id="person-portal-user-form" class="ff-form">
-        <label>Email acceso portal
-          <input class="ff-input" type="email" name="email" required />
-        </label>
-        <label>Password inicial
-          <input class="ff-input" type="password" name="password" minlength="8" required />
-        </label>
-        <div class="ff-filters__actions">
-          <button class="ff-btn ff-btn--primary" type="submit">Crear / actualizar acceso portal</button>
+        <div class="ff-table-wrap">
+          <table class="ff-table">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Tipo de relación</th>
+                <th>Estado</th>
+                <th>Fecha inicio</th>
+                <th>Fecha fin</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="person-relations-table">
+              <tr><td colspan="6" class="ff-muted">Cargando relaciones...</td></tr>
+            </tbody>
+          </table>
         </div>
-        <p id="person-portal-user-message" class="ff-form-message" aria-live="polite"></p>
-      </form>
-    </section>
 
-
-    <h3 class="ff-person-detail__section-head">Solicitudes</h3>
-    <div class="ff-table-wrap">
-      <table class="ff-table">
-        <thead>
-          <tr>
-            <th>Título</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Fecha límite</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="person-requests-table">
-          <tr><td colspan="5" class="ff-muted">Cargando solicitudes...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h4 class="ff-person-detail__section-head ff-person-detail__subhead">Crear solicitud</h4>
-    <form id="person-request-form" class="ff-form">
-      <label>Tipo
-        <select class="ff-input" name="request_type">
-          <option value="upload_document">upload_document</option>
-          <option value="complete_profile">complete_profile</option>
-          <option value="confirm_information">confirm_information</option>
-          <option value="provide_data">provide_data</option>
-          <option value="other">other</option>
-        </select>
-      </label>
-      <label>Título
-        <input class="ff-input" name="title" required />
-      </label>
-      <label>Descripción
-        <textarea class="ff-input" name="description" rows="2"></textarea>
-      </label>
-      <label>Fecha límite
-        <input class="ff-input" type="date" name="due_date" />
-      </label>
-      <label>Tipo resolución
-        <select class="ff-input" name="resolution_type">
-          <option value="document_upload">document_upload</option>
-          <option value="form_submission">form_submission</option>
-          <option value="confirm_information">confirm_information</option>
-          <option value="manual_review">manual_review</option>
-        </select>
-      </label>
-      <label>Expediente (opcional)
-        <input class="ff-input" name="case_id" />
-      </label>
-      <label>Empresa (opcional)
-        <input class="ff-input" name="company_id" />
-      </label>
-      <label>Empleado (opcional)
-        <input class="ff-input" name="employee_id" />
-      </label>
-      <div class="ff-filters__actions">
-        <button class="ff-btn ff-btn--primary" type="submit">Crear solicitud</button>
+        <div id="person-relation-form-wrap" class="ff-person-detail__form-wrap" style="display:none;">
+          <form id="person-relation-form" class="ff-form">
+            <label>Empresa (ID)
+              <input class="ff-input" name="company_id" required />
+            </label>
+            <label>Tipo de relación
+              <select class="ff-input" name="relation_type">
+                <option value="owner">owner</option>
+                <option value="employee">employee</option>
+                <option value="other">other</option>
+              </select>
+            </label>
+            <label>Fecha inicio
+              <input class="ff-input" type="date" name="start_date" required />
+            </label>
+            <label>Notas
+              <textarea class="ff-input" name="notes" rows="2"></textarea>
+            </label>
+            <div class="ff-filters__actions">
+              <button class="ff-btn ff-btn--primary" type="submit">Guardar</button>
+              <button id="person-relation-cancel" class="ff-btn ff-btn--ghost" type="button">Cancelar</button>
+            </div>
+          </form>
+          <p id="person-relation-message" class="ff-form-message"></p>
+        </div>
       </div>
-      <p id="person-request-message" class="ff-form-message"></p>
-    </form>
+    </details>
+
+    <details class="ff-person-detail__section">
+      <summary>Expedientes</summary>
+      <div class="ff-person-detail__section-content">
+        <div class="ff-table-wrap">
+          <table class="ff-table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Tipo</th>
+                <th>Empresa</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="person-cases-table">
+              <tr><td colspan="4" class="ff-muted">Cargando expedientes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <details class="ff-person-detail__section">
+      <summary>Documentos</summary>
+      <div class="ff-person-detail__section-content">
+        <div class="ff-table-wrap">
+          <table class="ff-table">
+            <thead>
+              <tr>
+                <th>Archivo</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="person-documents-table">
+              <tr><td colspan="5" class="ff-muted">Cargando documentos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <details class="ff-person-detail__section">
+      <summary>Acceso Frontoffice</summary>
+      <div class="ff-person-detail__section-content">
+        <section class="ff-person-detail__portal">
+          <p id="person-portal-user-status" class="ff-muted">Comprobando acceso portal...</p>
+          <form id="person-portal-user-form" class="ff-form">
+            <label>Email acceso portal
+              <input class="ff-input" type="email" name="email" required />
+            </label>
+            <label>Password inicial
+              <input class="ff-input" type="password" name="password" minlength="8" required />
+            </label>
+            <div class="ff-filters__actions">
+              <button class="ff-btn ff-btn--primary" type="submit">Crear / actualizar acceso portal</button>
+            </div>
+            <p id="person-portal-user-message" class="ff-form-message" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+    </details>
+
+    <details class="ff-person-detail__section">
+      <summary>Solicitudes</summary>
+      <div class="ff-person-detail__section-content">
+        <div class="ff-table-wrap">
+          <table class="ff-table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Fecha límite</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="person-requests-table">
+              <tr><td colspan="5" class="ff-muted">Cargando solicitudes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4 class="ff-person-detail__section-head ff-person-detail__subhead">Crear solicitud</h4>
+        <form id="person-request-form" class="ff-form">
+          <label>Tipo
+            <select class="ff-input" name="request_type">
+              <option value="upload_document">upload_document</option>
+              <option value="complete_profile">complete_profile</option>
+              <option value="confirm_information">confirm_information</option>
+              <option value="provide_data">provide_data</option>
+              <option value="other">other</option>
+            </select>
+          </label>
+          <label>Título
+            <input class="ff-input" name="title" required />
+          </label>
+          <label>Descripción
+            <textarea class="ff-input" name="description" rows="2"></textarea>
+          </label>
+          <label>Fecha límite
+            <input class="ff-input" type="date" name="due_date" />
+          </label>
+          <label>Tipo resolución
+            <select class="ff-input" name="resolution_type">
+              <option value="document_upload">document_upload</option>
+              <option value="form_submission">form_submission</option>
+              <option value="confirm_information">confirm_information</option>
+              <option value="manual_review">manual_review</option>
+            </select>
+          </label>
+          <label>Expediente (opcional)
+            <input class="ff-input" name="case_id" />
+          </label>
+          <label>Empresa (opcional)
+            <input class="ff-input" name="company_id" />
+          </label>
+          <label>Empleado (opcional)
+            <input class="ff-input" name="employee_id" />
+          </label>
+          <div class="ff-filters__actions">
+            <button class="ff-btn ff-btn--primary" type="submit">Crear solicitud</button>
+          </div>
+          <p id="person-request-message" class="ff-form-message"></p>
+        </form>
+      </div>
+    </details>
 
   </div>
 </section>
