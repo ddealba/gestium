@@ -167,6 +167,25 @@ def test_login_invalid_password(client, db_session):
     assert response.get_json()["message"] == "invalid_credentials"
 
 
+
+
+def test_login_portal_user_without_user_type_succeeds(client, db_session):
+    tenant = create_client(db_session)
+    create_user(db_session, tenant.id, "portal@example.com", "supersecret")
+
+    user = db_session.query(User).filter_by(email="portal@example.com", client_id=tenant.id).one()
+    user.user_type = "portal"
+    db_session.commit()
+
+    response = client.post(
+        "/auth/login",
+        json={"email": "portal@example.com", "password": "supersecret", "client_id": tenant.id},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["access_token"]
+
 def test_login_disabled_user(client, db_session):
     tenant = create_client(db_session)
     create_user(db_session, tenant.id, "disabled@example.com", "supersecret", status="disabled")
