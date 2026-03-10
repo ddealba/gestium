@@ -31,8 +31,8 @@ class AuthService:
         if not password:
             raise BadRequest("password_required")
         normalized_email = self.user_service.normalize_email(email)
-        normalized_user_type = (user_type or "internal").strip().lower()
-        if normalized_user_type not in {"internal", "portal"}:
+        normalized_user_type = user_type.strip().lower() if isinstance(user_type, str) else None
+        if normalized_user_type and normalized_user_type not in {"internal", "portal"}:
             raise BadRequest("invalid_user_type")
 
         resolved_client_id = client_id
@@ -46,7 +46,7 @@ class AuthService:
             resolved_client_id = user.client_id if user is not None else None
         if user is None or not self.user_service.verify_password(user, password):
             raise Unauthorized("invalid_credentials")
-        if (user.user_type or "internal") != normalized_user_type:
+        if normalized_user_type and (user.user_type or "internal") != normalized_user_type:
             raise Unauthorized("invalid_credentials")
         if user.status != "active":
             raise Forbidden("user_inactive")
