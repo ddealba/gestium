@@ -5,18 +5,29 @@
 {% block content %}
 <section class="ff-card" id="person-detail-root" data-person-id="{{ person_id }}">
   <div class="ff-card__head ff-page-head">
-    <h2>Detalle de persona</h2>
-    <a href="{{ url_for('web.app_persons') }}" class="ff-btn ff-btn--ghost">Volver</a>
+    <div>
+      <p class="ff-person-detail__eyebrow">Ficha de persona</p>
+      <h2>Detalle de persona</h2>
+    </div>
+    <a href="{{ url_for('web.app_persons') }}" class="ff-btn ff-btn--ghost">Volver al listado</a>
   </div>
-  <div class="ff-card__body">
-    <h3>Datos básicos</h3>
-    <div id="person-basic" class="ff-muted">Cargando...</div>
-    <h3 style="margin-top:1rem;">Datos de contacto</h3>
-    <div id="person-contact" class="ff-muted">Cargando...</div>
-    <h3 style="margin-top:1rem;">Estado</h3>
-    <div id="person-status" class="ff-muted">Cargando...</div>
+  <div class="ff-card__body ff-person-detail">
+    <section class="ff-person-detail__summary">
+      <div class="ff-person-detail__tile">
+        <h3>Identidad</h3>
+        <div id="person-basic" class="ff-muted">Cargando...</div>
+      </div>
+      <div class="ff-person-detail__tile">
+        <h3>Contacto</h3>
+        <div id="person-contact" class="ff-muted">Cargando...</div>
+      </div>
+      <div class="ff-person-detail__tile">
+        <h3>Estado</h3>
+        <div id="person-status" class="ff-muted">Cargando...</div>
+      </div>
+    </section>
 
-    <div class="ff-page-head" style="margin-top:1rem;">
+    <div class="ff-page-head ff-person-detail__section-head">
       <h3>Empresas relacionadas</h3>
       <button id="person-relation-add" class="ff-btn ff-btn--primary ff-btn--sm" type="button">Añadir relación</button>
     </div>
@@ -38,7 +49,7 @@
       </table>
     </div>
 
-    <div id="person-relation-form-wrap" style="display:none; margin-top:1rem;">
+    <div id="person-relation-form-wrap" class="ff-person-detail__form-wrap" style="display:none;">
       <form id="person-relation-form" class="ff-form">
         <label>Empresa (ID)
           <input class="ff-input" name="company_id" required />
@@ -64,7 +75,7 @@
       <p id="person-relation-message" class="ff-form-message"></p>
     </div>
   
-    <h3 style="margin-top:1rem;">Expedientes</h3>
+    <h3 class="ff-person-detail__section-head">Expedientes</h3>
     <div class="ff-table-wrap">
       <table class="ff-table">
         <thead>
@@ -81,7 +92,7 @@
       </table>
     </div>
 
-    <h3 style="margin-top:1rem;">Documentos</h3>
+    <h3 class="ff-person-detail__section-head">Documentos</h3>
     <div class="ff-table-wrap">
       <table class="ff-table">
         <thead>
@@ -100,23 +111,25 @@
     </div>
 
 
-    <h3 style="margin-top:1rem;">Acceso Frontoffice</h3>
-    <p id="person-portal-user-status" class="ff-muted">Comprobando acceso portal...</p>
-    <form id="person-portal-user-form" class="ff-form">
-      <label>Email acceso portal
-        <input class="ff-input" type="email" name="email" required />
-      </label>
-      <label>Password inicial
-        <input class="ff-input" type="password" name="password" minlength="8" required />
-      </label>
-      <div class="ff-filters__actions">
-        <button class="ff-btn ff-btn--primary" type="submit">Crear / actualizar acceso portal</button>
-      </div>
-      <p id="person-portal-user-message" class="ff-form-message" aria-live="polite"></p>
-    </form>
+    <section class="ff-person-detail__portal ff-person-detail__section-head">
+      <h3>Acceso Frontoffice</h3>
+      <p id="person-portal-user-status" class="ff-muted">Comprobando acceso portal...</p>
+      <form id="person-portal-user-form" class="ff-form">
+        <label>Email acceso portal
+          <input class="ff-input" type="email" name="email" required />
+        </label>
+        <label>Password inicial
+          <input class="ff-input" type="password" name="password" minlength="8" required />
+        </label>
+        <div class="ff-filters__actions">
+          <button class="ff-btn ff-btn--primary" type="submit">Crear / actualizar acceso portal</button>
+        </div>
+        <p id="person-portal-user-message" class="ff-form-message" aria-live="polite"></p>
+      </form>
+    </section>
 
 
-    <h3 style="margin-top:1rem;">Solicitudes</h3>
+    <h3 class="ff-person-detail__section-head">Solicitudes</h3>
     <div class="ff-table-wrap">
       <table class="ff-table">
         <thead>
@@ -134,7 +147,7 @@
       </table>
     </div>
 
-    <h4 style="margin-top:1rem;">Crear solicitud</h4>
+    <h4 class="ff-person-detail__section-head ff-person-detail__subhead">Crear solicitud</h4>
     <form id="person-request-form" class="ff-form">
       <label>Tipo
         <select class="ff-input" name="request_type">

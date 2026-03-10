@@ -20,8 +20,14 @@
   const portalUserMessage = document.getElementById('person-portal-user-message');
 
   const renderPerson = (person) => {
-    basic.innerHTML = `<b>${person.full_name || '-'}</b> · ${person.document_number || '-'}`;
-    contact.innerHTML = `${person.email || '-'} · ${person.phone || '-'}`;
+    basic.innerHTML = `<dl class="ff-person-detail__data">
+      <dt>Nombre</dt><dd>${person.full_name || '-'}</dd>
+      <dt>Documento</dt><dd>${person.document_number || '-'}</dd>
+    </dl>`;
+    contact.innerHTML = `<dl class="ff-person-detail__data">
+      <dt>Email</dt><dd>${person.email || '-'}</dd>
+      <dt>Teléfono</dt><dd>${person.phone || '-'}</dd>
+    </dl>`;
     status.innerHTML = `<span class="ff-tag ${person.status === 'active' ? 'ff-tag--success' : 'ff-tag--warn'}">${person.status || '-'}</span>`;
   };
 
