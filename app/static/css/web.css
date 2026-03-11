@@ -433,6 +433,30 @@
   overflow: hidden;
 }
 
+.ff-accordion {
+  display: flex;
+  flex-direction: column;
+}
+
+.ff-accordion[data-ff-accordion-single] > .ff-accordion__item + .ff-accordion__item {
+  margin-top: 0;
+  border-top: 0;
+}
+
+.ff-accordion[data-ff-accordion-single] > .ff-accordion__item {
+  border-radius: 0;
+}
+
+.ff-accordion[data-ff-accordion-single] > .ff-accordion__item:first-child {
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+}
+
+.ff-accordion[data-ff-accordion-single] > .ff-accordion__item:last-child {
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
 .ff-person-detail__section summary {
   list-style: none;
   cursor: pointer;
