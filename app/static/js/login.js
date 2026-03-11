@@ -33,6 +33,12 @@
         sessionStorage.removeItem('admin_selected_tenant_id');
         sessionStorage.removeItem('admin_selected_tenant_name');
       }
+      const isPersonUser = Boolean(me?.person_id);
+      if (isPersonUser) {
+        window.location.href = '/portal';
+        return;
+      }
+
       window.location.href = me?.is_super_admin ? '/app/platform/tenants' : '/app/companies';
     } catch (error) {
       window.handleApiError(error, { defaultMessage: 'No se pudo iniciar sesión.' });
