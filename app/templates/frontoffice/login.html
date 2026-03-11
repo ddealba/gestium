@@ -1,13 +1,28 @@
 <!doctype html>
 <html lang="es">
-  <head><meta charset="utf-8" /><title>Portal Login</title></head>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Portal Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  </head>
   <body>
-    <h1>Acceso portal</h1>
-    <form method="post" action="/portal/login">
-      <input name="client_id" placeholder="client_id" />
-      <input name="email" placeholder="email" />
-      <input name="password" type="password" placeholder="password" />
-      <button type="submit">Entrar</button>
-    </form>
+    <main class="ff-auth">
+      <section class="ff-auth__card">
+        <h1>Acceso portal</h1>
+        <form method="post" action="/portal/login" class="ff-form-stack">
+          <input class="ff-input" style="padding-left:12px;" name="client_id" placeholder="client_id" />
+          <input class="ff-input" style="padding-left:12px;" name="email" placeholder="email" />
+          <input class="ff-input" style="padding-left:12px;" name="password" type="password" placeholder="password" />
+          <button class="ff-btn ff-btn--primary" type="submit">Entrar</button>
+        </form>
+      </section>
+    </main>
   </body>
 </html>

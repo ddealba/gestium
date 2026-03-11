@@ -1,22 +1,26 @@
 {% extends "frontoffice/base.html" %}
 {% block title %}Portal · Mis solicitudes{% endblock %}
 {% block content %}
-<h1>Mis solicitudes</h1>
-<table>
-  <thead><tr><th>Título</th><th>Descripción</th><th>Tipo</th><th>Estado</th><th>Vence</th><th>Acción</th></tr></thead>
-  <tbody>
-    {% for item in requests %}
-      <tr>
-        <td>{{ item.title }}</td>
-        <td>{{ item.description or '-' }}</td>
-        <td>{{ item.request_type }}</td>
-        <td>{{ item.status }}</td>
-        <td>{{ item.due_date or '-' }}</td>
-        <td><a href="/portal/requests/{{ item.id }}">Resolver</a></td>
-      </tr>
-    {% else %}
-      <tr><td colspan="6">Sin solicitudes por ahora.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<section class="ff-card">
+  <div class="ff-card__head">Mis solicitudes</div>
+  <div class="ff-card__body ff-table-wrap">
+    <table class="ff-table">
+      <thead><tr><th>Título</th><th>Descripción</th><th>Tipo</th><th>Estado</th><th>Vence</th><th>Acción</th></tr></thead>
+      <tbody>
+        {% for item in requests %}
+          <tr>
+            <td>{{ item.title }}</td>
+            <td>{{ item.description or '-' }}</td>
+            <td>{{ item.request_type }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item.due_date or '-' }}</td>
+            <td><a class="ff-btn ff-btn--soft ff-btn--sm" href="/portal/requests/{{ item.id }}">Resolver</a></td>
+          </tr>
+        {% else %}
+          <tr><td class="ff-empty" colspan="6">Sin solicitudes por ahora.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 {% endblock %}

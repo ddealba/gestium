@@ -1,11 +1,8 @@
 {% extends "frontoffice/base.html" %}
+{% block title %}Portal · Mis expedientes{% endblock %}
 {% block content %}
-<h1>Mis expedientes</h1>
-<h2>Personales</h2>
-<table><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in cases_person %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
-
+<section class="ff-card"><div class="ff-card__head">Expedientes personales</div><div class="ff-card__body ff-table-wrap"><table class="ff-table"><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in cases_person %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table></div></section>
 {% if cases_company %}
-<h2>Empresa</h2>
-<table><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in cases_company %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table>
+<section class="ff-card" style="margin-top:14px;"><div class="ff-card__head">Expedientes de empresa</div><div class="ff-card__body ff-table-wrap"><table class="ff-table"><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in cases_company %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table></div></section>
 {% endif %}
 {% endblock %}

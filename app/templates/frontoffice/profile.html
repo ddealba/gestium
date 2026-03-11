@@ -1,12 +1,17 @@
 {% extends "frontoffice/base.html" %}
+{% block title %}Portal · Mi perfil{% endblock %}
 {% block content %}
-<h1>Mi perfil</h1>
-<ul>
-  <li>Nombre: {{ profile.first_name }} {{ profile.last_name }}</li>
-  <li>Documento: {{ profile.document_number }}</li>
-  <li>Email: {{ profile.email }}</li>
-  <li>Teléfono: {{ profile.phone }}</li>
-  <li>Dirección: {{ profile.address }}</li>
-  <li>Estado: {{ profile.status }}</li>
-</ul>
+<section class="ff-card">
+  <div class="ff-card__head">Mi perfil</div>
+  <div class="ff-card__body">
+    <div class="ff-grid">
+      <div class="ff-col-6"><b>Nombre</b><p class="ff-muted">{{ profile.first_name }} {{ profile.last_name }}</p></div>
+      <div class="ff-col-6"><b>Documento</b><p class="ff-muted">{{ profile.document_number }}</p></div>
+      <div class="ff-col-6"><b>Email</b><p class="ff-muted">{{ profile.email }}</p></div>
+      <div class="ff-col-6"><b>Teléfono</b><p class="ff-muted">{{ profile.phone }}</p></div>
+      <div class="ff-col-6"><b>Dirección</b><p class="ff-muted">{{ profile.address }}</p></div>
+      <div class="ff-col-6"><b>Estado</b><p class="ff-muted">{{ profile.status }}</p></div>
+    </div>
+  </div>
+</section>
 {% endblock %}
