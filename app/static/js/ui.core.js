@@ -52,6 +52,25 @@
   };
 
   initSidebarGroups();
+
+  const initAccordions=()=>{
+    qsa('[data-ff-accordion]').forEach(accordion=>{
+      const singleOpen=accordion.hasAttribute('data-ff-accordion-single');
+      if(!singleOpen) return;
+
+      qsa('details',accordion).forEach(item=>{
+        item.addEventListener('toggle',()=>{
+          if(!item.open) return;
+          qsa('details',accordion).forEach(other=>{
+            if(other!==item) other.open=false;
+          });
+        });
+      });
+    });
+  };
+
+  initAccordions();
+
   // Sidebar permission-aware nav visibility
   const applyPermissionsToSidebar=(permissions)=>{
     const set=new Set(permissions||[]);

@@ -31,9 +31,10 @@
       Gestiona cada bloque de información por separado para trabajar con foco y evitar sobrecarga visual.
     </p>
 
-    <details class="ff-person-detail__section" open>
-      <summary>Empresas relacionadas</summary>
-      <div class="ff-person-detail__section-content">
+    <section class="ff-accordion" data-ff-accordion data-ff-accordion-single>
+    <details class="ff-person-detail__section ff-accordion__item" open>
+      <summary class="ff-accordion__summary">Empresas relacionadas</summary>
+      <div class="ff-person-detail__section-content ff-accordion__content">
         <div class="ff-page-head ff-person-detail__section-head">
           <p class="ff-muted">Consulta y actualiza vínculos activos e históricos.</p>
           <button id="person-relation-add" class="ff-btn ff-btn--primary ff-btn--sm" type="button">Añadir relación</button>
@@ -84,9 +85,9 @@
       </div>
     </details>
 
-    <details class="ff-person-detail__section">
-      <summary>Expedientes</summary>
-      <div class="ff-person-detail__section-content">
+    <details class="ff-person-detail__section ff-accordion__item">
+      <summary class="ff-accordion__summary">Expedientes</summary>
+      <div class="ff-person-detail__section-content ff-accordion__content">
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>
@@ -105,9 +106,9 @@
       </div>
     </details>
 
-    <details class="ff-person-detail__section">
-      <summary>Documentos</summary>
-      <div class="ff-person-detail__section-content">
+    <details class="ff-person-detail__section ff-accordion__item">
+      <summary class="ff-accordion__summary">Documentos</summary>
+      <div class="ff-person-detail__section-content ff-accordion__content">
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>
@@ -127,9 +128,9 @@
       </div>
     </details>
 
-    <details class="ff-person-detail__section">
-      <summary>Acceso Frontoffice</summary>
-      <div class="ff-person-detail__section-content">
+    <details class="ff-person-detail__section ff-accordion__item">
+      <summary class="ff-accordion__summary">Acceso Frontoffice</summary>
+      <div class="ff-person-detail__section-content ff-accordion__content">
         <section class="ff-person-detail__portal">
           <p id="person-portal-user-status" class="ff-muted">Comprobando acceso portal...</p>
           <form id="person-portal-user-form" class="ff-form">
@@ -148,9 +149,9 @@
       </div>
     </details>
 
-    <details class="ff-person-detail__section">
-      <summary>Solicitudes</summary>
-      <div class="ff-person-detail__section-content">
+    <details class="ff-person-detail__section ff-accordion__item">
+      <summary class="ff-accordion__summary">Solicitudes</summary>
+      <div class="ff-person-detail__section-content ff-accordion__content">
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>
@@ -212,6 +213,7 @@
         </form>
       </div>
     </details>
+    </section>
 
   </div>
 </section>
