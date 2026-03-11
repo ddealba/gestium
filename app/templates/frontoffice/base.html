@@ -4,26 +4,98 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{% block title %}Portal{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/extras.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #f6f7fb; }
-      nav { background: #1f2937; color: #fff; padding: 12px 20px; }
-      nav a { color: #fff; margin-right: 12px; text-decoration: none; }
-      main { max-width: 980px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; }
-      .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-      .card { background: #eef2ff; padding: 12px; border-radius: 8px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-      th, td { text-align: left; border-bottom: 1px solid #ddd; padding: 8px; }
+      .ff-portal-shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 22px 32px;
+      }
+
+      .ff-portal-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .ff-portal-nav__item {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--ff-border);
+        background: rgba(255, 255, 255, .6);
+        font-weight: 600;
+        color: var(--ff-muted);
+      }
+
+      .ff-portal-nav__item.is-active {
+        color: var(--ff-primary);
+        border-color: rgba(91, 82, 182, .26);
+        background: rgba(91, 82, 182, .08);
+      }
+
+      .ff-portal-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 12px;
+      }
+
+      .ff-portal-kpi {
+        border: 1px solid rgba(91, 82, 182, .14);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(91, 82, 182, .08), rgba(255, 255, 255, .95));
+        padding: 14px;
+      }
+
+      .ff-portal-kpi__label {
+        margin: 0;
+        font-size: 13px;
+        color: var(--ff-muted);
+        font-weight: 600;
+      }
+
+      .ff-portal-kpi__value {
+        margin: 8px 0 0;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--ff-primary);
+      }
     </style>
   </head>
   <body>
-    <nav>
-      <a href="/portal">Inicio</a>
-      <a href="/portal/profile">Mi perfil</a>
-      <a href="/portal/documents">Mis documentos</a>
-      <a href="/portal/cases">Mis expedientes</a>
-      <a href="/portal/companies">Mis empresas</a>
-      <a href="/portal/requests">Mis solicitudes</a>
-    </nav>
-    <main>{% block content %}{% endblock %}</main>
+    <div class="ff-main">
+      <div class="ff-blob"></div>
+      <div class="ff-topbar">
+        <div class="ff-page-title">
+          <h1>Portal del cliente</h1>
+        </div>
+      </div>
+
+      <main class="ff-content ff-portal-shell">
+        <nav class="ff-portal-nav">
+          <a class="ff-portal-nav__item{% if request.path == '/portal' %} is-active{% endif %}" href="/portal">Inicio</a>
+          <a class="ff-portal-nav__item{% if request.path.startswith('/portal/profile') %} is-active{% endif %}" href="/portal/profile">Mi perfil</a>
+          <a class="ff-portal-nav__item{% if request.path.startswith('/portal/documents') %} is-active{% endif %}" href="/portal/documents">Mis documentos</a>
+          <a class="ff-portal-nav__item{% if request.path.startswith('/portal/cases') %} is-active{% endif %}" href="/portal/cases">Mis expedientes</a>
+          <a class="ff-portal-nav__item{% if request.path.startswith('/portal/companies') %} is-active{% endif %}" href="/portal/companies">Mis empresas</a>
+          <a class="ff-portal-nav__item{% if request.path.startswith('/portal/requests') %} is-active{% endif %}" href="/portal/requests">Mis solicitudes</a>
+        </nav>
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer class="ff-footer">© {{ current_year }} · Gestium</footer>
+    </div>
   </body>
 </html>

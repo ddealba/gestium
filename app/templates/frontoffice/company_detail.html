@@ -1,11 +1,12 @@
 {% extends "frontoffice/base.html" %}
+{% block title %}Portal · {{ company.name }}{% endblock %}
 {% block content %}
-<h1>{{ company.name }}</h1>
-<p><strong>NIF:</strong> {{ company.tax_id }} · <strong>Estado:</strong> {{ company.status }}</p>
-
-<h2>Documentos de empresa</h2>
-<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>{% for item in documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
-
-<h2>Expedientes de empresa</h2>
-<table><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>{% for item in cases %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
+<section class="ff-card">
+  <div class="ff-card__head">{{ company.name }}</div>
+  <div class="ff-card__body">
+    <p><strong>NIF:</strong> {{ company.tax_id }} · <strong>Estado:</strong> {{ company.status }}</p>
+  </div>
+</section>
+<section class="ff-card" style="margin-top:14px;"><div class="ff-card__head">Documentos de empresa</div><div class="ff-card__body ff-table-wrap"><table class="ff-table"><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>{% for item in documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table></div></section>
+<section class="ff-card" style="margin-top:14px;"><div class="ff-card__head">Expedientes de empresa</div><div class="ff-card__body ff-table-wrap"><table class="ff-table"><thead><tr><th>Título</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>{% for item in cases %}<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table></div></section>
 {% endblock %}

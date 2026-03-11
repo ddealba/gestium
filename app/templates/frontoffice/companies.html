@@ -1,5 +1,10 @@
 {% extends "frontoffice/base.html" %}
+{% block title %}Portal · Mis empresas{% endblock %}
 {% block content %}
-<h1>Mis empresas</h1>
-<table><thead><tr><th>Empresa</th><th>Rol</th><th>Acciones</th></tr></thead><tbody>{% for item in companies %}<tr><td>{{ item.company_name }}</td><td>{{ item.relation_type }}</td><td><a href="/portal/companies/{{ item.company_id }}">Ver detalle</a></td></tr>{% endfor %}</tbody></table>
+<section class="ff-card">
+  <div class="ff-card__head">Mis empresas</div>
+  <div class="ff-card__body ff-table-wrap">
+    <table class="ff-table"><thead><tr><th>Empresa</th><th>Rol</th><th>Acciones</th></tr></thead><tbody>{% for item in companies %}<tr><td>{{ item.company_name }}</td><td>{{ item.relation_type }}</td><td><a class="ff-btn ff-btn--soft ff-btn--sm" href="/portal/companies/{{ item.company_id }}">Ver detalle</a></td></tr>{% endfor %}</tbody></table>
+  </div>
+</section>
 {% endblock %}
