@@ -21,56 +21,91 @@
   {% endif %}
 </div>
 
-<div class="ff-portal-home-grid ff-portal-home-grid--primary">
-  <section class="ff-card">
-    <div class="ff-card__head">Qué tengo que hacer</div>
-    <div class="ff-card__body">
-      {% if home.tasks %}
-        <div class="ff-portal-task-list">
-          {% for task in home.tasks %}
-            <article class="ff-portal-task-item">
-              <div>
-                <p class="ff-portal-task-item__title">{{ task.title }}</p>
-                <p class="ff-muted" style="margin:4px 0 0;">
-                  Estado: {{ task.status }}
-                  {% if task.due_date %}· Vence: {{ task.due_date }}{% endif %}
-                  {% if task.priority == 'overdue' %}· <strong style="color:#b42318;">Vencida</strong>{% endif %}
-                </p>
-              </div>
-              <a class="ff-btn ff-btn--sm" href="{{ task.cta_url }}">{{ task.cta_label }}</a>
-            </article>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="ff-muted" style="margin:0;">No tienes tareas pendientes por ahora.</p>
+<section class="ff-card" style="margin-top:14px;">
+  <div class="ff-card__head">Qué tengo que hacer</div>
+  <div class="ff-card__body ff-portal-table-card">
+    {% set total_tasks = home.tasks|length %}
+    {% set visible_tasks = home.tasks[:5] %}
+    {% if home.tasks %}
+      <div class="ff-portal-table-wrap">
+        <table class="ff-portal-table" aria-label="Qué tengo que hacer">
+          <thead>
+            <tr>
+              <th>Tarea</th>
+              <th>Estado</th>
+              <th>Vencimiento</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in visible_tasks %}
+              <tr>
+                <td>
+                  <span class="ff-portal-row-leading-icon" aria-hidden="true"><i class="ph ph-list-checks"></i></span>
+                  <span>{{ task.title }}</span>
+                </td>
+                <td>
+                  {{ task.status }}
+                  {% if task.priority == 'overdue' %}<span class="ff-portal-badge ff-portal-badge--danger">Vencida</span>{% endif %}
+                </td>
+                <td>{{ task.due_date or '—' }}</td>
+                <td><a class="ff-btn ff-btn--sm" href="{{ task.cta_url }}">{{ task.cta_label }}</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if total_tasks > 5 %}
+        <p class="ff-portal-table-note">Mostrando 5 de {{ total_tasks }} tareas. Revisa las demás en sus secciones correspondientes.</p>
       {% endif %}
-    </div>
-  </section>
+    {% else %}
+      <p class="ff-muted" style="margin:0;">No tienes tareas pendientes por ahora.</p>
+    {% endif %}
+  </div>
+</section>
 
-  <section class="ff-card">
-    <div class="ff-card__head ff-portal-activity-head">
-      <span>Actividad reciente</span>
-      {% if home.activity %}<span class="ff-portal-activity-head__count">{{ home.activity|length }}</span>{% endif %}
-    </div>
-    <div class="ff-card__body ff-portal-activity-card">
-      {% if home.activity %}
-        <ul class="ff-portal-activity-list">
-          {% for item in home.activity %}
-            <li class="ff-portal-activity-item">
-              <span class="ff-portal-activity-item__dot" aria-hidden="true"></span>
-              <div class="ff-portal-activity-item__content">
-                <a href="{{ item.url }}" class="ff-portal-activity-item__link">{{ item.message }}</a>
-                {% if item.date %}<p class="ff-portal-activity-item__date">{{ item.date[:10] }}</p>{% endif %}
-              </div>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="ff-muted" style="margin:0;">Sin actividad reciente.</p>
+<section class="ff-card" style="margin-top:14px;">
+  <div class="ff-card__head ff-portal-activity-head">
+    <span>Actividad reciente</span>
+    {% if home.activity %}<span class="ff-portal-activity-head__count">{{ home.activity|length }}</span>{% endif %}
+  </div>
+  <div class="ff-card__body ff-portal-table-card">
+    {% set total_activity = home.activity|length %}
+    {% set visible_activity = home.activity[:5] %}
+    {% if home.activity %}
+      <div class="ff-portal-table-wrap">
+        <table class="ff-portal-table" aria-label="Actividad reciente">
+          <thead>
+            <tr>
+              <th>Actividad</th>
+              <th>Mensaje</th>
+              <th>Fecha</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in visible_activity %}
+              <tr>
+                <td>
+                  <span class="ff-portal-row-leading-icon" aria-hidden="true"><i class="ph ph-clock-counter-clockwise"></i></span>
+                  <span>Actualización</span>
+                </td>
+                <td>{{ item.message }}</td>
+                <td>{{ item.date[:10] if item.date else '—' }}</td>
+                <td><a href="{{ item.url }}" class="ff-portal-activity-item__link">Ver</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if total_activity > 5 %}
+        <p class="ff-portal-table-note">Mostrando 5 de {{ total_activity }} actividades recientes.</p>
       {% endif %}
-    </div>
-  </section>
-</div>
+    {% else %}
+      <p class="ff-muted" style="margin:0;">Sin actividad reciente.</p>
+    {% endif %}
+  </div>
+</section>
 
 <div class="ff-portal-home-grid ff-portal-home-grid--secondary">
   <section class="ff-card">
