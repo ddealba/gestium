@@ -19,6 +19,7 @@ from app.modules.documents.storage import open_file, save_upload
 from app.modules.person.person_completeness_service import PersonCompletenessService
 from app.modules.audit.audit_service import AuditService
 from app.repositories.document_repository import DocumentRepository
+from app.modules.notification.notification_service import NotificationService
 from app.services.company_access_service import CompanyAccessService
 
 _EXTENSION_TO_MIME = {
@@ -47,6 +48,7 @@ class DocumentModuleService:
         self.company_access_service = company_access_service or CompanyAccessService()
         self.audit_service = AuditService()
         self.completeness_service = PersonCompletenessService(self.audit_service)
+        self.notification_service = NotificationService()
 
     def upload_case_document(
         self,
@@ -101,6 +103,17 @@ class DocumentModuleService:
             document=document,
             original_filename=original_filename,
         )
+        if resolved_person_id:
+            self.notification_service.create_portal_notification(
+                client_id=client_id,
+                person_id=resolved_person_id,
+                notification_type="document_available",
+                title="Nuevo documento disponible",
+                message=f"Se ha añadido el documento: {original_filename}",
+                entity_type="document",
+                entity_id=document.id,
+                priority="medium",
+            )
         if resolved_person_id:
             self.completeness_service.auto_resolve_requests(client_id, resolved_person_id, actor_user_id=actor_user_id)
             person = db.session.query(Person).filter(Person.id == resolved_person_id, Person.client_id == client_id).one_or_none()

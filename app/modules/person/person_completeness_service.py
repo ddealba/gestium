@@ -10,6 +10,7 @@ from app.models.person import Person
 from app.models.person_request import PersonRequest
 from app.models.user import User
 from app.modules.audit.audit_service import AuditService
+from app.modules.notification.notification_service import NotificationService
 
 REQUIRED_PERSON_DOCUMENT_TYPES = ("dni",)
 ACTIVE_REQUEST_STATUSES = {"pending", "submitted", "in_review", "rejected", "expired"}
@@ -28,6 +29,7 @@ class PersonCompletenessService:
     def __init__(self, audit_service: AuditService | None = None) -> None:
         self.session = db.session
         self.audit_service = audit_service or AuditService()
+        self.notification_service = NotificationService()
 
     def get_person_completeness(self, person_id: str, client_id: str) -> dict:
         person = self._get_person(person_id, client_id)
@@ -110,6 +112,12 @@ class PersonCompletenessService:
                 entity_type="person",
                 entity_id=person.id,
                 metadata={"from": previous_status, "to": person.status},
+            )
+        if completeness["status"] != "active":
+            self.notification_service.notify_profile_incomplete(
+                client_id=person.client_id,
+                person_id=person.id,
+                completion_pct=completeness["completion_pct"],
             )
         return completeness
 

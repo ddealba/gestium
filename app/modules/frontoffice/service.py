@@ -17,6 +17,7 @@ from app.modules.frontoffice.schemas import (
     serialize_document,
     serialize_profile,
 )
+from app.modules.notification.notification_service import NotificationService, serialize_notification
 from app.modules.portal.visibility_service import PortalVisibilityService
 
 
@@ -25,6 +26,7 @@ class FrontofficeService:
 
     def __init__(self) -> None:
         self.visibility = PortalVisibilityService()
+        self.notification_service = NotificationService()
 
     @staticmethod
     def _ensure_person_id(user) -> str:
@@ -146,6 +148,11 @@ class FrontofficeService:
         tasks = self._build_portal_tasks(pending_requests, today)
         activity = self._build_portal_activity(documents, cases, requests)
 
+        notifications = self.notification_service.list_notifications_for_portal(
+            client_id=client_id,
+            person_id=person_id,
+        )
+
         return {
             "summary": {
                 "pending_requests": len(pending_requests),
@@ -162,6 +169,10 @@ class FrontofficeService:
                 "has_company_area": len(companies) > 0,
             },
             "companies": companies,
+            "notifications": {
+                "unread_count": len([item for item in notifications if item.status == "unread"]),
+                "items": [serialize_notification(item) for item in notifications[:5]],
+            },
         }
 
     @staticmethod
