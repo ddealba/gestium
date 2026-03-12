@@ -15,6 +15,7 @@ from app.models.person import Person
 from app.models.person_request import PersonRequest
 from app.modules.audit.audit_service import AuditService
 from app.modules.documents.service import DocumentModuleService
+from app.modules.notification.notification_service import NotificationService
 from app.modules.person_request.request_repository import PersonRequestRepository
 from app.modules.person_request.request_schemas import (
     REQUEST_STATUSES,
@@ -30,10 +31,12 @@ class PersonRequestService:
         repository: PersonRequestRepository | None = None,
         audit_service: AuditService | None = None,
         document_service: DocumentModuleService | None = None,
+        notification_service: NotificationService | None = None,
     ) -> None:
         self.repository = repository or PersonRequestRepository()
         self.audit_service = audit_service or AuditService()
         self.document_service = document_service or DocumentModuleService()
+        self.notification_service = notification_service or NotificationService()
 
     def create_person_request(
         self,
@@ -60,6 +63,7 @@ class PersonRequestService:
             created_by=actor_user_id,
         )
         self.repository.add(item)
+        db.session.flush()
         self.audit_service.log_action(
             client_id=client_id,
             actor_user_id=actor_user_id,
@@ -67,6 +71,16 @@ class PersonRequestService:
             entity_type="person_request",
             entity_id=item.id,
             metadata={"person_id": person_id, "request_type": payload.request_type},
+        )
+        self.notification_service.create_portal_notification(
+            client_id=client_id,
+            person_id=person_id,
+            notification_type="request_created",
+            title="Nueva solicitud pendiente",
+            message="Tienes una nueva solicitud.",
+            entity_type="person_request",
+            entity_id=item.id,
+            priority="high",
         )
         return item
 
@@ -237,6 +251,17 @@ class PersonRequestService:
             entity_type="person_request",
             entity_id=item.id,
         )
+        if item.created_by:
+            self.notification_service.create_backoffice_notification(
+                client_id=client_id,
+                user_id=item.created_by,
+                notification_type="request_resolved",
+                title="Solicitud respondida",
+                message="La persona ha respondido a la solicitud.",
+                entity_type="person_request",
+                entity_id=item.id,
+                priority="medium",
+            )
         return item
 
     def portal_upload_request(self, user, client_id: str, request_id: str, file: FileStorage) -> PersonRequest:
@@ -267,6 +292,17 @@ class PersonRequestService:
             entity_type="person_request",
             entity_id=item.id,
         )
+        if item.created_by:
+            self.notification_service.create_backoffice_notification(
+                client_id=client_id,
+                user_id=item.created_by,
+                notification_type="document_uploaded",
+                title="Nuevo documento subido",
+                message="Se ha subido un nuevo documento.",
+                entity_type="person_request",
+                entity_id=item.id,
+                priority="medium",
+            )
         return item
 
     @staticmethod

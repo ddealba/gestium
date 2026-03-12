@@ -7,6 +7,7 @@ from app.models.company import Company
 from app.models.document import Document
 from app.models.document_extraction import DocumentExtraction
 from app.models.employee import Employee
+from app.models.notification import Notification
 from app.models.permission import Permission
 from app.models.person import Person
 from app.models.person_company_relation import PersonCompanyRelation
@@ -24,6 +25,7 @@ __all__ = [
     "Document",
     "DocumentExtraction",
     "Employee",
+    "Notification",
     "Permission",
     "Person",
     "PersonCompanyRelation",

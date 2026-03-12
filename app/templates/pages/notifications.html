@@ -1,0 +1,41 @@
+{% extends "layouts/app.html" %}
+{% block title %}Avisos internos · Gestium{% endblock %}
+{% block page_header %}Avisos internos{% endblock %}
+
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head">Centro de avisos</div>
+  <div class="ff-card__body">
+    <p class="ff-muted">Últimos avisos internos del backoffice.</p>
+    <div id="notifications-list" style="display:grid;gap:8px;"></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+(async function(){
+  const el = document.getElementById('notifications-list');
+  try {
+    const response = await fetch('/api/notifications');
+    const payload = await response.json();
+    const items = Array.isArray(payload) ? payload : (payload.data || []);
+    if (!items.length) {
+      el.innerHTML = '<p class="ff-muted">No hay avisos.</p>';
+      return;
+    }
+    el.innerHTML = items.slice(0, 20).map((item) => `
+      <article class="ff-card" style="margin:0;">
+        <div class="ff-card__body">
+          <strong>${item.title}</strong>
+          <p style="margin:4px 0;">${item.message}</p>
+          <small class="ff-muted">${item.status} · ${item.priority}</small>
+        </div>
+      </article>
+    `).join('');
+  } catch (e) {
+    el.innerHTML = '<p class="ff-muted">No se pudieron cargar los avisos.</p>';
+  }
+})();
+</script>
+{% endblock %}

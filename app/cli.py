@@ -24,6 +24,7 @@ from app.repositories.role_repository import RoleRepository
 from app.repositories.user_company_access_repository import UserCompanyAccessRepository
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
+from app.modules.notification.notification_service import NotificationService
 
 RBAC_PERMISSIONS: dict[str, str] = {
     "tenant.profile.read": "Read tenant profile",
@@ -172,6 +173,21 @@ def register_cli(app: Flask) -> None:
         """Seed the database with RBAC permissions and roles."""
         _ensure_seed_allowed(allow_production)
         seed_rbac()
+
+
+    @app.cli.command("notifications:generate-due-alerts")
+    @click.option("--client-id", required=False, help="Optional tenant ID filter.")
+    def notifications_generate_due_alerts(client_id: str | None) -> None:
+        """Generate due-soon and overdue request alerts."""
+        service = NotificationService()
+        clients = [client_id] if client_id else [item.id for item in Client.query.all()]
+        total_due = 0
+        total_overdue = 0
+        for tenant_id in clients:
+            total_due += service.generate_due_soon_notifications(client_id=tenant_id)
+            total_overdue += service.generate_overdue_notifications(client_id=tenant_id)
+        db.session.commit()
+        click.echo(f"Generated due_soon={total_due} overdue={total_overdue} notifications")
 
     @app.cli.command("seed_smoke")
     @click.option(

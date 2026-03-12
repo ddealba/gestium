@@ -68,6 +68,15 @@ def _build_nav_items() -> list[dict]:
             "scope": "tenant",
         },
         {
+            "page_id": "notifications",
+            "endpoint": "web.app_notifications",
+            "label": "Avisos",
+            "icon": "ph-bell",
+            "active": False,
+            "badge": None,
+            "scope": "tenant",
+        },
+        {
             "page_id": "admin",
             "label": "Administración",
             "icon": "ph-shield-check",
@@ -352,3 +361,12 @@ def app_platform_tenant_detail(tenant_id: str):
         page_id="platform_tenant_detail",
         tenant_id=tenant_id,
     )
+
+
+@bp.get("/app/notifications")
+@auth_required
+@tenant_required
+@require_user_type("internal")
+def app_notifications():
+    """Render internal notifications page."""
+    return render_template("pages/notifications.html", active_nav="notifications", page_id="notifications")
