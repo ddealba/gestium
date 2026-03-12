@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 import uuid
 
 from app.common.jwt import create_access_token
@@ -10,6 +10,7 @@ from app.models.document import Document
 from app.models.employee import Employee
 from app.models.person import Person
 from app.models.person_company_relation import PersonCompanyRelation
+from app.models.person_request import PersonRequest
 from app.models.user import User
 
 
@@ -289,3 +290,176 @@ def test_portal_access_and_advanced_visibility(client, app):
         )
         assert foreign_company_docs.status_code == 403
 
+
+
+def test_portal_home_api_pending_tasks_and_contexts(client, app):
+    with app.app_context():
+        db.create_all()
+
+        tenant = Client(name=f"Tenant Home {uuid.uuid4()}", status="active")
+        db.session.add(tenant)
+        db.session.flush()
+
+        company = Company(client_id=tenant.id, name="Empresa Uno", tax_id="EU1", status="active")
+        person = Person(
+            client_id=tenant.id,
+            first_name="Mar",
+            last_name="Luz",
+            document_number="111A",
+            email="mar@example.com",
+            status="active",
+        )
+        db.session.add_all([company, person])
+        db.session.flush()
+
+        user = User(
+            client_id=tenant.id,
+            email="portal.home@example.com",
+            status="active",
+            user_type="portal",
+            person_id=person.id,
+            password_hash="x",
+        )
+        db.session.add(user)
+
+        db.session.add(
+            PersonCompanyRelation(
+                client_id=tenant.id,
+                person_id=person.id,
+                company_id=company.id,
+                relation_type="owner",
+                status="active",
+                start_date=date(2025, 1, 1),
+            )
+        )
+
+        employee = Employee(
+            client_id=tenant.id,
+            company_id=company.id,
+            person_id=person.id,
+            full_name="Mar Luz",
+            status="active",
+            start_date=date(2025, 1, 1),
+        )
+        db.session.add(employee)
+        db.session.flush()
+
+        today = datetime.now(timezone.utc).date()
+        db.session.add_all([
+            PersonRequest(
+                client_id=tenant.id,
+                person_id=person.id,
+                company_id=company.id,
+                request_type="upload_document",
+                title="Subir contrato",
+                status="pending",
+                resolution_type="document_upload",
+                due_date=today - timedelta(days=1),
+            ),
+            PersonRequest(
+                client_id=tenant.id,
+                person_id=person.id,
+                request_type="confirm_information",
+                title="Confirmar datos",
+                status="in_progress",
+                resolution_type="confirm_information",
+                due_date=today + timedelta(days=1),
+            ),
+        ])
+        db.session.add(
+            Document(
+                client_id=tenant.id,
+                company_id=company.id,
+                person_id=person.id,
+                original_filename="nuevo.pdf",
+                storage_path="/tmp/new",
+                status="processed",
+                created_at=datetime.now(timezone.utc) - timedelta(days=1),
+            )
+        )
+        db.session.add(Case(client_id=tenant.id, company_id=company.id, title="Caso abierto", type="general", status="open"))
+        db.session.commit()
+
+        token = create_access_token(user.id, tenant.id)
+        response = client.get("/portal/api/home", headers=_auth_header(token))
+        assert response.status_code == 200
+
+        payload = response.get_json()
+        assert payload["summary"]["pending_requests"] == 2
+        assert payload["summary"]["overdue_requests"] == 1
+        assert payload["summary"]["recent_documents"] == 1
+        assert payload["summary"]["open_cases"] == 1
+        assert payload["contexts"] == {
+            "has_personal_area": True,
+            "has_employee_area": True,
+            "has_company_area": True,
+        }
+        assert payload["tasks"][0]["priority"] == "overdue"
+        assert payload["tasks"][0]["cta_label"] == "Subir documento"
+
+
+def test_portal_home_api_without_companies(client, app):
+    with app.app_context():
+        db.create_all()
+
+        tenant = Client(name=f"Tenant No Company {uuid.uuid4()}", status="active")
+        db.session.add(tenant)
+        db.session.flush()
+        person = Person(client_id=tenant.id, first_name="Iris", last_name="Solo", document_number="222B", email="iris@example.com", status="active")
+        db.session.add(person)
+        db.session.flush()
+        user = User(client_id=tenant.id, email="iris.portal@example.com", status="active", user_type="portal", person_id=person.id, password_hash="x")
+        db.session.add(user)
+        db.session.commit()
+
+        token = create_access_token(user.id, tenant.id)
+        response = client.get("/portal/api/home", headers=_auth_header(token))
+        assert response.status_code == 200
+        payload = response.get_json()
+        assert payload["summary"]["companies_count"] == 0
+        assert payload["contexts"]["has_company_area"] is False
+        assert payload["companies"] == []
+
+
+def test_portal_home_api_tenant_isolation_and_foreign_portal_visibility(client, app):
+    with app.app_context():
+        db.create_all()
+
+        tenant_a = Client(name=f"Tenant A {uuid.uuid4()}", status="active")
+        tenant_b = Client(name=f"Tenant B {uuid.uuid4()}", status="active")
+        db.session.add_all([tenant_a, tenant_b])
+        db.session.flush()
+
+        person_a = Person(client_id=tenant_a.id, first_name="A", last_name="One", document_number="A1", email="a@example.com", status="active")
+        person_b = Person(client_id=tenant_a.id, first_name="B", last_name="Two", document_number="B1", email="b@example.com", status="active")
+        person_tenant_b = Person(client_id=tenant_b.id, first_name="C", last_name="Three", document_number="C1", email="c@example.com", status="active")
+        db.session.add_all([person_a, person_b, person_tenant_b])
+        db.session.flush()
+
+        user_a = User(client_id=tenant_a.id, email="a.portal@example.com", status="active", user_type="portal", person_id=person_a.id, password_hash="x")
+        user_b = User(client_id=tenant_a.id, email="b.portal@example.com", status="active", user_type="portal", person_id=person_b.id, password_hash="x")
+        user_tenant_b = User(client_id=tenant_b.id, email="c.portal@example.com", status="active", user_type="portal", person_id=person_tenant_b.id, password_hash="x")
+        db.session.add_all([user_a, user_b, user_tenant_b])
+        db.session.flush()
+
+        db.session.add_all([
+            PersonRequest(client_id=tenant_a.id, person_id=person_a.id, request_type="other", title="Tarea A", status="pending", resolution_type="manual_review"),
+            PersonRequest(client_id=tenant_a.id, person_id=person_b.id, request_type="other", title="Tarea B", status="pending", resolution_type="manual_review"),
+            PersonRequest(client_id=tenant_b.id, person_id=person_tenant_b.id, request_type="other", title="Tarea C", status="pending", resolution_type="manual_review"),
+        ])
+        db.session.commit()
+
+        token_a = create_access_token(user_a.id, tenant_a.id)
+        token_b = create_access_token(user_b.id, tenant_a.id)
+        token_tenant_b = create_access_token(user_tenant_b.id, tenant_b.id)
+
+        payload_a = client.get("/portal/api/home", headers=_auth_header(token_a)).get_json()
+        payload_b = client.get("/portal/api/home", headers=_auth_header(token_b)).get_json()
+        payload_tenant_b = client.get("/portal/api/home", headers=_auth_header(token_tenant_b)).get_json()
+
+        assert payload_a["summary"]["pending_requests"] == 1
+        assert payload_b["summary"]["pending_requests"] == 1
+        assert payload_tenant_b["summary"]["pending_requests"] == 1
+        assert {item["title"] for item in payload_a["tasks"]} == {"Tarea A"}
+        assert {item["title"] for item in payload_b["tasks"]} == {"Tarea B"}
+        assert {item["title"] for item in payload_tenant_b["tasks"]} == {"Tarea C"}

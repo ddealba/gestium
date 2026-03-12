@@ -3,37 +3,100 @@
 {% block content %}
 <section class="ff-card ff-dashboard-hero">
   <div class="ff-card__body">
-    <p class="ff-dashboard-hero__eyebrow">Bienvenido</p>
-    <h2>Resumen de tu actividad</h2>
-    <p class="ff-muted">Aquí tienes una vista rápida de documentos, expedientes y solicitudes visibles para tu usuario.</p>
+    <p class="ff-dashboard-hero__eyebrow">Inicio</p>
+    <h2>Qué tengo pendiente hoy</h2>
+    <p class="ff-muted">Prioriza primero lo vencido y luego las solicitudes más próximas.</p>
     <span class="ff-dashboard-hero__orb ff-dashboard-hero__orb--a"></span>
     <span class="ff-dashboard-hero__orb ff-dashboard-hero__orb--b"></span>
   </div>
 </section>
 
 <div class="ff-portal-kpis" style="margin-top:12px;">
-  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Docs personales</p><p class="ff-portal-kpi__value">{{ summary.person_documents }}</p></div>
-  {% if summary.has_employee_scope %}<div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Docs laborales</p><p class="ff-portal-kpi__value">{{ summary.employee_documents }}</p></div>{% endif %}
-  {% if summary.has_company_scope %}<div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Docs empresa</p><p class="ff-portal-kpi__value">{{ summary.company_documents }}</p></div>{% endif %}
-  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Expedientes personales</p><p class="ff-portal-kpi__value">{{ summary.personal_cases }}</p></div>
-  {% if summary.has_company_scope %}<div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Expedientes empresa</p><p class="ff-portal-kpi__value">{{ summary.company_cases }}</p></div>{% endif %}
-  {% if summary.has_company_scope %}<div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Mis empresas</p><p class="ff-portal-kpi__value">{{ summary.companies_count }}</p></div>{% endif %}
-  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Solicitudes pendientes</p><p class="ff-portal-kpi__value">{{ summary.pending_requests }}</p></div>
-  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Solicitudes vencidas</p><p class="ff-portal-kpi__value">{{ summary.overdue_requests }}</p></div>
-  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Solicitudes resueltas</p><p class="ff-portal-kpi__value">{{ summary.recently_resolved_requests }}</p></div>
+  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Solicitudes pendientes</p><p class="ff-portal-kpi__value">{{ home.summary.pending_requests }}</p></div>
+  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Solicitudes vencidas</p><p class="ff-portal-kpi__value">{{ home.summary.overdue_requests }}</p></div>
+  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Documentos recientes (7 días)</p><p class="ff-portal-kpi__value">{{ home.summary.recent_documents }}</p></div>
+  <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Expedientes abiertos</p><p class="ff-portal-kpi__value">{{ home.summary.open_cases }}</p></div>
+  {% if home.contexts.has_company_area %}
+    <div class="ff-portal-kpi"><p class="ff-portal-kpi__label">Empresas relacionadas</p><p class="ff-portal-kpi__value">{{ home.summary.companies_count }}</p></div>
+  {% endif %}
 </div>
 
-<section class="ff-card" style="margin-top:14px;">
-  <div class="ff-card__head">Últimos documentos visibles</div>
-  <div class="ff-card__body ff-table-wrap">
-    <table class="ff-table"><thead><tr><th>Nombre</th><th>Ámbito</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_documents %}<tr><td>{{ item.file_name }}</td><td>{{ item.scope }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
-  </div>
-</section>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-top:14px;align-items:start;">
+  <section class="ff-card">
+    <div class="ff-card__head">Qué tengo que hacer</div>
+    <div class="ff-card__body">
+      {% if home.tasks %}
+        <div style="display:grid;gap:10px;">
+          {% for task in home.tasks %}
+            <article style="border:1px solid var(--ff-border);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;">
+              <div>
+                <p style="margin:0;font-weight:700;color:var(--ff-title);">{{ task.title }}</p>
+                <p class="ff-muted" style="margin:4px 0 0;">
+                  Estado: {{ task.status }}
+                  {% if task.due_date %}· Vence: {{ task.due_date }}{% endif %}
+                  {% if task.priority == 'overdue' %}· <strong style="color:#b42318;">Vencida</strong>{% endif %}
+                </p>
+              </div>
+              <a class="ff-btn ff-btn--sm" href="{{ task.cta_url }}">{{ task.cta_label }}</a>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="ff-muted" style="margin:0;">No tienes tareas pendientes por ahora.</p>
+      {% endif %}
+    </div>
+  </section>
 
-<section class="ff-card" style="margin-top:14px;">
-  <div class="ff-card__head">Últimos expedientes visibles</div>
-  <div class="ff-card__body ff-table-wrap">
-    <table class="ff-table"><thead><tr><th>Título</th><th>Ámbito</th><th>Estado</th></tr></thead><tbody>{% for item in summary.recent_cases %}<tr><td>{{ item.title }}</td><td>{{ item.scope }}</td><td>{{ item.status }}</td></tr>{% endfor %}</tbody></table>
-  </div>
-</section>
+  <section class="ff-card">
+    <div class="ff-card__head">Actividad reciente</div>
+    <div class="ff-card__body">
+      {% if home.activity %}
+        <ul style="margin:0;padding-left:16px;display:grid;gap:8px;">
+          {% for item in home.activity %}
+            <li>
+              <a href="{{ item.url }}" style="font-weight:600;color:var(--ff-title);text-decoration:none;">{{ item.message }}</a>
+              {% if item.date %}<p class="ff-muted" style="margin:2px 0 0;">{{ item.date[:10] }}</p>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="ff-muted" style="margin:0;">Sin actividad reciente.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-top:14px;">
+  <section class="ff-card">
+    <div class="ff-card__head">Accesos rápidos</div>
+    <div class="ff-card__body" style="display:flex;flex-wrap:wrap;gap:8px;">
+      <a class="ff-btn" href="/portal/requests">Mis solicitudes</a>
+      <a class="ff-btn" href="/portal/documents">Mis documentos</a>
+      <a class="ff-btn" href="/portal/cases">Mis expedientes</a>
+      <a class="ff-btn" href="/portal/profile">Mi perfil</a>
+      {% if home.contexts.has_company_area %}<a class="ff-btn" href="/portal/companies">Mis empresas</a>{% endif %}
+    </div>
+  </section>
+
+  <section class="ff-card">
+    <div class="ff-card__head">Mis accesos / contextos</div>
+    <div class="ff-card__body">
+      <ul style="margin:0;padding-left:16px;display:grid;gap:6px;">
+        <li>Cliente particular: <strong>{{ 'Sí' if home.contexts.has_personal_area else 'No' }}</strong></li>
+        <li>Empleado: <strong>{{ 'Sí' if home.contexts.has_employee_area else 'No' }}</strong></li>
+        <li>Owner de empresa: <strong>{{ 'Sí' if home.contexts.has_company_area else 'No' }}</strong></li>
+      </ul>
+      {% if home.companies %}
+        <p style="margin:12px 0 6px;font-weight:700;color:var(--ff-title);">Empresas relacionadas</p>
+        <ul style="margin:0;padding-left:16px;display:grid;gap:4px;">
+          {% for company in home.companies %}
+            <li>{{ company.company_name }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<script src="{{ url_for('static', filename='js/frontoffice/portal.js') }}"></script>
 {% endblock %}
