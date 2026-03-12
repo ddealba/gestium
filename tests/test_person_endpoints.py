@@ -1,10 +1,17 @@
+from datetime import date
 import pytest
 
 from app.cli import seed_rbac
 from app.common.jwt import create_access_token
 from app.extensions import db
+from app.models.case import Case
 from app.models.client import Client
+from app.models.company import Company
+from app.models.document import Document
+from app.models.employee import Employee
 from app.models.person import Person
+from app.models.person_company_relation import PersonCompanyRelation
+from app.models.person_request import PersonRequest
 from app.models.role import Role
 from app.models.user import User
 from app.modules.audit.models import AuditLog
@@ -57,6 +64,13 @@ def create_person(db_session, client_id: str, first_name: str, document_number: 
     db_session.add(person)
     db_session.commit()
     return person
+
+
+def create_company(db_session, client_id: str, name: str = "Company") -> Company:
+    company = Company(client_id=client_id, name=name, tax_id=f"TAX-{name}", status="active")
+    db_session.add(company)
+    db_session.commit()
+    return company
 
 
 def test_create_person(client, db_session):
@@ -195,3 +209,127 @@ def test_upsert_person_portal_user_conflict(client, db_session):
 
     assert response.status_code == 409
     assert response.get_json()["message"] == "email_already_in_use"
+
+
+def test_person_overview_with_complete_data(client, db_session):
+    tenant = create_client(db_session, "Acme")
+    user = create_user(db_session, tenant.id, "ops@acme.com")
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+
+    person = create_person(db_session, tenant.id, "Ada", "DOC-360", "ada@example.com")
+    person.phone = "+34123123123"
+    person.address_line1 = "Calle Mayor 1"
+    person.city = "Madrid"
+    person.country = "ES"
+    person.status = "active"
+
+    company = create_company(db_session, tenant.id, "Acme Corp")
+    relation = PersonCompanyRelation(
+        client_id=tenant.id,
+        person_id=person.id,
+        company_id=company.id,
+        relation_type="owner",
+        status="active",
+        start_date=date(2024, 1, 1),
+    )
+    employee = Employee(
+        client_id=tenant.id,
+        company_id=company.id,
+        person_id=person.id,
+        full_name="Ada Tester",
+        status="active",
+        start_date=date(2024, 1, 10),
+    )
+    case = Case(
+        client_id=tenant.id,
+        company_id=company.id,
+        person_id=person.id,
+        type="onboarding",
+        title="Expediente onboarding",
+        status="open",
+    )
+    db_session.add_all([relation, employee, case])
+    db_session.flush()
+
+    document = Document(
+        client_id=tenant.id,
+        company_id=company.id,
+        person_id=person.id,
+        employee_id=employee.id,
+        case_id=case.id,
+        original_filename="dni.pdf",
+        storage_path="/tmp/dni.pdf",
+        status="pending",
+    )
+    request = PersonRequest(
+        client_id=tenant.id,
+        person_id=person.id,
+        request_type="upload_document",
+        title="Subir DNI",
+        status="pending",
+        resolution_type="document_upload",
+    )
+    portal_user = User(
+        client_id=tenant.id,
+        person_id=person.id,
+        email="portal.ada@example.com",
+        status="active",
+        user_type="portal",
+    )
+    db_session.add_all([document, request, portal_user])
+    db_session.add(AuditLog(client_id=tenant.id, action="person.updated", entity_type="person", entity_id=person.id))
+    db_session.commit()
+
+    response = client.get(f"/persons/{person.id}/overview", headers=auth_header_for(user))
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["person"]["id"] == person.id
+    assert payload["completeness"]["completion_percentage"] == 100
+    assert len(payload["companies"]) == 1
+    assert payload["employee"]["id"] == employee.id
+    assert len(payload["cases"]) == 1
+    assert len(payload["documents"]) == 1
+    assert payload["documents"][0]["contexts"] == ["personal", "laboral", "empresa", "expediente"]
+    assert len(payload["requests"]) == 1
+    assert payload["portal_access"]["status"] == "active"
+    assert len(payload["audit"]) >= 1
+
+
+def test_person_overview_without_relations(client, db_session):
+    tenant = create_client(db_session, "Acme")
+    user = create_user(db_session, tenant.id, "ops@acme.com")
+    seed_rbac()
+    assign_role(db_session, user, "Operativo")
+    person = create_person(db_session, tenant.id, "Solo", "DOC-SOLO")
+
+    response = client.get(f"/persons/{person.id}/overview", headers=auth_header_for(user))
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["companies"] == []
+    assert payload["employee"] is None
+    assert payload["cases"] == []
+    assert payload["documents"] == []
+    assert payload["requests"] == []
+    assert payload["portal_access"] is None
+
+
+def test_person_overview_tenant_isolation(client, db_session):
+    tenant_a = create_client(db_session, "Acme")
+    tenant_b = create_client(db_session, "Beta")
+    user_a = create_user(db_session, tenant_a.id, "a@acme.com")
+    seed_rbac()
+    assign_role(db_session, user_a, "Operativo")
+    person_b = create_person(db_session, tenant_b.id, "Private", "B-2")
+
+    response = client.get(f"/persons/{person_b.id}/overview", headers=auth_header_for(user_a))
+    assert response.status_code == 404
+
+
+def test_person_overview_without_permission_returns_403(client, db_session):
+    tenant = create_client(db_session, "Acme")
+    user = create_user(db_session, tenant.id, "noperms@acme.com")
+    person = create_person(db_session, tenant.id, "Ada", "DOC-403")
+
+    response = client.get(f"/persons/{person.id}/overview", headers=auth_header_for(user))
+    assert response.status_code == 403
