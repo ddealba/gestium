@@ -463,3 +463,45 @@ def test_portal_home_api_tenant_isolation_and_foreign_portal_visibility(client, 
         assert {item["title"] for item in payload_a["tasks"]} == {"Tarea A"}
         assert {item["title"] for item in payload_b["tasks"]} == {"Tarea B"}
         assert {item["title"] for item in payload_tenant_b["tasks"]} == {"Tarea C"}
+
+
+def test_portal_user_cannot_access_backoffice_routes(client, app):
+    with app.app_context():
+        db.create_all()
+        tenant = Client(name=f"Tenant Internal Block {uuid.uuid4()}", status="active")
+        db.session.add(tenant)
+        db.session.flush()
+        person = Person(client_id=tenant.id, first_name="Portal", last_name="User", document_number="P1", email="portal.block@example.com", status="active")
+        user = User(client_id=tenant.id, email="portal.block.user@example.com", status="active", user_type="portal", person_id=person.id, password_hash="x")
+        db.session.add_all([person, user])
+        db.session.commit()
+
+        token = create_access_token(user.id, tenant.id)
+        response = client.get("/app/companies", headers=_auth_header(token))
+        assert response.status_code == 403
+
+
+def test_dashboard_summary_uses_aggregated_queries(monkeypatch):
+    from app.modules.portal.dashboard_service import PortalDashboardService
+
+    class FakeVisibility:
+        def count_pending_requests(self, person_id, client_id):
+            return 7
+
+        def count_visible_companies(self, person_id, client_id):
+            return 2
+
+        def get_visible_requests(self, person_id, client_id):
+            return []
+
+        def get_visible_documents(self, person_id, client_id):
+            return []
+
+        def get_visible_cases(self, person_id, client_id):
+            return []
+
+    service = PortalDashboardService(visibility_service=FakeVisibility())
+    summary = service.get_portal_home_summary("person-1", "client-1")
+
+    assert summary["pending_requests"] == 7
+    assert summary["companies_count"] == 2

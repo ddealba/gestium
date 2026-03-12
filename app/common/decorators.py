@@ -52,6 +52,8 @@ def auth_required(func: Callable[..., Any]):
             raise Forbidden("user_inactive")
 
         g.user = user
+        if (request.path.startswith("/app") or request.path.startswith("/api")) and ((getattr(user, "user_type", "") or "").strip().lower() == "portal"):
+            raise Forbidden("portal_access_forbidden")
         refresh_tenant_context()
         return func(*args, **kwargs)
 
@@ -116,3 +118,21 @@ def require_company_access(required_level: str, company_id_arg: str | None = Non
         return wrapper
 
     return decorator
+
+
+
+def portal_user_required(func: Callable[..., Any]):
+    """Ensure current authenticated user is a portal user with a linked person."""
+
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any):
+        if not getattr(g, "user", None):
+            raise Unauthorized("missing_token")
+        current_type = (getattr(g.user, "user_type", None) or "internal").strip().lower()
+        if current_type != "portal":
+            raise Forbidden("invalid_user_type")
+        if not getattr(g.user, "person_id", None):
+            raise Forbidden("portal_user_requires_person")
+        return func(*args, **kwargs)
+
+    return wrapper

@@ -1,5 +1,4 @@
-"""Frontoffice module."""
+"""Legacy frontoffice module kept for backward compatibility.
 
-from app.modules.frontoffice.routes import bp
-
-__all__ = ["bp"]
+Routes were consolidated under ``app.modules.portal``.
+"""
