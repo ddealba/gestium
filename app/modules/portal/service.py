@@ -8,6 +8,7 @@ from app.extensions import db
 from app.models.company import Company
 from app.models.person import Person
 from app.modules.frontoffice.schemas import serialize_case, serialize_company_relation, serialize_document, serialize_profile
+from app.modules.person.person_completeness_service import PersonCompletenessService
 from app.modules.portal.context import PortalContext
 from app.modules.portal.dashboard_service import PortalDashboardService
 from app.modules.portal.visibility_service import PortalVisibilityService
@@ -19,12 +20,15 @@ class PortalService:
     def __init__(self) -> None:
         self.visibility = PortalVisibilityService()
         self.dashboard = PortalDashboardService(self.visibility)
+        self.completeness_service = PersonCompletenessService()
 
     def get_portal_profile(self, context: PortalContext) -> dict:
         person = db.session.query(Person).filter(Person.id == context.person_id, Person.client_id == context.client_id).one_or_none()
         if person is None:
             raise NotFound("person_not_found")
-        return serialize_profile(person)
+        payload = serialize_profile(person)
+        payload["completeness"] = self.completeness_service.get_person_completeness(person.id, context.client_id)
+        return payload
 
     def get_portal_documents(self, context: PortalContext, scope: str | None = None) -> list[dict]:
         rows = self.visibility.get_visible_documents(context.person_id, context.client_id, scope)
@@ -65,6 +69,7 @@ class PortalService:
         employee_ids = self.visibility.get_visible_employee_ids(context.person_id, context.client_id)
         return {
             "summary": self.dashboard.get_portal_home_summary(context.person_id, context.client_id),
+            "completeness": self.completeness_service.get_person_completeness(context.person_id, context.client_id),
             "tasks": self.dashboard.get_portal_home_tasks(context.person_id, context.client_id),
             "activity": self.dashboard.get_portal_home_activity(context.person_id, context.client_id),
             "contexts": {
@@ -74,3 +79,26 @@ class PortalService:
             },
             "companies": companies,
         }
+
+
+    def update_portal_profile(self, context: PortalContext, payload: dict, actor_user_id: str | None = None) -> dict:
+        person = db.session.query(Person).filter(Person.id == context.person_id, Person.client_id == context.client_id).one_or_none()
+        if person is None:
+            raise NotFound("person_not_found")
+
+        editable_fields = {"email", "phone", "address_line1", "city", "postal_code", "country"}
+        updates = {key: value for key, value in payload.items() if key in editable_fields}
+        if not updates:
+            raise Forbidden("no_editable_fields")
+
+        for field, value in updates.items():
+            normalized = value.strip() if isinstance(value, str) else value
+            if field == "email" and normalized:
+                normalized = normalized.lower()
+                if "@" not in normalized or normalized.startswith("@") or normalized.endswith("@"):
+                    raise Forbidden("invalid_email")
+            setattr(person, field, normalized or None)
+
+        self.completeness_service.auto_resolve_requests(context.client_id, context.person_id, actor_user_id=actor_user_id)
+        self.completeness_service.recalculate_person_status(person, actor_user_id=actor_user_id)
+        return self.get_portal_profile(context)

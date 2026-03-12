@@ -221,7 +221,9 @@ def test_person_overview_with_complete_data(client, db_session):
     person.phone = "+34123123123"
     person.address_line1 = "Calle Mayor 1"
     person.city = "Madrid"
+    person.postal_code = "28001"
     person.country = "ES"
+    person.document_type = "dni"
     person.status = "active"
 
     company = create_company(db_session, tenant.id, "Acme Corp")
@@ -261,6 +263,7 @@ def test_person_overview_with_complete_data(client, db_session):
         original_filename="dni.pdf",
         storage_path="/tmp/dni.pdf",
         status="pending",
+        doc_type="dni",
     )
     request = PersonRequest(
         client_id=tenant.id,
@@ -285,7 +288,7 @@ def test_person_overview_with_complete_data(client, db_session):
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["person"]["id"] == person.id
-    assert payload["completeness"]["completion_percentage"] == 100
+    assert payload["completeness"]["completion_pct"] == 100
     assert len(payload["companies"]) == 1
     assert payload["employee"]["id"] == employee.id
     assert len(payload["cases"]) == 1
@@ -333,3 +336,82 @@ def test_person_overview_without_permission_returns_403(client, db_session):
 
     response = client.get(f"/persons/{person.id}/overview", headers=auth_header_for(user))
     assert response.status_code == 403
+
+
+def test_person_completeness_and_generate_requests(client, db_session):
+    tenant = create_client(db_session, "Acme")
+    user = create_user(db_session, tenant.id, "admin.requests@acme.com")
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+
+    person = create_person(db_session, tenant.id, "Ada", "DOC-GEN", "ada@example.com")
+
+    completeness_response = client.get(f"/persons/{person.id}/completeness", headers=auth_header_for(user))
+    assert completeness_response.status_code == 200
+    completeness = completeness_response.get_json()["completeness"]
+    assert completeness["status"] in {"draft", "pending_info"}
+    assert "phone" in completeness["missing_fields"]
+    assert "dni" in completeness["missing_documents"]
+
+    generate_response = client.post(f"/persons/{person.id}/generate-requests", headers=auth_header_for(user))
+    assert generate_response.status_code == 200
+    created = generate_response.get_json()["created"]
+    assert created >= 1
+
+    second_response = client.post(f"/persons/{person.id}/generate-requests", headers=auth_header_for(user))
+    assert second_response.status_code == 200
+    assert second_response.get_json()["created"] == 0
+
+
+def test_person_status_recalculated_to_active(client, db_session):
+    tenant = create_client(db_session, "Acme")
+    user = create_user(db_session, tenant.id, "admin.active@acme.com")
+    seed_rbac()
+    assign_role(db_session, user, "Admin Cliente")
+
+    create_response = client.post(
+        "/persons",
+        headers=auth_header_for(user),
+        json={
+            "first_name": "Lina",
+            "last_name": "Active",
+            "document_type": "dni",
+            "document_number": "DNI-ACT-1",
+            "email": "lina@example.com",
+            "phone": "+340000000",
+            "address_line1": "Street 1",
+            "city": "Madrid",
+            "postal_code": "28001",
+            "country": "ES",
+        },
+    )
+    assert create_response.status_code == 201
+    person_id = create_response.get_json()["person"]["id"]
+
+    portal_response = client.post(
+        f"/persons/{person_id}/portal-user",
+        headers=auth_header_for(user),
+        json={"email": "lina.portal@example.com", "password": "Password123"},
+    )
+    assert portal_response.status_code == 200
+
+    db_session.add(Document(client_id=tenant.id, person_id=person_id, original_filename="dni.pdf", storage_path="/tmp/dni.pdf", doc_type="dni", status="processed"))
+    from app.modules.person.person_completeness_service import PersonCompletenessService
+    person_row = db_session.query(Person).filter_by(id=person_id, client_id=tenant.id).one()
+    PersonCompletenessService().recalculate_person_status(person_row, actor_user_id=user.id)
+    db_session.commit()
+
+    overview = client.get(f"/persons/{person_id}/overview", headers=auth_header_for(user)).get_json()
+    assert overview["person"]["status"] == "active"
+    assert overview["completeness"]["status"] == "active"
+
+def test_person_completeness_tenant_isolation(client, db_session):
+    tenant_a = create_client(db_session, "Iso A")
+    tenant_b = create_client(db_session, "Iso B")
+    user_a = create_user(db_session, tenant_a.id, "iso.a@acme.com")
+    seed_rbac()
+    assign_role(db_session, user_a, "Operativo")
+
+    person_b = create_person(db_session, tenant_b.id, "Other", "ISO-OTHER")
+    response = client.get(f"/persons/{person_b.id}/completeness", headers=auth_header_for(user_a))
+    assert response.status_code == 404

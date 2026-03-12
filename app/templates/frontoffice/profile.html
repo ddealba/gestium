@@ -1,6 +1,20 @@
 {% extends "frontoffice/base.html" %}
 {% block title %}Portal · Mi perfil{% endblock %}
 {% block content %}
+<section class="ff-card" style="margin-bottom:12px;">
+  <div class="ff-card__head">Estado de perfil</div>
+  <div class="ff-card__body">
+    <p style="margin:0 0 8px;">Completitud: <strong>{{ profile.completeness.completion_pct }}%</strong> · Estado: <strong>{{ profile.completeness.status }}</strong></p>
+    {% if profile.completeness.missing_fields or profile.completeness.missing_documents %}
+      <p class="ff-muted" style="margin:0 0 8px;">Te falta completar:</p>
+      <ul style="margin:0;padding-left:16px;display:grid;gap:4px;">
+        {% for item in profile.completeness.missing_fields %}<li>{{ item }}</li>{% endfor %}
+        {% for item in profile.completeness.missing_documents %}<li>{{ item|upper }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</section>
+
 <section class="ff-card">
   <div class="ff-card__head">Mi perfil</div>
   <div class="ff-card__body">
@@ -14,4 +28,36 @@
     </div>
   </div>
 </section>
+
+<section class="ff-card" style="margin-top:12px;">
+  <div class="ff-card__head">Actualizar datos básicos</div>
+  <div class="ff-card__body">
+    <form id="portal-profile-form" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+      <label>Email<input type="email" name="email" value="{{ profile.email or '' }}" /></label>
+      <label>Teléfono<input type="text" name="phone" value="{{ profile.phone or '' }}" /></label>
+      <label style="grid-column:1 / span 2;">Dirección<input type="text" name="address_line1" value="{{ profile.address or '' }}" /></label>
+      <label>Ciudad<input type="text" name="city" value="{{ profile.city or '' }}" /></label>
+      <label>Código postal<input type="text" name="postal_code" value="{{ profile.postal_code or '' }}" /></label>
+      <label>País<input type="text" name="country" value="{{ profile.country or '' }}" /></label>
+      <div style="grid-column:1 / span 2;"><button class="ff-btn" type="submit">Guardar cambios</button></div>
+    </form>
+  </div>
+</section>
+
+<script>
+(() => {
+  const form = document.getElementById('portal-profile-form');
+  if (!form || !window.apiFetch) return;
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    try {
+      await window.apiFetch('/portal/api/profile', { method: 'PATCH', body: data });
+      window.location.reload();
+    } catch (error) {
+      if (window.handleApiError) window.handleApiError(error, { defaultMessage: 'No se pudo actualizar el perfil.' });
+    }
+  });
+})();
+</script>
 {% endblock %}

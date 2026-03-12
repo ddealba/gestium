@@ -6,6 +6,7 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 from app.models.person import Person
 from app.modules.audit.audit_service import AuditService
+from app.modules.person.person_completeness_service import PersonCompletenessService
 from app.modules.person.person_repository import PersonRepository
 from app.modules.person.person_schemas import PersonCreateRequest, PersonUpdateRequest
 
@@ -20,6 +21,7 @@ class PersonService:
     ) -> None:
         self.repository = repository or PersonRepository()
         self.audit_service = audit_service or AuditService()
+        self.completeness_service = PersonCompletenessService(self.audit_service)
 
     def create_person(self, client_id: str, user_id: str | None, payload: PersonCreateRequest) -> Person:
         self._ensure_document_unique(client_id, payload.document_number)
@@ -41,6 +43,7 @@ class PersonService:
             created_by=user_id,
         )
         self.repository.create_person(person)
+        self.completeness_service.recalculate_person_status(person, actor_user_id=user_id)
         self.audit_service.log_action(
             client_id=client_id,
             actor_user_id=user_id,
@@ -82,6 +85,8 @@ class PersonService:
             value = getattr(payload, field)
             if value is not None:
                 setattr(person, field, value)
+
+        self.completeness_service.recalculate_person_status(person, actor_user_id=user_id)
 
         self.repository.update_person(person)
         self.audit_service.log_action(

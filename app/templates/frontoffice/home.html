@@ -21,6 +21,28 @@
   {% endif %}
 </div>
 
+
+<section class="ff-card" style="margin-top:14px;">
+  <div class="ff-card__head">Completa tu perfil</div>
+  <div class="ff-card__body">
+    <p style="margin:0 0 8px;">Completitud: <strong>{{ home.completeness.completion_pct }}%</strong> · Estado: <strong>{{ home.completeness.status }}</strong></p>
+    {% if home.completeness.missing_fields or home.completeness.missing_documents %}
+      <p class="ff-muted" style="margin:0 0 8px;">Pendiente:</p>
+      <ul style="margin:0;padding-left:16px;display:grid;gap:4px;">
+        {% for item in home.completeness.missing_fields[:4] %}<li>Completar {{ item }}</li>{% endfor %}
+        {% for item in home.completeness.missing_documents[:4] %}<li>Subir {{ item|upper }}</li>{% endfor %}
+      </ul>
+    {% else %}
+      <p class="ff-muted" style="margin:0;">Tu perfil está completo.</p>
+    {% endif %}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+      <a class="ff-btn" href="/portal/profile">Completar datos</a>
+      <a class="ff-btn" href="/portal/documents">Subir documento</a>
+      <a class="ff-btn" href="/portal/requests">Ver solicitudes</a>
+    </div>
+  </div>
+</section>
+
 <section class="ff-card" style="margin-top:14px;">
   <div class="ff-card__head">Qué tengo que hacer</div>
   <div class="ff-card__body ff-portal-table-card">

@@ -16,6 +16,7 @@ from app.models.employee import Employee
 from app.models.person import Person
 from app.modules.cases.repository import CaseEventRepository, CaseRepository
 from app.modules.documents.storage import open_file, save_upload
+from app.modules.person.person_completeness_service import PersonCompletenessService
 from app.modules.audit.audit_service import AuditService
 from app.repositories.document_repository import DocumentRepository
 from app.services.company_access_service import CompanyAccessService
@@ -45,6 +46,7 @@ class DocumentModuleService:
         self.event_repository = event_repository or CaseEventRepository()
         self.company_access_service = company_access_service or CompanyAccessService()
         self.audit_service = AuditService()
+        self.completeness_service = PersonCompletenessService(self.audit_service)
 
     def upload_case_document(
         self,
@@ -99,6 +101,11 @@ class DocumentModuleService:
             document=document,
             original_filename=original_filename,
         )
+        if resolved_person_id:
+            self.completeness_service.auto_resolve_requests(client_id, resolved_person_id, actor_user_id=actor_user_id)
+            person = db.session.query(Person).filter(Person.id == resolved_person_id, Person.client_id == client_id).one_or_none()
+            if person is not None:
+                self.completeness_service.recalculate_person_status(person, actor_user_id=actor_user_id)
 
         if current_app.config.get("AUTO_EXTRACTION_ENABLED", False):
             db.session.add(
@@ -175,6 +182,11 @@ class DocumentModuleService:
             document=document,
             original_filename=original_filename,
         )
+        if resolved_person_id:
+            self.completeness_service.auto_resolve_requests(client_id, resolved_person_id, actor_user_id=actor_user_id)
+            person = db.session.query(Person).filter(Person.id == resolved_person_id, Person.client_id == client_id).one_or_none()
+            if person is not None:
+                self.completeness_service.recalculate_person_status(person, actor_user_id=actor_user_id)
         return document
 
     def list_case_documents(

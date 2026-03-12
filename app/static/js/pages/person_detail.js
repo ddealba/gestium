@@ -54,18 +54,23 @@
   };
 
   const renderCompleteness = (completeness) => {
-    const pct = Number(completeness?.completion_percentage || 0);
+    const pct = Number(completeness?.completion_pct || 0);
     completionProgress.style.width = `${Math.max(0, Math.min(100, pct))}%`;
     completionTitle.textContent = `Completitud: ${pct}%`;
-    const flags = [
-      ['Datos básicos completos', completeness?.basic_data_complete],
-      ['Documento identificativo', completeness?.identification_document_present],
-      ['Email', completeness?.email_present],
-      ['Teléfono', completeness?.phone_present],
-      ['Acceso portal creado', completeness?.portal_access_created],
-    ];
+    const checks = completeness?.checks || {};
+    const labels = {
+      basic_info: 'Datos básicos completos',
+      identification: 'Identificación',
+      contact_info: 'Contacto',
+      address_info: 'Dirección',
+      portal_access: 'Acceso portal',
+      required_documents: 'Documentación requerida',
+    };
+    const flags = Object.keys(labels).map((key) => [labels[key], checks[key]]);
     completionFlags.innerHTML = flags
-      .map(([label, ok]) => `<div><strong>${escapeHtml(label)}:</strong> ${ok ? '<span class="ff-tag ff-tag--success">Sí</span>' : '<span class="ff-tag ff-tag--warn">No</span>'}</div>`)
+      .map(([label, ok]) => `<div><strong>${escapeHtml(label)}:</strong> ${ok ? '<span class=\"ff-tag ff-tag--success\">Sí</span>' : '<span class=\"ff-tag ff-tag--warn\">No</span>'}</div>`)
+      .concat((completeness?.missing_fields || []).length ? [`<div><strong>Campos faltantes:</strong> ${(completeness.missing_fields || []).map((item) => `<span class=\"ff-tag ff-tag--warn\">${escapeHtml(item)}</span>`).join(' ')}</div>`] : [])
+      .concat((completeness?.missing_documents || []).length ? [`<div><strong>Documentos faltantes:</strong> ${(completeness.missing_documents || []).map((item) => `<span class=\"ff-tag ff-tag--warn\">${escapeHtml(item)}</span>`).join(' ')}</div>`] : [])
       .join('');
   };
 
@@ -233,6 +238,16 @@
       await load();
     } catch (error) {
       window.handleApiError(error, { defaultMessage: 'No se pudo desactivar acceso portal.' });
+    }
+  });
+
+  document.getElementById('generate-requests-action')?.addEventListener('click', async () => {
+    try {
+      const result = await window.apiFetch(`/persons/${personId}/generate-requests`, { method: 'POST' });
+      window.showToast('success', `Solicitudes generadas: ${result.created || 0}`);
+      await load();
+    } catch (error) {
+      window.handleApiError(error, { defaultMessage: 'No se pudieron generar solicitudes pendientes.' });
     }
   });
 
