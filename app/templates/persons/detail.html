@@ -6,15 +6,15 @@
 <section class="ff-card" id="person-detail-root" data-person-id="{{ person_id }}">
   <div class="ff-card__head ff-page-head">
     <div>
-      <p class="ff-person-detail__eyebrow">Ficha de persona</p>
-      <h2>Detalle de persona</h2>
+      <p class="ff-person-detail__eyebrow">Vista 360</p>
+      <h2 id="person-header-name">Detalle de persona</h2>
     </div>
     <a href="{{ url_for('web.app_persons') }}" class="ff-btn ff-btn--ghost">Volver al listado</a>
   </div>
   <div class="ff-card__body ff-person-detail">
     <section class="ff-person-detail__summary">
       <div class="ff-person-detail__tile">
-        <h3>Identidad</h3>
+        <h3>Datos básicos</h3>
         <div id="person-basic" class="ff-muted">Cargando...</div>
       </div>
       <div class="ff-person-detail__tile">
@@ -27,18 +27,22 @@
       </div>
     </section>
 
-    <p class="ff-person-detail__intro ff-muted">
-      Gestiona cada bloque de información por separado para trabajar con foco y evitar sobrecarga visual.
-    </p>
-
-    <section class="ff-accordion" data-ff-accordion data-ff-accordion-single>
-    <details class="ff-person-detail__section ff-accordion__item" open>
-      <summary class="ff-accordion__summary">Empresas relacionadas</summary>
-      <div class="ff-person-detail__section-content ff-accordion__content">
-        <div class="ff-page-head ff-person-detail__section-head">
-          <p class="ff-muted">Consulta y actualiza vínculos activos e históricos.</p>
-          <button id="person-relation-add" class="ff-btn ff-btn--primary ff-btn--sm" type="button">Añadir relación</button>
+    <section class="ff-person-detail__section" open>
+      <summary>Completitud</summary>
+      <div class="ff-person-detail__section-content">
+        <div class="ff-person-detail__completion">
+          <div class="ff-person-detail__completion-bar">
+            <div id="person-completion-progress" class="ff-person-detail__completion-fill" style="width:0%"></div>
+          </div>
+          <p id="person-completion-title" class="ff-muted">Calculando completitud...</p>
         </div>
+        <div id="person-completion-flags" class="ff-person-detail__flags"></div>
+      </div>
+    </section>
+
+    <section class="ff-person-detail__section" open>
+      <summary>Empresas relacionadas</summary>
+      <div class="ff-person-detail__section-content">
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>
@@ -48,46 +52,26 @@
                 <th>Estado</th>
                 <th>Fecha inicio</th>
                 <th>Fecha fin</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="person-relations-table">
-              <tr><td colspan="6" class="ff-muted">Cargando relaciones...</td></tr>
+              <tr><td colspan="5" class="ff-muted">Cargando relaciones...</td></tr>
             </tbody>
           </table>
         </div>
-
-        <div id="person-relation-form-wrap" class="ff-person-detail__form-wrap" style="display:none;">
-          <form id="person-relation-form" class="ff-form">
-            <label>Empresa (ID)
-              <input class="ff-input" name="company_id" required />
-            </label>
-            <label>Tipo de relación
-              <select class="ff-input" name="relation_type">
-                <option value="owner">owner</option>
-                <option value="employee">employee</option>
-                <option value="other">other</option>
-              </select>
-            </label>
-            <label>Fecha inicio
-              <input class="ff-input" type="date" name="start_date" required />
-            </label>
-            <label>Notas
-              <textarea class="ff-input" name="notes" rows="2"></textarea>
-            </label>
-            <div class="ff-filters__actions">
-              <button class="ff-btn ff-btn--primary" type="submit">Guardar</button>
-              <button id="person-relation-cancel" class="ff-btn ff-btn--ghost" type="button">Cancelar</button>
-            </div>
-          </form>
-          <p id="person-relation-message" class="ff-form-message"></p>
-        </div>
       </div>
-    </details>
+    </section>
 
-    <details class="ff-person-detail__section ff-accordion__item">
-      <summary class="ff-accordion__summary">Expedientes</summary>
-      <div class="ff-person-detail__section-content ff-accordion__content">
+    <section class="ff-person-detail__section" open>
+      <summary>Empleado vinculado</summary>
+      <div class="ff-person-detail__section-content" id="person-employee-block">
+        <p class="ff-muted">Cargando empleado...</p>
+      </div>
+    </section>
+
+    <section class="ff-person-detail__section" open>
+      <summary>Expedientes</summary>
+      <div class="ff-person-detail__section-content">
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>
@@ -96,28 +80,30 @@
                 <th>Tipo</th>
                 <th>Empresa</th>
                 <th>Estado</th>
+                <th>Vencimiento</th>
+                <th>Enlace</th>
               </tr>
             </thead>
             <tbody id="person-cases-table">
-              <tr><td colspan="4" class="ff-muted">Cargando expedientes...</td></tr>
+              <tr><td colspan="6" class="ff-muted">Cargando expedientes...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
-    </details>
+    </section>
 
-    <details class="ff-person-detail__section ff-accordion__item">
-      <summary class="ff-accordion__summary">Documentos</summary>
-      <div class="ff-person-detail__section-content ff-accordion__content">
+    <section class="ff-person-detail__section" open>
+      <summary>Documentos</summary>
+      <div class="ff-person-detail__section-content">
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>
               <tr>
-                <th>Archivo</th>
+                <th>Nombre</th>
                 <th>Tipo</th>
                 <th>Estado</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
+                <th>Contexto</th>
+                <th>Enlace</th>
               </tr>
             </thead>
             <tbody id="person-documents-table">
@@ -126,32 +112,11 @@
           </table>
         </div>
       </div>
-    </details>
+    </section>
 
-    <details class="ff-person-detail__section ff-accordion__item">
-      <summary class="ff-accordion__summary">Acceso Frontoffice</summary>
-      <div class="ff-person-detail__section-content ff-accordion__content">
-        <section class="ff-person-detail__portal">
-          <p id="person-portal-user-status" class="ff-muted">Comprobando acceso portal...</p>
-          <form id="person-portal-user-form" class="ff-form">
-            <label>Email acceso portal
-              <input class="ff-input" type="email" name="email" required />
-            </label>
-            <label>Password inicial
-              <input class="ff-input" type="password" name="password" minlength="8" required />
-            </label>
-            <div class="ff-filters__actions">
-              <button class="ff-btn ff-btn--primary" type="submit">Crear / actualizar acceso portal</button>
-            </div>
-            <p id="person-portal-user-message" class="ff-form-message" aria-live="polite"></p>
-          </form>
-        </section>
-      </div>
-    </details>
-
-    <details class="ff-person-detail__section ff-accordion__item">
-      <summary class="ff-accordion__summary">Solicitudes</summary>
-      <div class="ff-person-detail__section-content ff-accordion__content">
+    <section class="ff-person-detail__section" open>
+      <summary>Solicitudes</summary>
+      <div class="ff-person-detail__section-content">
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>
@@ -160,7 +125,7 @@
                 <th>Tipo</th>
                 <th>Estado</th>
                 <th>Fecha límite</th>
-                <th>Acciones</th>
+                <th>Resolución</th>
               </tr>
             </thead>
             <tbody id="person-requests-table">
@@ -168,53 +133,39 @@
             </tbody>
           </table>
         </div>
-
-        <h4 class="ff-person-detail__section-head ff-person-detail__subhead">Crear solicitud</h4>
-        <form id="person-request-form" class="ff-form">
-          <label>Tipo
-            <select class="ff-input" name="request_type">
-              <option value="upload_document">upload_document</option>
-              <option value="complete_profile">complete_profile</option>
-              <option value="confirm_information">confirm_information</option>
-              <option value="provide_data">provide_data</option>
-              <option value="other">other</option>
-            </select>
-          </label>
-          <label>Título
-            <input class="ff-input" name="title" required />
-          </label>
-          <label>Descripción
-            <textarea class="ff-input" name="description" rows="2"></textarea>
-          </label>
-          <label>Fecha límite
-            <input class="ff-input" type="date" name="due_date" />
-          </label>
-          <label>Tipo resolución
-            <select class="ff-input" name="resolution_type">
-              <option value="document_upload">document_upload</option>
-              <option value="form_submission">form_submission</option>
-              <option value="confirm_information">confirm_information</option>
-              <option value="manual_review">manual_review</option>
-            </select>
-          </label>
-          <label>Expediente (opcional)
-            <input class="ff-input" name="case_id" />
-          </label>
-          <label>Empresa (opcional)
-            <input class="ff-input" name="company_id" />
-          </label>
-          <label>Empleado (opcional)
-            <input class="ff-input" name="employee_id" />
-          </label>
-          <div class="ff-filters__actions">
-            <button class="ff-btn ff-btn--primary" type="submit">Crear solicitud</button>
-          </div>
-          <p id="person-request-message" class="ff-form-message"></p>
-        </form>
       </div>
-    </details>
     </section>
 
+    <section class="ff-person-detail__section" open>
+      <summary>Acceso portal</summary>
+      <div class="ff-person-detail__section-content">
+        <div id="person-portal-user-status" class="ff-muted">Comprobando acceso portal...</div>
+        <div class="ff-filters__actions" style="margin-top:12px;">
+          <button id="portal-create-action" class="ff-btn ff-btn--primary ff-btn--sm" type="button">Crear/actualizar acceso</button>
+          <button id="portal-disable-action" class="ff-btn ff-btn--ghost ff-btn--sm" type="button">Desactivar</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="ff-person-detail__section" open>
+      <summary>Auditoría reciente</summary>
+      <div class="ff-person-detail__section-content">
+        <div class="ff-table-wrap">
+          <table class="ff-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Acción</th>
+                <th>Entidad</th>
+              </tr>
+            </thead>
+            <tbody id="person-audit-table">
+              <tr><td colspan="3" class="ff-muted">Cargando auditoría...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </div>
 </section>
 {% endblock %}

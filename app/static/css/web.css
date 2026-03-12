@@ -507,3 +507,8 @@
 [data-theme="dark"] .ff-person-detail__tile {
   background: var(--ff-surface-2);
 }
+
+.ff-person-detail__completion{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.ff-person-detail__completion-bar{height:10px;border-radius:999px;background:rgba(15,23,42,.1);overflow:hidden}
+.ff-person-detail__completion-fill{height:100%;background:linear-gradient(90deg,#18a0fb,#67b36a)}
+.ff-person-detail__flags{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}

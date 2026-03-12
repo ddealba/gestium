@@ -11,6 +11,7 @@ from app.common.responses import ok
 from app.common.tenant import tenant_required
 from app.extensions import db
 from app.modules.person.person_schemas import PersonCreateRequest, PersonResponseSchema, PersonUpdateRequest
+from app.modules.person.person_overview_service import PersonOverviewService
 from app.modules.person.person_service import PersonService
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
@@ -61,6 +62,15 @@ def get_person(person_id: str):
     service = PersonService()
     person = service.get_person(str(g.client_id), person_id)
     return ok({"person": PersonResponseSchema.dump(person)})
+
+
+@bp.get("/persons/<person_id>/overview")
+@auth_required
+@tenant_required
+@require_permission("person.read")
+def get_person_overview(person_id: str):
+    overview = PersonOverviewService().build_overview(str(g.client_id), person_id)
+    return ok(overview)
 
 
 @bp.post("/persons")
@@ -182,6 +192,41 @@ def upsert_person_portal_user(person_id: str):
                 "status": target.status,
                 "person_id": target.person_id,
                 "user_type": target.user_type,
+            }
+        }
+    )
+
+
+@bp.post("/persons/<person_id>/portal-user/disable")
+@auth_required
+@tenant_required
+@require_permission("tenant.user.manage")
+def disable_person_portal_user(person_id: str):
+    person = PersonService().get_person(str(g.client_id), person_id)
+    user = (
+        UserRepository()
+        .session.query(User)
+        .filter(
+            User.client_id == str(g.client_id),
+            User.person_id == person.id,
+            User.user_type == "portal",
+        )
+        .order_by(User.created_at.desc())
+        .first()
+    )
+    if user is None:
+        raise BadRequest("portal_user_not_found")
+    user.status = "disabled"
+    db.session.add(user)
+    db.session.commit()
+    return ok(
+        {
+            "portal_user": {
+                "id": user.id,
+                "email": user.email,
+                "status": user.status,
+                "person_id": user.person_id,
+                "user_type": user.user_type,
             }
         }
     )
