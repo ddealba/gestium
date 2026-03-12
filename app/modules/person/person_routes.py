@@ -10,6 +10,7 @@ from app.common.decorators import auth_required, require_permission
 from app.common.responses import ok
 from app.common.tenant import tenant_required
 from app.extensions import db
+from app.modules.person.person_completeness_service import PersonCompletenessService
 from app.modules.person.person_schemas import PersonCreateRequest, PersonResponseSchema, PersonUpdateRequest
 from app.modules.person.person_overview_service import PersonOverviewService
 from app.modules.person.person_service import PersonService
@@ -71,6 +72,37 @@ def get_person(person_id: str):
 def get_person_overview(person_id: str):
     overview = PersonOverviewService().build_overview(str(g.client_id), person_id)
     return ok(overview)
+
+
+
+
+@bp.get("/persons/<person_id>/completeness")
+@auth_required
+@tenant_required
+@require_permission("person.read")
+def get_person_completeness(person_id: str):
+    PersonService().get_person(str(g.client_id), person_id)
+    completeness = PersonCompletenessService().get_person_completeness(person_id, str(g.client_id))
+    return ok({"completeness": completeness})
+
+
+@bp.post("/persons/<person_id>/generate-requests")
+@auth_required
+@tenant_required
+@require_permission("person.write")
+def generate_person_requests(person_id: str):
+    PersonService().get_person(str(g.client_id), person_id)
+    payload = request.get_json(silent=True) or {}
+    force_regenerate = bool(payload.get("force_regenerate", False))
+    service = PersonCompletenessService()
+    created = service.generate_pending_requests(
+        client_id=str(g.client_id),
+        person_id=person_id,
+        actor_user_id=str(g.user.id),
+        force_regenerate=force_regenerate,
+    )
+    db.session.commit()
+    return ok({"created": len(created), "requests": [{"id": item.id, "title": item.title, "type": item.request_type} for item in created]})
 
 
 @bp.post("/persons")
@@ -183,6 +215,8 @@ def upsert_person_portal_user(person_id: str):
         target.password_hash = generate_password_hash(password)
         user_repo.update(target)
 
+    completeness_service = PersonCompletenessService()
+    completeness_service.recalculate_person_status(person, actor_user_id=str(g.user.id))
     db.session.commit()
     return ok(
         {
@@ -218,6 +252,7 @@ def disable_person_portal_user(person_id: str):
         raise BadRequest("portal_user_not_found")
     user.status = "disabled"
     db.session.add(user)
+    PersonCompletenessService().recalculate_person_status(person, actor_user_id=str(g.user.id))
     db.session.commit()
     return ok(
         {

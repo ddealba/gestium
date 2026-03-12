@@ -505,3 +505,103 @@ def test_dashboard_summary_uses_aggregated_queries(monkeypatch):
 
     assert summary["pending_requests"] == 7
     assert summary["companies_count"] == 2
+
+def test_portal_profile_patch_updates_only_own_profile_and_recalculates(client, app):
+    with app.app_context():
+        db.create_all()
+
+        tenant = Client(name=f"Tenant Profile {uuid.uuid4()}", status="active")
+        db.session.add(tenant)
+        db.session.flush()
+
+        person = Person(
+            client_id=tenant.id,
+            first_name="Portal",
+            last_name="Editable",
+            document_type="dni",
+            document_number="PE1",
+            email="portal.edit@example.com",
+            status="pending_info",
+        )
+        db.session.add(person)
+        db.session.flush()
+
+        user = User(
+            client_id=tenant.id,
+            email="portal.edit.user@example.com",
+            status="active",
+            user_type="portal",
+            person_id=person.id,
+            password_hash="x",
+        )
+        db.session.add(user)
+        db.session.flush()
+
+        db.session.add(Document(client_id=tenant.id, person_id=person.id, original_filename="dni.pdf", storage_path="/tmp/dni.pdf", doc_type="dni", status="processed"))
+
+        db.session.add(
+            PersonRequest(
+                client_id=tenant.id,
+                person_id=person.id,
+                request_type="complete_profile",
+                title="Completa tu teléfono",
+                status="pending",
+                resolution_type="form_submission",
+                resolution_payload={"auto_need_key": "field:phone", "field": "phone"},
+            )
+        )
+        db.session.commit()
+
+        token = create_access_token(user.id, tenant.id)
+        response = client.patch(
+            "/portal/api/profile",
+            headers=_auth_header(token),
+            json={
+                "phone": "+34111111111",
+                "address_line1": "Calle 1",
+                "city": "Madrid",
+                "postal_code": "28001",
+                "country": "ES",
+            },
+        )
+        assert response.status_code == 200
+        payload = response.get_json()
+        assert payload["phone"] == "+34111111111"
+        assert payload["completeness"]["status"] in {"pending_info", "active"}
+
+        request_row = db.session.query(PersonRequest).filter(PersonRequest.person_id == person.id).one()
+        assert request_row.status == "resolved"
+
+
+def test_portal_profile_patch_forbidden_fields_ignored_and_tenant_isolation(client, app):
+    with app.app_context():
+        db.create_all()
+
+        tenant_a = Client(name=f"Tenant A Profile {uuid.uuid4()}", status="active")
+        tenant_b = Client(name=f"Tenant B Profile {uuid.uuid4()}", status="active")
+        db.session.add_all([tenant_a, tenant_b])
+        db.session.flush()
+
+        person_a = Person(client_id=tenant_a.id, first_name="A", last_name="One", document_number="A-P", email="a@ex.com", status="draft")
+        person_b = Person(client_id=tenant_b.id, first_name="B", last_name="Two", document_number="B-P", email="b@ex.com", status="draft")
+        db.session.add_all([person_a, person_b])
+        db.session.flush()
+
+        user_a = User(client_id=tenant_a.id, email="a.portal@ex.com", status="active", user_type="portal", person_id=person_a.id, password_hash="x")
+        db.session.add(user_a)
+        db.session.commit()
+
+        token_a = create_access_token(user_a.id, tenant_a.id)
+        response = client.patch(
+            "/portal/api/profile",
+            headers=_auth_header(token_a),
+            json={"document_number": "CANNOT", "first_name": "Hack", "city": "Sevilla"},
+        )
+        assert response.status_code == 200
+
+        db.session.refresh(person_a)
+        db.session.refresh(person_b)
+        assert person_a.document_number == "A-P"
+        assert person_a.first_name == "A"
+        assert person_a.city == "Sevilla"
+        assert person_b.city is None

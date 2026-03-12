@@ -12,6 +12,10 @@ def serialize_profile(person) -> dict:
         "email": person.email,
         "phone": person.phone,
         "address": person.address_line1,
+        "address_line1": person.address_line1,
+        "city": person.city,
+        "postal_code": person.postal_code,
+        "country": person.country,
         "status": person.status,
     }
 

@@ -11,6 +11,7 @@ from app.models.employee import Employee
 from app.models.person_request import PersonRequest
 from app.models.user import User
 from app.modules.audit.models import AuditLog
+from app.modules.person.person_completeness_service import PersonCompletenessService
 from app.modules.person.person_repository import PersonRepository
 from app.modules.person.person_schemas import PersonResponseSchema
 from app.modules.person_company_relation.relation_repository import PersonCompanyRelationRepository
@@ -27,6 +28,7 @@ class PersonOverviewService:
         self.person_repository = person_repository or PersonRepository()
         self.relation_repository = relation_repository or PersonCompanyRelationRepository()
         self.session = db.session
+        self.completeness_service = PersonCompletenessService()
 
     def build_overview(self, client_id: str, person_id: str) -> dict:
         person = self.person_repository.get_person_by_id(person_id, client_id)
@@ -45,7 +47,7 @@ class PersonOverviewService:
 
         return {
             "person": person_payload,
-            "completeness": self._build_completeness(person_payload, portal_user),
+            "completeness": self.completeness_service.get_person_completeness(person.id, client_id),
             "companies": [
                 {
                     "relation_id": relation.id,
@@ -65,29 +67,6 @@ class PersonOverviewService:
             "portal_access": self._build_portal_access(portal_user),
             "audit": self._list_audit(client_id, person.id),
         }
-
-    def _build_completeness(self, person_payload: dict, portal_user: User | None) -> dict:
-        basic_complete = all(
-            [
-                bool(person_payload.get("first_name")),
-                bool(person_payload.get("last_name")),
-                bool(person_payload.get("document_number")),
-                bool(person_payload.get("address_line1")),
-                bool(person_payload.get("city")),
-                bool(person_payload.get("country")),
-                bool(person_payload.get("status")),
-            ]
-        )
-        flags = {
-            "basic_data_complete": basic_complete,
-            "identification_document_present": bool(person_payload.get("document_number")),
-            "email_present": bool(person_payload.get("email")),
-            "phone_present": bool(person_payload.get("phone")),
-            "portal_access_created": portal_user is not None,
-        }
-        score = sum(1 for value in flags.values() if value)
-        percentage = int(round((score / len(flags)) * 100)) if flags else 0
-        return {**flags, "completion_percentage": percentage}
 
     def _get_portal_user(self, client_id: str, person_id: str) -> User | None:
         return (

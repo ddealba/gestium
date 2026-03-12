@@ -153,6 +153,20 @@ def portal_api_me():
     return ok(PortalService().get_portal_profile(_portal_context()))
 
 
+
+
+@bp.patch("/portal/api/profile")
+@auth_required
+@tenant_required
+@portal_user_required
+def portal_api_profile_update():
+    context = _portal_context()
+    payload = request.get_json(silent=True) or {}
+    updated = PortalService().update_portal_profile(context, payload, actor_user_id=str(g.user.id))
+    PortalAuditService().log("portal_profile_updated", context, "person", context.person_id, metadata={"updated_fields": sorted(payload.keys())})
+    return ok(updated)
+
+
 @bp.get("/portal/api/home")
 @auth_required
 @tenant_required
