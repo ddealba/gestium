@@ -56,20 +56,8 @@ def portal_login():
 @tenant_required
 @require_user_type("portal")
 def portal_home():
-    service = FrontofficeService()
-    summary = service.get_portal_summary(g.user, str(g.client_id))
-    request_summary = PersonRequestService().portal_dashboard_summary(g.user, str(g.client_id))
-    documents = service.get_portal_documents(g.user, str(g.client_id))
-    cases = service.get_portal_cases(g.user, str(g.client_id))
-    return render_template(
-        "frontoffice/home.html",
-        summary={
-            **summary,
-            **request_summary,
-            "recent_documents": documents[:5],
-            "recent_cases": cases[:5],
-        },
-    )
+    payload = FrontofficeService().get_portal_home(g.user, str(g.client_id))
+    return render_template("frontoffice/home.html", home=payload)
 
 
 @bp.get("/portal/profile")
@@ -172,6 +160,17 @@ def portal_company_detail(company_id: str):
 @require_user_type("portal")
 def portal_api_me():
     payload = FrontofficeService().get_portal_profile(g.user, str(g.client_id))
+    return ok(payload)
+
+
+
+
+@bp.get("/portal/api/home")
+@auth_required
+@tenant_required
+@require_user_type("portal")
+def portal_api_home():
+    payload = FrontofficeService().get_portal_home(g.user, str(g.client_id))
     return ok(payload)
 
 
