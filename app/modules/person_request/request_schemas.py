@@ -10,7 +10,7 @@ from werkzeug.exceptions import BadRequest
 from app.models.person_request import PersonRequest
 
 REQUEST_TYPES = {"complete_profile", "upload_document", "confirm_information", "provide_data", "other"}
-REQUEST_STATUSES = {"pending", "in_progress", "resolved", "cancelled", "expired"}
+REQUEST_STATUSES = {"pending", "submitted", "in_review", "resolved", "rejected", "cancelled", "expired"}
 RESOLUTION_TYPES = {"manual_review", "document_upload", "form_submission", "auto_resolved", "confirm_information"}
 
 
@@ -105,6 +105,30 @@ class PersonRequestUpdateRequest:
         return cls(**values)
 
 
+
+
+@dataclass(frozen=True)
+class PersonRequestReviewRequest:
+    review_notes: str | None = None
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "PersonRequestReviewRequest":
+        return cls(review_notes=_optional_text(payload.get("review_notes")))
+
+
+@dataclass(frozen=True)
+class PersonRequestRejectRequest:
+    rejection_reason: str
+    review_notes: str | None = None
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "PersonRequestRejectRequest":
+        return cls(
+            rejection_reason=_required_text(payload.get("rejection_reason"), "rejection_reason"),
+            review_notes=_optional_text(payload.get("review_notes")),
+        )
+
+
 @dataclass(frozen=True)
 class PersonRequestSubmitRequest:
     payload: dict
@@ -134,6 +158,10 @@ class PersonRequestResponseSchema:
             "due_date": _format_date(item.due_date),
             "resolution_type": item.resolution_type,
             "resolution_payload": item.resolution_payload,
+            "review_notes": item.review_notes,
+            "rejection_reason": item.rejection_reason,
+            "submitted_at": _format_datetime(item.submitted_at),
+            "reviewed_at": _format_datetime(item.reviewed_at),
             "created_by": item.created_by,
             "resolved_by": item.resolved_by,
             "created_at": _format_datetime(item.created_at),

@@ -63,7 +63,7 @@ class PersonRequestService:
         self.audit_service.log_action(
             client_id=client_id,
             actor_user_id=actor_user_id,
-            action="person_request_created",
+            action="request_created",
             entity_type="person_request",
             entity_id=item.id,
             metadata={"person_id": person_id, "request_type": payload.request_type},
@@ -86,7 +86,7 @@ class PersonRequestService:
         item = self.repository.get_by_id(client_id, request_id)
         if item is None:
             raise NotFound("person_request_not_found")
-        return item
+        return self._with_expired_state(item)
 
     def update_person_request(
         self,
@@ -102,11 +102,31 @@ class PersonRequestService:
         if payload.due_date is not None:
             item.due_date = payload.due_date
         if payload.status is not None:
-            if item.status == "resolved" and payload.status == "cancelled":
-                raise BadRequest("cannot_cancel_resolved_request")
+            self._validate_transition(item.status, payload.status, actor="backoffice")
             item.status = payload.status
         if payload.resolution_type is not None:
             item.resolution_type = payload.resolution_type
+        return item
+
+    def submit_review(
+        self,
+        client_id: str,
+        request_id: str,
+        actor_user_id: str | None,
+        review_notes: str | None = None,
+    ) -> PersonRequest:
+        item = self.get_person_request(client_id, request_id)
+        self._validate_transition(item.status, "in_review", actor="backoffice")
+        item.status = "in_review"
+        item.review_notes = review_notes
+        item.reviewed_at = datetime.now(timezone.utc)
+        self.audit_service.log_action(
+            client_id=client_id,
+            actor_user_id=actor_user_id,
+            action="request_review_started",
+            entity_type="person_request",
+            entity_id=item.id,
+        )
         return item
 
     def resolve_person_request(
@@ -115,47 +135,71 @@ class PersonRequestService:
         request_id: str,
         actor_user_id: str | None,
         resolution_payload: dict | None = None,
-        status: str = "resolved",
-        audit_action: str = "person_request_resolved",
+        review_notes: str | None = None,
     ) -> PersonRequest:
         item = self.get_person_request(client_id, request_id)
-        if item.status == "cancelled":
-            raise BadRequest("cannot_resolve_cancelled_request")
-        item.status = status
-        item.resolution_payload = resolution_payload or {}
+        self._validate_transition(item.status, "resolved", actor="backoffice")
+        item.status = "resolved"
+        if resolution_payload is not None:
+            item.resolution_payload = resolution_payload
+        item.review_notes = review_notes
+        item.rejection_reason = None
+        now = datetime.now(timezone.utc)
         item.resolved_by = actor_user_id
-        item.resolved_at = datetime.now(timezone.utc)
+        item.resolved_at = now
+        item.reviewed_at = now
         self.audit_service.log_action(
             client_id=client_id,
             actor_user_id=actor_user_id,
-            action=audit_action,
+            action="request_resolved",
             entity_type="person_request",
             entity_id=item.id,
             metadata={"status": item.status},
         )
         return item
 
-    def cancel_person_request(self, client_id: str, request_id: str, actor_user_id: str | None) -> PersonRequest:
+    def reject_person_request(
+        self,
+        client_id: str,
+        request_id: str,
+        actor_user_id: str | None,
+        rejection_reason: str,
+        review_notes: str | None = None,
+    ) -> PersonRequest:
         item = self.get_person_request(client_id, request_id)
-        if item.status == "resolved":
-            raise BadRequest("cannot_cancel_resolved_request")
-        item.status = "cancelled"
+        self._validate_transition(item.status, "rejected", actor="backoffice")
+        item.status = "rejected"
+        item.rejection_reason = rejection_reason
+        item.review_notes = review_notes
+        item.reviewed_at = datetime.now(timezone.utc)
         self.audit_service.log_action(
             client_id=client_id,
             actor_user_id=actor_user_id,
-            action="person_request_cancelled",
+            action="request_rejected",
             entity_type="person_request",
             entity_id=item.id,
         )
         return item
 
+    def cancel_person_request(self, client_id: str, request_id: str, actor_user_id: str | None) -> PersonRequest:
+        item = self.get_person_request(client_id, request_id)
+        self._validate_transition(item.status, "cancelled", actor="backoffice")
+        item.status = "cancelled"
+        self.audit_service.log_action(
+            client_id=client_id,
+            actor_user_id=actor_user_id,
+            action="request_cancelled",
+            entity_type="person_request",
+            entity_id=item.id,
+        )
+        return item
 
     def portal_dashboard_summary(self, user, client_id: str) -> dict:
         person_id = self._require_portal_person(user)
-        items = self.repository.list_person_requests(client_id, person_id)
+        items = [self._with_expired_state(item) for item in self.repository.list_person_requests(client_id, person_id)]
         now = datetime.now(timezone.utc).date()
-        pending = [item for item in items if item.status in {"pending", "in_progress"}]
-        overdue = [item for item in pending if item.due_date and item.due_date < now]
+        pending = [item for item in items if item.status in {"pending", "submitted", "in_review", "rejected"}]
+        overdue = [item for item in items if item.status == "expired" or (item.status == "pending" and item.due_date and item.due_date < now)]
         resolved_recent = [item for item in items if item.status == "resolved"][:5]
         return {
             "pending_requests": len(pending),
@@ -165,14 +209,14 @@ class PersonRequestService:
 
     def portal_list_requests(self, user, client_id: str, status: str | None = None) -> list[PersonRequest]:
         person_id = self._require_portal_person(user)
-        return self.list_person_requests(client_id, person_id, status=status)
+        return [self._with_expired_state(item) for item in self.list_person_requests(client_id, person_id, status=status)]
 
     def portal_get_request(self, user, client_id: str, request_id: str) -> PersonRequest:
         person_id = self._require_portal_person(user)
         item = self.get_person_request(client_id, request_id)
         if item.person_id != person_id:
             raise Forbidden("portal_request_forbidden")
-        return item
+        return self._with_expired_state(item)
 
     def portal_submit_request(
         self,
@@ -182,20 +226,24 @@ class PersonRequestService:
         payload: PersonRequestSubmitRequest,
     ) -> PersonRequest:
         item = self.portal_get_request(user, client_id, request_id)
-        target_status = "resolved" if item.resolution_type in {"form_submission", "confirm_information", "auto_resolved"} else "in_progress"
-        return self.resolve_person_request(
+        self._validate_transition(item.status, "submitted", actor="portal")
+        item.status = "submitted"
+        item.resolution_payload = payload.payload
+        item.submitted_at = datetime.now(timezone.utc)
+        self.audit_service.log_action(
             client_id=client_id,
-            request_id=request_id,
             actor_user_id=str(user.id),
-            resolution_payload=payload.payload,
-            status=target_status,
-            audit_action="portal_request_submitted",
+            action="request_submitted",
+            entity_type="person_request",
+            entity_id=item.id,
         )
+        return item
 
     def portal_upload_request(self, user, client_id: str, request_id: str, file: FileStorage) -> PersonRequest:
         item = self.portal_get_request(user, client_id, request_id)
         if item.resolution_type != "document_upload":
             raise BadRequest("invalid_resolution_type")
+        self._validate_transition(item.status, "submitted", actor="portal")
 
         document = self.document_service.upload_document(
             client_id=client_id,
@@ -209,14 +257,54 @@ class PersonRequestService:
             status="pending",
         )
         db.session.flush()
-        return self.resolve_person_request(
+        item.status = "submitted"
+        item.submitted_at = datetime.now(timezone.utc)
+        item.resolution_payload = {"document_id": document.id, "file_name": document.original_filename}
+        self.audit_service.log_action(
             client_id=client_id,
-            request_id=request_id,
             actor_user_id=str(user.id),
-            resolution_payload={"document_id": document.id, "file_name": document.original_filename},
-            status="resolved",
-            audit_action="portal_request_file_uploaded",
+            action="request_submitted",
+            entity_type="person_request",
+            entity_id=item.id,
         )
+        return item
+
+    @staticmethod
+    def _validate_transition(current_status: str, target_status: str, actor: str) -> None:
+        transitions_backoffice = {
+            "pending": {"in_review", "resolved", "rejected", "cancelled", "expired"},
+            "submitted": {"in_review", "resolved", "rejected", "cancelled"},
+            "in_review": {"resolved", "rejected", "cancelled", "pending"},
+            "rejected": {"in_review", "cancelled", "pending"},
+            "expired": {"cancelled", "pending"},
+            "resolved": set(),
+            "cancelled": set(),
+        }
+        transitions_portal = {
+            "pending": {"submitted"},
+            "rejected": {"submitted"},
+        }
+
+        if actor == "portal":
+            allowed = transitions_portal.get(current_status, set())
+            if target_status not in allowed:
+                raise BadRequest("invalid_status_transition")
+            return
+
+        allowed = transitions_backoffice.get(current_status, set())
+        if target_status not in allowed:
+            if target_status == "cancelled" and current_status == "resolved":
+                raise BadRequest("cannot_cancel_resolved_request")
+            if target_status == "resolved" and current_status == "cancelled":
+                raise BadRequest("cannot_resolve_cancelled_request")
+            raise BadRequest("invalid_status_transition")
+
+    @staticmethod
+    def _with_expired_state(item: PersonRequest) -> PersonRequest:
+        today = datetime.now(timezone.utc).date()
+        if item.status == "pending" and item.due_date and item.due_date < today:
+            item.status = "expired"
+        return item
 
     @staticmethod
     def _require_portal_person(user) -> str:

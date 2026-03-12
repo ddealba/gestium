@@ -11,7 +11,9 @@ from app.common.tenant import tenant_required
 from app.extensions import db
 from app.modules.person_request.request_schemas import (
     PersonRequestCreateRequest,
+    PersonRequestRejectRequest,
     PersonRequestResponseSchema,
+    PersonRequestReviewRequest,
     PersonRequestSubmitRequest,
     PersonRequestUpdateRequest,
 )
@@ -67,12 +69,13 @@ def update_person_request(request_id: str):
     return ok({"request": PersonRequestResponseSchema.dump(item)})
 
 
-@bp.post("/person-requests/<request_id>/cancel")
+@bp.post("/person-requests/<request_id>/submit-review")
 @auth_required
 @tenant_required
 @require_permission("person.write")
-def cancel_person_request(request_id: str):
-    item = PersonRequestService().cancel_person_request(str(g.client_id), request_id, str(g.user.id))
+def submit_person_request_review(request_id: str):
+    payload = PersonRequestReviewRequest.from_dict(request.get_json(silent=True) or {})
+    item = PersonRequestService().submit_review(str(g.client_id), request_id, str(g.user.id), payload.review_notes)
     db.session.commit()
     return ok({"request": PersonRequestResponseSchema.dump(item)})
 
@@ -87,9 +90,36 @@ def resolve_person_request(request_id: str):
         client_id=str(g.client_id),
         request_id=request_id,
         actor_user_id=str(g.user.id),
-        resolution_payload=raw_payload.get("payload") if isinstance(raw_payload.get("payload"), dict) else {},
-        status=raw_payload.get("status") or "resolved",
+        resolution_payload=raw_payload.get("payload") if isinstance(raw_payload.get("payload"), dict) else None,
+        review_notes=raw_payload.get("review_notes"),
     )
+    db.session.commit()
+    return ok({"request": PersonRequestResponseSchema.dump(item)})
+
+
+@bp.post("/person-requests/<request_id>/reject")
+@auth_required
+@tenant_required
+@require_permission("person.write")
+def reject_person_request(request_id: str):
+    payload = PersonRequestRejectRequest.from_dict(request.get_json(silent=True) or {})
+    item = PersonRequestService().reject_person_request(
+        client_id=str(g.client_id),
+        request_id=request_id,
+        actor_user_id=str(g.user.id),
+        rejection_reason=payload.rejection_reason,
+        review_notes=payload.review_notes,
+    )
+    db.session.commit()
+    return ok({"request": PersonRequestResponseSchema.dump(item)})
+
+
+@bp.post("/person-requests/<request_id>/cancel")
+@auth_required
+@tenant_required
+@require_permission("person.write")
+def cancel_person_request(request_id: str):
+    item = PersonRequestService().cancel_person_request(str(g.client_id), request_id, str(g.user.id))
     db.session.commit()
     return ok({"request": PersonRequestResponseSchema.dump(item)})
 
