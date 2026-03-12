@@ -491,17 +491,25 @@ def test_dashboard_summary_uses_aggregated_queries(monkeypatch):
         def count_visible_companies(self, person_id, client_id):
             return 2
 
+        def count_recent_visible_documents(self, person_id, client_id, since):
+            return 5
+
+        def count_open_visible_cases(self, person_id, client_id):
+            return 3
+
         def get_visible_requests(self, person_id, client_id):
             return []
 
         def get_visible_documents(self, person_id, client_id):
-            return []
+            raise AssertionError("summary must not load full document list")
 
         def get_visible_cases(self, person_id, client_id):
-            return []
+            raise AssertionError("summary must not load full case list")
 
     service = PortalDashboardService(visibility_service=FakeVisibility())
     summary = service.get_portal_home_summary("person-1", "client-1")
 
     assert summary["pending_requests"] == 7
+    assert summary["recent_documents"] == 5
+    assert summary["open_cases"] == 3
     assert summary["companies_count"] == 2

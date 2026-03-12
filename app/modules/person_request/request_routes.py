@@ -5,7 +5,7 @@ from __future__ import annotations
 from flask import Blueprint, g, request
 from werkzeug.exceptions import BadRequest
 
-from app.common.decorators import auth_required, require_permission, require_user_type
+from app.common.decorators import auth_required, portal_user_required, require_permission
 from app.common.responses import ok
 from app.common.tenant import tenant_required
 from app.extensions import db
@@ -127,7 +127,7 @@ def cancel_person_request(request_id: str):
 @bp.get("/portal/api/requests")
 @auth_required
 @tenant_required
-@require_user_type("portal")
+@portal_user_required
 def portal_list_requests():
     items = PersonRequestService().portal_list_requests(g.user, str(g.client_id), status=request.args.get("status"))
     return ok([PersonRequestResponseSchema.dump(item) for item in items])
@@ -136,7 +136,7 @@ def portal_list_requests():
 @bp.get("/portal/api/requests/<request_id>")
 @auth_required
 @tenant_required
-@require_user_type("portal")
+@portal_user_required
 def portal_get_request(request_id: str):
     item = PersonRequestService().portal_get_request(g.user, str(g.client_id), request_id)
     return ok(PersonRequestResponseSchema.dump(item))
@@ -145,7 +145,7 @@ def portal_get_request(request_id: str):
 @bp.post("/portal/api/requests/<request_id>/submit")
 @auth_required
 @tenant_required
-@require_user_type("portal")
+@portal_user_required
 def portal_submit_request(request_id: str):
     payload = PersonRequestSubmitRequest.from_dict(request.get_json(silent=True) or {})
     item = PersonRequestService().portal_submit_request(g.user, str(g.client_id), request_id, payload)
@@ -156,7 +156,7 @@ def portal_submit_request(request_id: str):
 @bp.post("/portal/api/requests/<request_id>/upload")
 @auth_required
 @tenant_required
-@require_user_type("portal")
+@portal_user_required
 def portal_upload_request(request_id: str):
     file = request.files.get("file")
     if file is None:
