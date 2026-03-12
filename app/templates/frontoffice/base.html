@@ -72,6 +72,123 @@
         font-weight: 700;
         color: var(--ff-primary);
       }
+
+      .ff-portal-home-grid {
+        display: grid;
+        gap: 14px;
+        margin-top: 14px;
+        align-items: start;
+      }
+
+      .ff-portal-home-grid--primary {
+        grid-template-columns: minmax(0, 1.9fr) minmax(320px, 1fr);
+      }
+
+      .ff-portal-home-grid--secondary {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      }
+
+      .ff-portal-task-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .ff-portal-task-item {
+        border: 1px solid var(--ff-border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .ff-portal-task-item__title {
+        margin: 0;
+        font-weight: 700;
+        color: var(--ff-title);
+      }
+
+      .ff-portal-activity-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .ff-portal-activity-head__count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        height: 28px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(91, 82, 182, .12);
+        color: var(--ff-primary);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .ff-portal-activity-card {
+        padding-top: 10px;
+      }
+
+      .ff-portal-activity-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .ff-portal-activity-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        align-items: start;
+        padding: 8px 10px;
+        border: 1px solid rgba(91, 82, 182, .12);
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(91, 82, 182, .04), rgba(255, 255, 255, .9));
+      }
+
+      .ff-portal-activity-item__dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        margin-top: 7px;
+        background: linear-gradient(135deg, var(--ff-primary), #18a0fb);
+        box-shadow: 0 0 0 4px rgba(91, 82, 182, .12);
+      }
+
+      .ff-portal-activity-item__content {
+        min-width: 0;
+      }
+
+      .ff-portal-activity-item__link {
+        font-weight: 600;
+        color: var(--ff-title);
+        text-decoration: none;
+        line-height: 1.35;
+      }
+
+      .ff-portal-activity-item__link:hover {
+        color: var(--ff-primary);
+      }
+
+      .ff-portal-activity-item__date {
+        margin: 4px 0 0;
+        color: var(--ff-muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 960px) {
+        .ff-portal-home-grid--primary,
+        .ff-portal-home-grid--secondary {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>

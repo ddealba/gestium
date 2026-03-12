@@ -21,16 +21,16 @@
   {% endif %}
 </div>
 
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-top:14px;align-items:start;">
+<div class="ff-portal-home-grid ff-portal-home-grid--primary">
   <section class="ff-card">
     <div class="ff-card__head">Qué tengo que hacer</div>
     <div class="ff-card__body">
       {% if home.tasks %}
-        <div style="display:grid;gap:10px;">
+        <div class="ff-portal-task-list">
           {% for task in home.tasks %}
-            <article style="border:1px solid var(--ff-border);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;">
+            <article class="ff-portal-task-item">
               <div>
-                <p style="margin:0;font-weight:700;color:var(--ff-title);">{{ task.title }}</p>
+                <p class="ff-portal-task-item__title">{{ task.title }}</p>
                 <p class="ff-muted" style="margin:4px 0 0;">
                   Estado: {{ task.status }}
                   {% if task.due_date %}· Vence: {{ task.due_date }}{% endif %}
@@ -48,14 +48,20 @@
   </section>
 
   <section class="ff-card">
-    <div class="ff-card__head">Actividad reciente</div>
-    <div class="ff-card__body">
+    <div class="ff-card__head ff-portal-activity-head">
+      <span>Actividad reciente</span>
+      {% if home.activity %}<span class="ff-portal-activity-head__count">{{ home.activity|length }}</span>{% endif %}
+    </div>
+    <div class="ff-card__body ff-portal-activity-card">
       {% if home.activity %}
-        <ul style="margin:0;padding-left:16px;display:grid;gap:8px;">
+        <ul class="ff-portal-activity-list">
           {% for item in home.activity %}
-            <li>
-              <a href="{{ item.url }}" style="font-weight:600;color:var(--ff-title);text-decoration:none;">{{ item.message }}</a>
-              {% if item.date %}<p class="ff-muted" style="margin:2px 0 0;">{{ item.date[:10] }}</p>{% endif %}
+            <li class="ff-portal-activity-item">
+              <span class="ff-portal-activity-item__dot" aria-hidden="true"></span>
+              <div class="ff-portal-activity-item__content">
+                <a href="{{ item.url }}" class="ff-portal-activity-item__link">{{ item.message }}</a>
+                {% if item.date %}<p class="ff-portal-activity-item__date">{{ item.date[:10] }}</p>{% endif %}
+              </div>
             </li>
           {% endfor %}
         </ul>
@@ -66,7 +72,7 @@
   </section>
 </div>
 
-<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-top:14px;">
+<div class="ff-portal-home-grid ff-portal-home-grid--secondary">
   <section class="ff-card">
     <div class="ff-card__head">Accesos rápidos</div>
     <div class="ff-card__body" style="display:flex;flex-wrap:wrap;gap:8px;">
