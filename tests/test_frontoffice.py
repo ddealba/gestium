@@ -361,7 +361,7 @@ def test_portal_home_api_pending_tasks_and_contexts(client, app):
                 person_id=person.id,
                 request_type="confirm_information",
                 title="Confirmar datos",
-                status="in_progress",
+                status="submitted",
                 resolution_type="confirm_information",
                 due_date=today + timedelta(days=1),
             ),

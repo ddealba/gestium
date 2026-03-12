@@ -12,9 +12,18 @@
             <td>{{ item.title }}</td>
             <td>{{ item.description or '-' }}</td>
             <td>{{ item.request_type }}</td>
-            <td>{{ item.status }}</td>
+            <td>
+              {% if item.status == 'pending' %}<span class="ff-tag ff-tag--warn">Pendiente</span>
+              {% elif item.status == 'submitted' %}<span class="ff-tag ff-tag--blue">Enviada</span>
+              {% elif item.status == 'in_review' %}<span class="ff-tag ff-tag--blue">En revisión</span>
+              {% elif item.status == 'resolved' %}<span class="ff-tag ff-tag--success">Resuelta</span>
+              {% elif item.status == 'rejected' %}<span class="ff-tag ff-tag--danger">Rechazada</span>
+              {% elif item.status == 'expired' %}<span class="ff-tag ff-tag--danger">Vencida</span>
+              {% elif item.status == 'cancelled' %}<span class="ff-tag">Cancelada</span>
+              {% else %}{{ item.status }}{% endif %}
+            </td>
             <td>{{ item.due_date or '-' }}</td>
-            <td><a class="ff-btn ff-btn--soft ff-btn--sm" href="/portal/requests/{{ item.id }}">Resolver</a></td>
+            <td><a class="ff-btn ff-btn--soft ff-btn--sm" href="/portal/requests/{{ item.id }}">Ver detalle</a></td>
           </tr>
         {% else %}
           <tr><td class="ff-empty" colspan="6">Sin solicitudes por ahora.</td></tr>

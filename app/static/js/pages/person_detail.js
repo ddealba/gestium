@@ -28,7 +28,15 @@
       .replaceAll("'", '&#039;');
   };
 
-  const statusTag = (value) => `<span class="ff-tag ${value === 'active' || value === 'done' || value === 'resolved' ? 'ff-tag--success' : 'ff-tag--warn'}">${escapeHtml(value || '-')}</span>`;
+  const statusTag = (value) => {
+    const normalized = value || '-';
+    const tone = ['active', 'done', 'resolved'].includes(normalized)
+      ? 'ff-tag--success'
+      : ['cancelled', 'rejected', 'expired'].includes(normalized)
+        ? 'ff-tag--danger'
+        : 'ff-tag--warn';
+    return `<span class="ff-tag ${tone}">${escapeHtml(normalized)}</span>`;
+  };
 
   const renderPerson = (person) => {
     headerName.textContent = person.full_name || 'Detalle de persona';
@@ -120,15 +128,27 @@
 
   const renderRequests = (items) => {
     if (!items?.length) {
-      requestsTable.innerHTML = '<tr><td colspan="5" class="ff-muted">Sin solicitudes.</td></tr>';
+      requestsTable.innerHTML = '<tr><td colspan="6" class="ff-muted">Sin solicitudes.</td></tr>';
       return;
     }
+    const lastAction = (item) => item.resolved_at || item.reviewed_at || item.submitted_at || '-';
+    const actions = (item) => {
+      if (['resolved', 'cancelled'].includes(item.status)) return '-';
+      return `
+        <div class="ff-filters__actions" style="gap:6px;">
+          <button class="ff-btn ff-btn--ghost ff-btn--sm" type="button" data-request-action="review" data-request-id="${escapeHtml(item.id)}">En revisión</button>
+          <button class="ff-btn ff-btn--primary ff-btn--sm" type="button" data-request-action="resolve" data-request-id="${escapeHtml(item.id)}">Resolver</button>
+          <button class="ff-btn ff-btn--soft ff-btn--sm" type="button" data-request-action="reject" data-request-id="${escapeHtml(item.id)}">Rechazar</button>
+          <button class="ff-btn ff-btn--soft ff-btn--sm" type="button" data-request-action="cancel" data-request-id="${escapeHtml(item.id)}">Cancelar</button>
+        </div>`;
+    };
     requestsTable.innerHTML = items.map((item) => `<tr>
       <td>${escapeHtml(item.title || '-')}</td>
       <td>${escapeHtml(item.type || '-')}</td>
       <td>${statusTag(item.status)}</td>
       <td>${escapeHtml(item.due_date || '-')}</td>
-      <td>${escapeHtml(item.resolution_type || '-')}</td>
+      <td>${escapeHtml(lastAction(item))}</td>
+      <td>${actions(item)}</td>
     </tr>`).join('');
   };
 
@@ -164,6 +184,30 @@
     renderPortal(data?.portal_access || null);
     renderAudit(data?.audit || []);
   };
+
+
+  requestsTable?.addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-request-action]');
+    if (!button) return;
+    const requestId = button.dataset.requestId;
+    const action = button.dataset.requestAction;
+    try {
+      if (action === 'review') {
+        await window.apiFetch(`/person-requests/${requestId}/submit-review`, { method: 'POST', body: { review_notes: 'Revisión iniciada desde vista persona' } });
+      } else if (action === 'resolve') {
+        await window.apiFetch(`/person-requests/${requestId}/resolve`, { method: 'POST', body: { review_notes: 'Resuelta desde vista persona' } });
+      } else if (action === 'reject') {
+        const reason = window.prompt('Motivo del rechazo');
+        if (!reason) return;
+        await window.apiFetch(`/person-requests/${requestId}/reject`, { method: 'POST', body: { rejection_reason: reason } });
+      } else if (action === 'cancel') {
+        await window.apiFetch(`/person-requests/${requestId}/cancel`, { method: 'POST' });
+      }
+      await load();
+    } catch (error) {
+      window.handleApiError(error, { defaultMessage: 'No se pudo ejecutar la acción en la solicitud.' });
+    }
+  });
 
   document.getElementById('portal-create-action')?.addEventListener('click', async () => {
     const email = window.prompt('Email de acceso portal');

@@ -203,6 +203,9 @@ class PersonOverviewService:
                 "status": item.status,
                 "due_date": item.due_date.isoformat() if item.due_date else None,
                 "resolution_type": item.resolution_type,
+                "submitted_at": item.submitted_at.isoformat() if item.submitted_at else None,
+                "reviewed_at": item.reviewed_at.isoformat() if item.reviewed_at else None,
+                "resolved_at": item.resolved_at.isoformat() if item.resolved_at else None,
             }
             for item in rows
         ]

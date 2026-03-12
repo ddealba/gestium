@@ -33,6 +33,10 @@ class PersonRequest(BaseModel):
 
     resolution_type = db.Column(db.String(40), nullable=False, default="manual_review")
     resolution_payload = db.Column(db.JSON, nullable=True)
+    review_notes = db.Column(db.Text, nullable=True)
+    rejection_reason = db.Column(db.Text, nullable=True)
+    submitted_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    reviewed_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     created_by = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=True)
     resolved_by = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=True)

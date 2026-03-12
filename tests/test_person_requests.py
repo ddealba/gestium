@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 import uuid
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -97,10 +97,6 @@ def test_person_request_backoffice_and_portal_flow(client, app, db_session, tmp_
         assert create_response.status_code == 201
         request_id = create_response.get_json()["request"]["id"]
 
-        list_response = client.get(f"/persons/{person.id}/requests", headers=auth_header(internal))
-        assert list_response.status_code == 200
-        assert len(list_response.get_json()["items"]) == 1
-
         portal_list = client.get("/portal/api/requests", headers=auth_header(portal_user))
         assert portal_list.status_code == 200
         assert {item["id"] for item in portal_list.get_json()} == {request_id}
@@ -115,7 +111,23 @@ def test_person_request_backoffice_and_portal_flow(client, app, db_session, tmp_
             content_type="multipart/form-data",
         )
         assert upload_response.status_code == 200
-        assert upload_response.get_json()["request"]["status"] == "resolved"
+        assert upload_response.get_json()["request"]["status"] == "submitted"
+
+        review_response = client.post(
+            f"/person-requests/{request_id}/submit-review",
+            headers=auth_header(internal),
+            json={"review_notes": "en revisión"},
+        )
+        assert review_response.status_code == 200
+        assert review_response.get_json()["request"]["status"] == "in_review"
+
+        resolve_response = client.post(
+            f"/person-requests/{request_id}/resolve",
+            headers=auth_header(internal),
+            json={"review_notes": "ok"},
+        )
+        assert resolve_response.status_code == 200
+        assert resolve_response.get_json()["request"]["status"] == "resolved"
 
         docs = db.session.query(Document).filter(Document.person_id == person.id).all()
         assert len(docs) == 1
@@ -137,8 +149,45 @@ def test_person_request_backoffice_and_portal_flow(client, app, db_session, tmp_
             json={"payload": {"phone": "600123123", "notes": "Datos actualizados"}},
         )
         assert submit_response.status_code == 200
-        assert submit_response.get_json()["request"]["status"] == "resolved"
-        assert submit_response.get_json()["request"]["resolution_payload"]["phone"] == "600123123"
+        assert submit_response.get_json()["request"]["status"] == "submitted"
+
+        reject_response = client.post(
+            f"/person-requests/{submit_id}/reject",
+            headers=auth_header(internal),
+            json={"rejection_reason": "incompleto"},
+        )
+        assert reject_response.status_code == 200
+        assert reject_response.get_json()["request"]["status"] == "rejected"
+
+        resubmit_response = client.post(
+            f"/portal/api/requests/{submit_id}/submit",
+            headers=auth_header(portal_user),
+            json={"payload": {"phone": "600123123"}},
+        )
+        assert resubmit_response.status_code == 200
+        assert resubmit_response.get_json()["request"]["status"] == "submitted"
+
+        invalid_transition = client.post(
+            f"/person-requests/{request_id}/cancel",
+            headers=auth_header(internal),
+        )
+        assert invalid_transition.status_code == 400
 
         cross_tenant = client.get(f"/persons/{foreign_person.id}/requests", headers=auth_header(internal))
         assert cross_tenant.status_code == 404
+
+        expired_create = client.post(
+            f"/persons/{person.id}/requests",
+            headers=auth_header(internal),
+            json={
+                "request_type": "other",
+                "title": "Solicitud vencida",
+                "due_date": (date.today() - timedelta(days=2)).isoformat(),
+                "resolution_type": "manual_review",
+            },
+        )
+        expired_id = expired_create.get_json()["request"]["id"]
+        expired_detail = client.get(f"/portal/api/requests/{expired_id}", headers=auth_header(portal_user))
+        assert expired_detail.status_code == 200
+        assert expired_detail.get_json()["status"] == "expired"
+

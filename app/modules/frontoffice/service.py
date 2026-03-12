@@ -125,7 +125,7 @@ class FrontofficeService:
             .all()
         )
 
-        actionable_statuses = {"pending", "in_progress"}
+        actionable_statuses = {"pending", "submitted", "in_review", "rejected", "expired"}
         pending_requests = [item for item in requests if item.status in actionable_statuses]
         overdue_requests = [
             item
@@ -254,8 +254,8 @@ class FrontofficeService:
             )
 
         for item in requests[:4]:
-            event = "resuelta" if item.status == "resolved" else "creada"
-            stamp = item.resolved_at if item.status == "resolved" else item.created_at
+            event = "resuelta" if item.status == "resolved" else ("rechazada" if item.status == "rejected" else "actualizada")
+            stamp = item.resolved_at if item.status == "resolved" else (item.reviewed_at or item.submitted_at or item.created_at)
             activity.append(
                 {
                     "type": "request",
