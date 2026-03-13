@@ -1,96 +1,36 @@
 {% extends "layouts/app.html" %}
 
 {% block title %}Dashboard · Gestium{% endblock %}
-{% block page_header %}Dashboard{% endblock %}
+{% block page_header %}Dashboard operativo{% endblock %}
 
 {% block content %}
 <section class="ff-grid" id="dashboard-page">
-  <div class="ff-col-12">
-    <p id="dashboard-loading" class="ff-muted">Cargando dashboard…</p>
-  </div>
+  <div class="ff-col-12"><p id="dashboard-loading" class="ff-muted">Cargando dashboard…</p></div>
 
-  <div class="ff-col-12">
-    <div class="ff-card ff-dashboard-hero">
-      <div class="ff-dashboard-hero__orb ff-dashboard-hero__orb--a"></div>
-      <div class="ff-dashboard-hero__orb ff-dashboard-hero__orb--b"></div>
-      <div class="ff-card__body">
-        <p class="ff-dashboard-hero__eyebrow">Visión general</p>
-        <h2>Resumen operativo en tiempo real</h2>
-        <p class="ff-muted">Supervisa expedientes, vencimientos y carga documental de un vistazo para tomar decisiones más rápidas.</p>
-      </div>
-    </div>
-  </div>
+  <div class="ff-col-12"><h3>KPIs</h3></div>
+  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Personas totales</small><div class="ff-stat__value" id="kpi-persons-total">0</div></div></div></div>
+  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Personas activas</small><div class="ff-stat__value" id="kpi-persons-active">0</div></div></div></div>
+  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Onboarding incompleto</small><div class="ff-stat__value" id="kpi-persons-incomplete">0</div></div></div></div>
+  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Solicitudes pendientes</small><div class="ff-stat__value" id="kpi-requests-pending">0</div></div></div></div>
+  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Solicitudes vencidas</small><div class="ff-stat__value" id="kpi-requests-overdue">0</div></div></div></div>
+  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Enviadas hoy</small><div class="ff-stat__value" id="kpi-requests-sent-today">0</div></div></div></div>
+  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__body"><small>Docs subidos hoy</small><div class="ff-stat__value" id="kpi-documents-today">0</div></div></div></div>
+  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__body"><small>Docs pendientes</small><div class="ff-stat__value" id="kpi-documents-pending">0</div></div></div></div>
+  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__body"><small>Expedientes abiertos</small><div class="ff-stat__value" id="kpi-cases-open">0</div></div></div></div>
+  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__body"><small>Expedientes vencidos</small><div class="ff-stat__value" id="kpi-cases-overdue">0</div></div></div></div>
 
-  <div class="ff-col-3"><div class="ff-card ff-kpi-card"><div class="ff-card__head"><span>Casos activos</span><span class="ff-kpi-card__icon">📁</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-active-cases">0</div><small class="ff-muted" id="kpi-cases-last-days">0 en ventana</small></div></div></div>
-  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--danger"><div class="ff-card__head"><span>Casos vencidos</span><span class="ff-kpi-card__icon">⏰</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-overdue-cases">0</div><small class="ff-muted" id="kpi-due-today">0 vencen hoy</small></div></div></div>
-  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--info"><div class="ff-card__head"><span>Docs pendientes</span><span class="ff-kpi-card__icon">🧾</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-pending">0</div><small class="ff-muted" id="kpi-docs-last-days">0 subidos en ventana</small></div></div></div>
-  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--success"><div class="ff-card__head"><span>Sin extracción</span><span class="ff-kpi-card__icon">🤖</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-docs-no-extraction">0</div><small class="ff-muted"><span id="kpi-coverage">0</span>% cobertura</small></div></div></div>
+  <div class="ff-col-12"><h3>Clientes que requieren atención</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Nombre</th><th>Empresa</th><th>Onboarding</th><th>Solicitudes pendientes</th><th>Última actividad</th><th></th></tr></thead><tbody id="attention-persons-body"></tbody></table></div><p id="attention-persons-empty" class="ff-empty" hidden>Sin clientes pendientes.</p></div>
 
+  <div class="ff-col-12"><h3>Solicitudes pendientes</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Persona</th><th>Empresa</th><th>Tipo</th><th>Estado</th><th>Vencimiento</th><th>Acciones</th></tr></thead><tbody id="pending-requests-body"></tbody></table></div><p id="pending-requests-empty" class="ff-empty" hidden>Sin solicitudes pendientes.</p></div>
 
-  <div class="ff-col-4"><div class="ff-card ff-kpi-card"><div class="ff-card__head"><span>Empresas activas</span><span class="ff-kpi-card__icon">🏢</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-companies-active">0</div><small class="ff-muted">Empresas del cliente</small></div></div></div>
-  <div class="ff-col-4"><div class="ff-card ff-kpi-card ff-kpi-card--info"><div class="ff-card__head"><span>Empresas con expedientes</span><span class="ff-kpi-card__icon">📂</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-companies-open-cases">0</div><small class="ff-muted">Empresas con casos activos</small></div></div></div>
-  <div class="ff-col-4"><div class="ff-card ff-kpi-card ff-kpi-card--success"><div class="ff-card__head"><span>Empleados</span><span class="ff-kpi-card__icon">👥</span></div><div class="ff-card__body"><div class="ff-stat__value" id="kpi-employees-total">0</div><small class="ff-muted">Personas gestionadas · <span id="kpi-my-cases">0</span> mis casos</small></div></div></div>
+  <div class="ff-col-12"><h3>Actividad reciente</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Fecha</th><th>Persona</th><th>Acción</th><th>Entidad</th></tr></thead><tbody id="recent-activity-body"></tbody></table></div><p id="recent-activity-empty" class="ff-empty" hidden>Sin actividad reciente.</p></div>
 
-  <div class="ff-col-4">
-    <div class="ff-card"><div class="ff-card__head"><span>Casos por estado</span></div><div class="ff-card__body"><div id="chart-cases-by-status"></div></div></div>
-  </div>
-  <div class="ff-col-4">
-    <div class="ff-card"><div class="ff-card__head"><span>Documentos por estado</span></div><div class="ff-card__body"><div id="chart-docs-by-status"></div></div></div>
-  </div>
-  <div class="ff-col-4">
-    <div class="ff-card"><div class="ff-card__head"><span>Empleados por empresa</span></div><div class="ff-card__body"><div id="chart-employees-by-company"></div></div></div>
-  </div>
+  <div class="ff-col-12"><h3>Documentos recientes</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Persona</th><th>Empresa</th><th>Tipo</th><th>Subida</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="recent-documents-body"></tbody></table></div><p id="recent-documents-empty" class="ff-empty" hidden>Sin documentos recientes.</p></div>
 
-  <div class="ff-col-6">
-    <div class="ff-card">
-      <div class="ff-card__head"><span>Top casos vencidos</span></div>
-      <div class="ff-card__body">
-        <div class="ff-table-wrap">
-          <table class="ff-table" id="dashboard-overdue-table">
-            <thead><tr><th>Expediente</th><th>Empresa</th><th>Estado</th><th>Vencimiento</th><th>Responsable</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <p id="overdue-empty" class="ff-empty" hidden>Aún no hay casos vencidos.</p>
-      </div>
-    </div>
-  </div>
-
-
-
-  <div class="ff-col-6">
-    <div class="ff-card">
-      <div class="ff-card__head"><span>Mis casos</span></div>
-      <div class="ff-card__body">
-        <div class="ff-table-wrap">
-          <table class="ff-table" id="dashboard-my-cases-table">
-            <thead><tr><th>Caso</th><th>Empresa</th><th>Estado</th><th>Vencimiento</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <p id="my-cases-empty" class="ff-empty" hidden>No tienes casos asignados.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="ff-col-12">
-    <div class="ff-card"><div class="ff-card__head"><span>Cobertura extracción</span></div><div class="ff-card__body"><div id="chart-extract-coverage"></div></div></div>
-  </div>
-
-  <div class="ff-col-12">
-    <div class="ff-card">
-      <div class="ff-card__head"><span>Actividad reciente</span></div>
-      <div class="ff-card__body">
-        <ul id="dashboard-activity" class="ff-timeline"></ul>
-        <p id="activity-empty" class="ff-empty" hidden>Aún no hay datos de actividad.</p>
-      </div>
-    </div>
-  </div>
-
+  <div class="ff-col-12"><h3>Expedientes críticos</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Empresa</th><th>Persona</th><th>Título</th><th>Estado</th><th>Vencimiento</th></tr></thead><tbody id="cases-attention-body"></tbody></table></div><p id="cases-attention-empty" class="ff-empty" hidden>Sin expedientes críticos.</p></div>
 </section>
 {% endblock %}
 
 {% block page_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="{{ url_for('static', filename='js/pages/dashboard.js', v=ui_version) }}"></script>
 {% endblock %}

@@ -8,7 +8,9 @@ from werkzeug.exceptions import BadRequest
 from app.common.decorators import auth_required, require_permission
 from app.common.responses import ok
 from app.common.tenant import tenant_required
+from app.modules.audit.audit_service import AuditService
 from app.modules.dashboard.service import DashboardService
+from app.modules.dashboard.tenant_service import DashboardTenantService
 
 bp = Blueprint("dashboard", __name__)
 
@@ -39,5 +41,22 @@ def get_dashboard_summary():
         overdue_limit=_parse_int_arg("overdue_limit", 8),
         activity_limit=_parse_int_arg("activity_limit", 12),
         my_cases_limit=_parse_int_arg("my_cases_limit", 5),
+    )
+    return ok(payload)
+
+
+@bp.get("/dashboard/tenant")
+@auth_required
+@tenant_required
+@require_permission("dashboard.read")
+def get_dashboard_tenant():
+    service = DashboardTenantService()
+    payload = service.get_dashboard(str(g.client_id))
+    AuditService().log_action(
+        client_id=str(g.client_id),
+        actor_user_id=str(g.user.id),
+        action="dashboard_viewed",
+        entity_type="dashboard",
+        entity_id="tenant",
     )
     return ok(payload)
