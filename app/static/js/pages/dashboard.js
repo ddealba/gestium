@@ -9,17 +9,20 @@
     if (el) el.textContent = String(value ?? 0);
   };
 
-  const renderTable = (bodyId, emptyId, rows, rowRenderer) => {
+  const asTag = (value, variant = '') => `<span class="ff-tag${variant ? ` ff-tag--${variant}` : ''}">${value || '-'}</span>`;
+
+  const renderTable = (bodyId, emptyId, rows, rowRenderer, maxRows = 5) => {
     const body = document.getElementById(bodyId);
     const empty = document.getElementById(emptyId);
     if (!body) return;
     body.innerHTML = '';
-    if (!Array.isArray(rows) || !rows.length) {
+    const visibleRows = Array.isArray(rows) ? rows.slice(0, maxRows) : [];
+    if (!visibleRows.length) {
       if (empty) empty.hidden = false;
       return;
     }
     if (empty) empty.hidden = true;
-    rows.forEach((row) => body.appendChild(rowRenderer(row)));
+    visibleRows.forEach((row) => body.appendChild(rowRenderer(row)));
   };
 
   const tr = (html) => {
@@ -49,42 +52,32 @@
       renderTable('attention-persons-body', 'attention-persons-empty', data.attention_persons, (item) => tr(`
         <td>${item.person_name || '-'}</td>
         <td>${item.company_name || '-'}</td>
-        <td><span class="ff-tag">${item.onboarding_status || '-'}</span></td>
+        <td>${asTag(item.onboarding_status || '-', item.onboarding_status === 'incomplete' ? 'warn' : 'success')}</td>
         <td>${item.pending_requests || 0}</td>
-        <td>${fmtDateTime(item.last_activity)}</td>
-        <td><a href="/app/persons/${item.person_id}">Ver persona</a></td>
+        <td><a href="/app/persons/${item.person_id}">Ver</a></td>
       `));
 
       renderTable('pending-requests-body', 'pending-requests-empty', data.pending_requests, (item) => tr(`
         <td><a href="/app/persons/${item.person_id}">${item.person_name || '-'}</a></td>
-        <td>${item.company_name || '-'}</td>
         <td>${item.request_type || '-'}</td>
-        <td>${item.status || '-'}</td>
         <td>${fmtDate(item.due_date)}</td>
         <td><a href="/app/persons/${item.person_id}/requests">Abrir</a></td>
       `));
 
       renderTable('recent-activity-body', 'recent-activity-empty', data.recent_activity, (item) => tr(`
         <td>${fmtDateTime(item.date)}</td>
-        <td>${item.person_name || '-'}</td>
-        <td>${item.action || '-'}</td>
-        <td>${item.entity || '-'}</td>
+        <td><strong>${item.person_name || '-'}</strong><br><span class="ff-muted">${item.action || '-'} · ${item.entity || '-'}</span></td>
       `));
 
       renderTable('recent-documents-body', 'recent-documents-empty', data.recent_documents, (item) => tr(`
-        <td>${item.person_name || '-'}</td>
-        <td>${item.company_name || '-'}</td>
+        <td><strong>${item.person_name || '-'}</strong><br><span class="ff-muted">${item.company_name || '-'}</span></td>
         <td>${item.document_type || '-'}</td>
-        <td>${fmtDateTime(item.uploaded_at)}</td>
-        <td>${item.status || '-'}</td>
-        <td><a href="/app/documents">Ver documento</a></td>
+        <td>${asTag(item.status || '-')}</td>
       `));
 
       renderTable('cases-attention-body', 'cases-attention-empty', data.cases_attention, (item) => tr(`
         <td>${item.company_name || '-'}</td>
-        <td>${item.person_name || '-'}</td>
         <td><a href="/app/cases/${item.case_id}">${item.title || '-'}</a></td>
-        <td>${item.status || '-'}</td>
         <td>${fmtDate(item.due_date)}</td>
       `));
 
