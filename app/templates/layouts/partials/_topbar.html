@@ -18,12 +18,19 @@
       <i class="ph ph-moon"></i>
     </button>
 
-    <button class="ff-iconbtn" title="Notificaciones">
-      <i class="ph ph-bell"></i>
-      {% if notifications_count %}
-        <span class="ff-badge" style="position:absolute;top:-6px;right:-6px;background:var(--ff-warning);">{{ notifications_count }}</span>
-      {% endif %}
-    </button>
+    <div style="position:relative;">
+      <button class="ff-iconbtn" id="bo-notifications-toggle" title="Notificaciones" type="button">
+        <i class="ph ph-bell"></i>
+        <span id="bo-notifications-count" class="ff-badge" style="position:absolute;top:-6px;right:-6px;background:var(--ff-warning);display:none;">0</span>
+      </button>
+      <div id="bo-notifications-dropdown" class="ff-card" style="display:none;position:absolute;right:0;top:42px;width:340px;z-index:40;">
+        <div class="ff-card__head" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Avisos internos</span>
+          <a href="/app/notifications" class="ff-btn ff-btn--sm">Ver todas</a>
+        </div>
+        <div class="ff-card__body" id="bo-notifications-list" style="display:grid;gap:8px;max-height:280px;overflow:auto;"></div>
+      </div>
+    </div>
 
     <div class="ff-user">
       <div class="ff-avatar">{{ user_initials|default('U') }}</div>
@@ -34,3 +41,55 @@
     </div>
   </div>
 </header>
+
+<script>
+(function(){
+  const toggle = document.getElementById('bo-notifications-toggle');
+  const dropdown = document.getElementById('bo-notifications-dropdown');
+  const list = document.getElementById('bo-notifications-list');
+  const count = document.getElementById('bo-notifications-count');
+  if (!toggle || !dropdown || !list || !count) return;
+
+  async function loadNotifications() {
+    try {
+      const response = await fetch('/api/notifications');
+      const payload = await response.json();
+      const items = Array.isArray(payload) ? payload : (payload.data || []);
+      const unread = items.filter((item) => item.status === 'unread').length;
+      if (unread > 0) {
+        count.style.display = 'inline-flex';
+        count.textContent = String(unread);
+      } else {
+        count.style.display = 'none';
+      }
+      if (!items.length) {
+        list.innerHTML = '<p class="ff-muted" style="margin:0;">No hay avisos.</p>';
+        return;
+      }
+      list.innerHTML = items.slice(0, 5).map((item) => `
+        <article style="border:1px solid var(--ff-border);border-radius:10px;padding:8px;">
+          <strong>${item.title}</strong>
+          <p style="margin:4px 0;">${item.message}</p>
+          <small class="ff-muted">${item.priority} · ${item.status}</small>
+        </article>
+      `).join('');
+    } catch (error) {
+      list.innerHTML = '<p class="ff-muted" style="margin:0;">No se pudieron cargar los avisos.</p>';
+    }
+  }
+
+  toggle.addEventListener('click', async () => {
+    const willOpen = dropdown.style.display === 'none';
+    dropdown.style.display = willOpen ? 'block' : 'none';
+    if (willOpen) await loadNotifications();
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!dropdown.contains(event.target) && !toggle.contains(event.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  loadNotifications();
+})();
+</script>

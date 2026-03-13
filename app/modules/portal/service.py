@@ -8,6 +8,7 @@ from app.extensions import db
 from app.models.company import Company
 from app.models.person import Person
 from app.modules.frontoffice.schemas import serialize_case, serialize_company_relation, serialize_document, serialize_profile
+from app.modules.notification.notification_service import NotificationService, serialize_notification
 from app.modules.person.person_completeness_service import PersonCompletenessService
 from app.modules.portal.context import PortalContext
 from app.modules.portal.dashboard_service import PortalDashboardService
@@ -21,6 +22,7 @@ class PortalService:
         self.visibility = PortalVisibilityService()
         self.dashboard = PortalDashboardService(self.visibility)
         self.completeness_service = PersonCompletenessService()
+        self.notification_service = NotificationService()
 
     def get_portal_profile(self, context: PortalContext) -> dict:
         person = db.session.query(Person).filter(Person.id == context.person_id, Person.client_id == context.client_id).one_or_none()
@@ -67,6 +69,10 @@ class PortalService:
     def get_portal_home(self, context: PortalContext) -> dict:
         companies = self.get_portal_companies(context)
         employee_ids = self.visibility.get_visible_employee_ids(context.person_id, context.client_id)
+        notifications = self.notification_service.list_notifications_for_portal(
+            client_id=context.client_id,
+            person_id=context.person_id,
+        )
         return {
             "summary": self.dashboard.get_portal_home_summary(context.person_id, context.client_id),
             "completeness": self.completeness_service.get_person_completeness(context.person_id, context.client_id),
@@ -78,7 +84,26 @@ class PortalService:
                 "has_company_area": len(companies) > 0,
             },
             "companies": companies,
+            "notifications": {
+                "unread_count": len([item for item in notifications if item.status == "unread"]),
+                "items": [serialize_notification(item) for item in notifications[:5]],
+            },
         }
+
+    def list_portal_notifications(
+        self,
+        context: PortalContext,
+        *,
+        status: str | None = None,
+        priority: str | None = None,
+    ) -> list[dict]:
+        items = self.notification_service.list_notifications_for_portal(
+            client_id=context.client_id,
+            person_id=context.person_id,
+            status=status,
+            priority=priority,
+        )
+        return [serialize_notification(item) for item in items]
 
 
     def update_portal_profile(self, context: PortalContext, payload: dict, actor_user_id: str | None = None) -> dict:
