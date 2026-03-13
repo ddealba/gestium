@@ -5,29 +5,102 @@
 
 {% block content %}
 <section class="ff-grid" id="dashboard-page">
-  <div class="ff-col-12"><p id="dashboard-loading" class="ff-muted">Cargando dashboard…</p></div>
+  <div class="ff-col-12">
+    <div class="ff-card ff-dashboard-hero ff-dashboard-hero--ops">
+      <div class="ff-card__body">
+        <p class="ff-dashboard-hero__eyebrow">Panel de control</p>
+        <h2>Vista general de operación</h2>
+        <p class="ff-muted">Resumen de personas, solicitudes, documentos y expedientes para priorizar acciones del día.</p>
+        <div class="ff-dashboard-hero__chips">
+          <span class="ff-pill"><i class="ph ph-users-three"></i> Personas</span>
+          <span class="ff-pill"><i class="ph ph-files"></i> Solicitudes</span>
+          <span class="ff-pill"><i class="ph ph-folders"></i> Expedientes</span>
+        </div>
+        <p id="dashboard-loading" class="ff-muted ff-dashboard-loading">Cargando dashboard…</p>
+        <span class="ff-dashboard-hero__orb ff-dashboard-hero__orb--a"></span>
+        <span class="ff-dashboard-hero__orb ff-dashboard-hero__orb--b"></span>
+      </div>
+    </div>
+  </div>
 
-  <div class="ff-col-12"><h3>KPIs</h3></div>
-  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Personas totales</small><div class="ff-stat__value" id="kpi-persons-total">0</div></div></div></div>
-  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Personas activas</small><div class="ff-stat__value" id="kpi-persons-active">0</div></div></div></div>
-  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Onboarding incompleto</small><div class="ff-stat__value" id="kpi-persons-incomplete">0</div></div></div></div>
-  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Solicitudes pendientes</small><div class="ff-stat__value" id="kpi-requests-pending">0</div></div></div></div>
-  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Solicitudes vencidas</small><div class="ff-stat__value" id="kpi-requests-overdue">0</div></div></div></div>
-  <div class="ff-col-2"><div class="ff-card"><div class="ff-card__body"><small>Enviadas hoy</small><div class="ff-stat__value" id="kpi-requests-sent-today">0</div></div></div></div>
-  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__body"><small>Docs subidos hoy</small><div class="ff-stat__value" id="kpi-documents-today">0</div></div></div></div>
-  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__body"><small>Docs pendientes</small><div class="ff-stat__value" id="kpi-documents-pending">0</div></div></div></div>
-  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__body"><small>Expedientes abiertos</small><div class="ff-stat__value" id="kpi-cases-open">0</div></div></div></div>
-  <div class="ff-col-3"><div class="ff-card"><div class="ff-card__body"><small>Expedientes vencidos</small><div class="ff-stat__value" id="kpi-cases-overdue">0</div></div></div></div>
+  <div class="ff-col-3"><div class="ff-card ff-kpi-card"><div class="ff-stat"><div class="ff-stat__left"><span class="ff-kpi-card__icon"><i class="ph ph-users-three"></i></span><div><div class="ff-stat__value" id="kpi-persons-active">0</div><div class="ff-stat__label">Personas activas</div></div></div></div></div></div>
+  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--warn"><div class="ff-stat"><div class="ff-stat__left"><span class="ff-kpi-card__icon"><i class="ph ph-user-focus"></i></span><div><div class="ff-stat__value" id="kpi-persons-incomplete">0</div><div class="ff-stat__label">Onboarding incompleto</div></div></div></div></div></div>
+  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--danger"><div class="ff-stat"><div class="ff-stat__left"><span class="ff-kpi-card__icon"><i class="ph ph-warning-circle"></i></span><div><div class="ff-stat__value" id="kpi-requests-overdue">0</div><div class="ff-stat__label">Solicitudes vencidas</div></div></div></div></div></div>
+  <div class="ff-col-3"><div class="ff-card ff-kpi-card ff-kpi-card--success"><div class="ff-stat"><div class="ff-stat__left"><span class="ff-kpi-card__icon"><i class="ph ph-file-arrow-up"></i></span><div><div class="ff-stat__value" id="kpi-documents-today">0</div><div class="ff-stat__label">Documentos subidos hoy</div></div></div></div></div></div>
 
-  <div class="ff-col-12"><h3>Clientes que requieren atención</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Nombre</th><th>Empresa</th><th>Onboarding</th><th>Solicitudes pendientes</th><th>Última actividad</th><th></th></tr></thead><tbody id="attention-persons-body"></tbody></table></div><p id="attention-persons-empty" class="ff-empty" hidden>Sin clientes pendientes.</p></div>
+  <div class="ff-col-6">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <span>Clientes que requieren atención</span>
+        <span class="ff-muted ff-dashboard-meta">Máx. 5</span>
+      </div>
+      <div class="ff-card__body">
+        <div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Nombre</th><th>Empresa</th><th>Onboarding</th><th>Solicitudes</th><th></th></tr></thead><tbody id="attention-persons-body"></tbody></table></div>
+        <p id="attention-persons-empty" class="ff-empty" hidden>Sin clientes pendientes.</p>
+      </div>
+    </div>
+  </div>
 
-  <div class="ff-col-12"><h3>Solicitudes pendientes</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Persona</th><th>Empresa</th><th>Tipo</th><th>Estado</th><th>Vencimiento</th><th>Acciones</th></tr></thead><tbody id="pending-requests-body"></tbody></table></div><p id="pending-requests-empty" class="ff-empty" hidden>Sin solicitudes pendientes.</p></div>
+  <div class="ff-col-6">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <span>Solicitudes pendientes</span>
+        <span class="ff-muted ff-dashboard-meta">Máx. 5</span>
+      </div>
+      <div class="ff-card__body">
+        <div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Persona</th><th>Tipo</th><th>Vence</th><th>Acción</th></tr></thead><tbody id="pending-requests-body"></tbody></table></div>
+        <p id="pending-requests-empty" class="ff-empty" hidden>Sin solicitudes pendientes.</p>
+      </div>
+    </div>
+  </div>
 
-  <div class="ff-col-12"><h3>Actividad reciente</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Fecha</th><th>Persona</th><th>Acción</th><th>Entidad</th></tr></thead><tbody id="recent-activity-body"></tbody></table></div><p id="recent-activity-empty" class="ff-empty" hidden>Sin actividad reciente.</p></div>
+  <div class="ff-col-4">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <span>Actividad reciente</span>
+        <i class="ph ph-clock-counter-clockwise ff-muted"></i>
+      </div>
+      <div class="ff-card__body">
+        <div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Fecha</th><th>Detalle</th></tr></thead><tbody id="recent-activity-body"></tbody></table></div>
+        <p id="recent-activity-empty" class="ff-empty" hidden>Sin actividad reciente.</p>
+      </div>
+    </div>
+  </div>
 
-  <div class="ff-col-12"><h3>Documentos recientes</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Persona</th><th>Empresa</th><th>Tipo</th><th>Subida</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="recent-documents-body"></tbody></table></div><p id="recent-documents-empty" class="ff-empty" hidden>Sin documentos recientes.</p></div>
+  <div class="ff-col-4">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <span>Documentos recientes</span>
+        <span class="ff-muted ff-dashboard-meta">Máx. 5</span>
+      </div>
+      <div class="ff-card__body">
+        <div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Persona</th><th>Documento</th><th>Estado</th></tr></thead><tbody id="recent-documents-body"></tbody></table></div>
+        <p id="recent-documents-empty" class="ff-empty" hidden>Sin documentos recientes.</p>
+      </div>
+    </div>
+  </div>
 
-  <div class="ff-col-12"><h3>Expedientes críticos</h3><div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Empresa</th><th>Persona</th><th>Título</th><th>Estado</th><th>Vencimiento</th></tr></thead><tbody id="cases-attention-body"></tbody></table></div><p id="cases-attention-empty" class="ff-empty" hidden>Sin expedientes críticos.</p></div>
+  <div class="ff-col-4">
+    <div class="ff-card">
+      <div class="ff-card__head">
+        <span>Expedientes críticos</span>
+        <span class="ff-muted ff-dashboard-meta">Máx. 5</span>
+      </div>
+      <div class="ff-card__body">
+        <div class="ff-table-wrap"><table class="ff-table"><thead><tr><th>Empresa</th><th>Título</th><th>Vence</th></tr></thead><tbody id="cases-attention-body"></tbody></table></div>
+        <p id="cases-attention-empty" class="ff-empty" hidden>Sin expedientes críticos.</p>
+      </div>
+    </div>
+  </div>
+
+  <div hidden>
+    <span id="kpi-persons-total">0</span>
+    <span id="kpi-requests-pending">0</span>
+    <span id="kpi-requests-sent-today">0</span>
+    <span id="kpi-documents-pending">0</span>
+    <span id="kpi-cases-open">0</span>
+    <span id="kpi-cases-overdue">0</span>
+  </div>
 </section>
 {% endblock %}
 

@@ -271,6 +271,43 @@
   background: rgba(255, 90, 122, 0.14);
 }
 
+.ff-kpi-card--warn {
+  border-color: rgba(255, 139, 61, 0.22);
+  background: linear-gradient(180deg, rgba(255, 139, 61, 0.08), rgba(255, 255, 255, 0.98));
+}
+
+.ff-kpi-card--warn .ff-stat__value {
+  color: #b85a1e;
+}
+
+.ff-kpi-card--warn .ff-kpi-card__icon {
+  background: rgba(255, 139, 61, 0.16);
+}
+
+.ff-dashboard-hero--ops .ff-dashboard-hero__chips {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.ff-dashboard-hero--ops .ff-pill {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.26);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ff-dashboard-loading {
+  margin: 12px 0 0;
+}
+
+.ff-dashboard-meta {
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .ff-kpi-card--info {
   border-color: rgba(24, 160, 251, 0.2);
   background: linear-gradient(180deg, rgba(24, 160, 251, 0.08), rgba(255, 255, 255, 0.98));
@@ -300,7 +337,8 @@
 [data-theme="dark"] .ff-kpi-card,
 [data-theme="dark"] .ff-kpi-card--danger,
 [data-theme="dark"] .ff-kpi-card--info,
-[data-theme="dark"] .ff-kpi-card--success {
+[data-theme="dark"] .ff-kpi-card--success,
+[data-theme="dark"] .ff-kpi-card--warn {
   background: var(--ff-surface-2);
 }
 
