@@ -13,6 +13,20 @@
   </div>
   <div class="ff-card__body">
     <p id="companies-message" class="ff-form-message" aria-live="polite"></p>
+    <form id="company-create-form" class="ff-form" style="margin-bottom: 1rem; display:grid; gap:10px; grid-template-columns: repeat(auto-fit,minmax(200px,1fr));">
+      <label>
+        Nombre
+        <input id="company-create-name" class="ff-input" type="text" required />
+      </label>
+      <label>
+        NIF
+        <input id="company-create-tax-id" class="ff-input" type="text" required />
+      </label>
+      <div class="ff-filters__actions" style="align-self:end;">
+        <button class="ff-btn ff-btn--primary" type="submit">Nueva empresa</button>
+      </div>
+    </form>
+
     <div class="ff-filters" id="companies-filters">
       <div>
         <label class="ff-label" for="companies-q">Búsqueda</label>

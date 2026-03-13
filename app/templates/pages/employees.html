@@ -15,6 +15,20 @@
       </div>
       <div class="ff-card__body">
         <p id="employees-message" class="ff-form-message" aria-live="polite"></p>
+        <form id="employee-manage-form" class="ff-form" style="margin-bottom:1rem;display:grid; gap:10px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr));">
+          <input type="hidden" id="employee-id" />
+          <label>Person ID<input id="employee-person-id" class="ff-input" type="text" /></label>
+          <label>Nombre<input id="employee-full-name" class="ff-input" type="text" /></label>
+          <label>Referencia<input id="employee-ref" class="ff-input" type="text" /></label>
+          <label>Estado<select id="employee-status" class="ff-input"><option value="active">active</option><option value="terminated">terminated</option></select></label>
+          <label>Alta<input id="employee-start-date" class="ff-input" type="date" required /></label>
+          <label>Baja<input id="employee-end-date" class="ff-input" type="date" /></label>
+          <div class="ff-filters__actions" style="align-self:end;">
+            <button class="ff-btn ff-btn--primary" type="submit">Guardar empleado</button>
+            <button id="employee-new" class="ff-btn ff-btn--ghost" type="button">Nuevo</button>
+          </div>
+        </form>
+
         <div class="ff-filters" id="employees-filters">
           <div>
             <label class="ff-label" for="employees-q">Búsqueda</label>
@@ -59,7 +73,14 @@
         <h2>Personas relacionadas</h2>
       </div>
       <div class="ff-card__body">
-        <p class="ff-muted">Vista básica de relaciones persona-empresa para backoffice.</p>
+        <p class="ff-muted">Gestión de relaciones persona-empresa para backoffice.</p>
+        <form id="company-relation-form" class="ff-form" style="margin: 0 0 1rem 0; display:grid; gap:10px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr));">
+          <label>Person ID<input id="company-relation-person-id" class="ff-input" type="text" required /></label>
+          <label>Tipo<select id="company-relation-type" class="ff-input"><option value="employee">employee</option><option value="owner">owner</option><option value="other">other</option></select></label>
+          <label>Inicio<input id="company-relation-start" class="ff-input" type="date" required /></label>
+          <div class="ff-filters__actions" style="align-self:end;"><button class="ff-btn ff-btn--primary" type="submit">Vincular persona</button></div>
+        </form>
+
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>

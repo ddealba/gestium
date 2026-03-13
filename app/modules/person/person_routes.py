@@ -16,6 +16,7 @@ from app.modules.person.person_overview_service import PersonOverviewService
 from app.modules.person.person_service import PersonService
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
+from app.services.invitation_service import InvitationService
 from app.models.user import User
 from app.modules.notification.notification_service import NotificationService
 
@@ -115,6 +116,11 @@ def create_person():
     create_payload = PersonCreateRequest.from_dict(payload)
     service = PersonService()
     person = service.create_person(str(g.client_id), str(g.user.id), create_payload)
+    PersonCompletenessService().generate_pending_requests(
+        client_id=str(g.client_id),
+        person_id=person.id,
+        actor_user_id=str(g.user.id),
+    )
     db.session.commit()
     return ok({"person": PersonResponseSchema.dump(person)}, status_code=201)
 
@@ -243,6 +249,76 @@ def upsert_person_portal_user(person_id: str):
                 "person_id": target.person_id,
                 "user_type": target.user_type,
             }
+        }
+    )
+
+
+@bp.post("/persons/<person_id>/portal-user/invite")
+@auth_required
+@tenant_required
+@require_permission("tenant.user.manage")
+def invite_person_portal_user(person_id: str):
+    payload = request.get_json(silent=True) or {}
+    email = (payload.get("email") or "").strip()
+    if not email:
+        raise BadRequest("email_required")
+
+    person = PersonService().get_person(str(g.client_id), person_id)
+    user_repo = UserRepository()
+    user_service = UserService(user_repo)
+    normalized_email = user_service.normalize_email(email)
+
+    existing_by_email = user_repo.get_by_email(normalized_email, str(g.client_id))
+    if existing_by_email and existing_by_email.person_id and existing_by_email.person_id != person.id:
+        raise Conflict("email_already_in_use")
+
+    portal_user = (
+        user_repo.session.query(User)
+        .filter(
+            User.client_id == str(g.client_id),
+            User.person_id == person.id,
+            User.user_type == "portal",
+        )
+        .order_by(User.created_at.desc())
+        .first()
+    )
+
+    target = portal_user or existing_by_email
+    if target is None:
+        target = User(
+            client_id=str(g.client_id),
+            email=normalized_email,
+            status="invited",
+            user_type="portal",
+            person_id=person.id,
+            password_hash=None,
+        )
+        user_repo.create(target)
+    else:
+        target.email = normalized_email
+        target.user_type = "portal"
+        target.person_id = person.id
+        if target.status == "disabled":
+            target.status = "invited"
+        user_repo.update(target)
+
+    invitation = InvitationService(user_repository=user_repo).create_invitation(str(g.client_id), normalized_email)
+    PersonCompletenessService().recalculate_person_status(person, actor_user_id=str(g.user.id))
+    db.session.commit()
+
+    activation_link = f"/portal/activate?token={invitation.token}"
+    return ok(
+        {
+            "portal_user": {
+                "id": target.id,
+                "email": target.email,
+                "status": target.status,
+                "person_id": target.person_id,
+                "user_type": target.user_type,
+            },
+            "invite_token": invitation.token,
+            "activation_link": activation_link,
+            "expires_at": invitation.invitation.expires_at.isoformat(),
         }
     )
 

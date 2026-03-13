@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Activar acceso portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  </head>
+  <body>
+    <main class="ff-auth">
+      <section class="ff-auth__card">
+        <h1>Activar acceso portal</h1>
+        <form id="portal-activate-form" class="ff-form-stack">
+          <input id="portal-activate-token" class="ff-input" style="padding-left:12px;" name="token" value="{{ token }}" placeholder="token" required />
+          <input id="portal-activate-password" class="ff-input" style="padding-left:12px;" name="password" type="password" placeholder="password" required />
+          <button class="ff-btn ff-btn--primary" type="submit">Activar</button>
+        </form>
+        <p id="portal-activate-message" class="ff-form-message" aria-live="polite"></p>
+      </section>
+    </main>
+    <script>
+      document.getElementById('portal-activate-form')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const message = document.getElementById('portal-activate-message');
+        try {
+          await fetch('/auth/activate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: document.getElementById('portal-activate-token').value,
+              password: document.getElementById('portal-activate-password').value,
+            }),
+          });
+          window.location.href = '/portal/login';
+        } catch (e) {
+          if (message) message.textContent = 'No se pudo activar el acceso.';
+        }
+      });
+    </script>
+  </body>
+</html>

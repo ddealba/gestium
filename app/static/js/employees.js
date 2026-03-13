@@ -16,6 +16,15 @@
   const nextButton = document.getElementById('employees-next');
   const employeeDocumentsTable = document.getElementById('employee-documents-table');
   const employeeDocumentsMessage = document.getElementById('employee-documents-message');
+  const employeeForm = document.getElementById('employee-manage-form');
+  const employeeIdInput = document.getElementById('employee-id');
+  const employeePersonId = document.getElementById('employee-person-id');
+  const employeeFullName = document.getElementById('employee-full-name');
+  const employeeRef = document.getElementById('employee-ref');
+  const employeeStatus = document.getElementById('employee-status');
+  const employeeStartDate = document.getElementById('employee-start-date');
+  const employeeEndDate = document.getElementById('employee-end-date');
+  const employeeNewButton = document.getElementById('employee-new');
 
   const state = { limit: 20, offset: 0, total: 0 };
 
@@ -93,6 +102,13 @@
       const card = document.createElement('article');
       card.className = 'ff-employee-card';
       card.dataset.employeeId = employee.id;
+      card.dataset.personId = employee.person_id || '';
+      card.dataset.fullName = employee.full_name || '';
+      card.dataset.employeeRef = employee.employee_ref || '';
+      card.dataset.status = employee.status || 'active';
+      card.dataset.startDate = employee.start_date || '';
+      card.dataset.endDate = employee.end_date || '';
+
       card.innerHTML = `
         ${buildAvatar(employee, index)}
         <div class="ff-employee-card__content">
@@ -103,6 +119,7 @@
         </div>
         <div class="ff-employee-card__status">
           <span class="ff-tag ${meta.className}">${meta.label}</span>
+          <button class="ff-btn ff-btn--ghost ff-btn--sm" type="button" data-action="terminate">Terminar</button>
         </div>
       `;
       list.appendChild(card);
@@ -206,11 +223,67 @@
   });
 
 
-  list.addEventListener('click', (event) => {
+  list.addEventListener('click', async (event) => {
     const card = event.target.closest('.ff-employee-card[data-employee-id]');
     if (!card) return;
+    if (employeeIdInput) employeeIdInput.value = card.dataset.employeeId || '';
+    if (employeePersonId) employeePersonId.value = card.dataset.personId || '';
+    if (employeeFullName) employeeFullName.value = card.dataset.fullName || '';
+    if (employeeRef) employeeRef.value = card.dataset.employeeRef || '';
+    if (employeeStatus) employeeStatus.value = card.dataset.status || 'active';
+    if (employeeStartDate) employeeStartDate.value = card.dataset.startDate || '';
+    if (employeeEndDate) employeeEndDate.value = card.dataset.endDate || '';
+
+    if (event.target.closest('[data-action="terminate"]')) {
+      const endDate = window.prompt('Fecha de baja (YYYY-MM-DD)', card.dataset.endDate || '');
+      if (endDate) {
+        await window.apiFetch(`/companies/${companyId}/employees/${card.dataset.employeeId}/terminate`, {
+          method: 'POST',
+          body: { end_date: endDate },
+        });
+        await loadEmployees();
+      }
+      return;
+    }
     loadEmployeeDocuments(card.dataset.employeeId);
   });
+
+
+
+  const resetEmployeeForm = () => {
+    if (!employeeForm) return;
+    employeeForm.reset();
+    if (employeeIdInput) employeeIdInput.value = '';
+    if (employeeStatus) employeeStatus.value = 'active';
+  };
+
+  employeeForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!companyId) return;
+    const body = {
+      person_id: employeePersonId.value || null,
+      full_name: employeeFullName.value || null,
+      employee_ref: employeeRef.value || null,
+      status: employeeStatus.value,
+      start_date: employeeStartDate.value,
+      end_date: employeeEndDate.value || null,
+    };
+    try {
+      if (employeeIdInput.value) {
+        await window.apiFetch(`/companies/${companyId}/employees/${employeeIdInput.value}`, { method: 'PATCH', body });
+      } else {
+        await window.apiFetch(`/companies/${companyId}/employees`, { method: 'POST', body });
+      }
+      resetEmployeeForm();
+      await loadEmployees();
+      setMessage('Empleado guardado correctamente.');
+    } catch (error) {
+      window.handleApiError(error, { defaultMessage: 'No se pudo guardar el empleado.' });
+      setMessage('No se pudo guardar el empleado.', true);
+    }
+  });
+
+  employeeNewButton?.addEventListener('click', resetEmployeeForm);
 
   refreshButton?.addEventListener('click', loadEmployees);
   loadEmployees();

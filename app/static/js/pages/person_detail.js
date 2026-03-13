@@ -215,19 +215,21 @@
   });
 
   document.getElementById('portal-create-action')?.addEventListener('click', async () => {
-    const email = window.prompt('Email de acceso portal');
+    const email = window.prompt('Email para invitación al portal');
     if (!email) return;
-    const password = window.prompt('Password inicial (mínimo 8 caracteres)');
-    if (!password) return;
     try {
-      await window.apiFetch(`/persons/${personId}/portal-user`, {
+      const result = await window.apiFetch(`/persons/${personId}/portal-user/invite`, {
         method: 'POST',
-        body: { email, password },
+        body: { email },
       });
-      window.showToast('success', 'Acceso portal actualizado');
+      const link = result?.activation_link || '';
+      if (link) {
+        window.prompt('Enlace de activación generado (cópialo):', `${window.location.origin}${link}`);
+      }
+      window.showToast('success', 'Invitación de acceso portal creada');
       await load();
     } catch (error) {
-      window.handleApiError(error, { defaultMessage: 'No se pudo actualizar acceso portal.' });
+      window.handleApiError(error, { defaultMessage: 'No se pudo generar la invitación de acceso portal.' });
     }
   });
 
