@@ -61,7 +61,7 @@
         <td><a href="/app/persons/${item.person_id}">${item.person_name || '-'}</a></td>
         <td>${item.request_type || '-'}</td>
         <td>${fmtDate(item.due_date)}</td>
-        <td><a href="/app/persons/${item.person_id}/requests">Abrir</a></td>
+        <td><a href="/app/persons/${item.person_id}">Abrir</a></td>
       `));
 
       renderTable('recent-activity-body', 'recent-activity-empty', data.recent_activity, (item) => tr(`

@@ -1,6 +1,7 @@
 {% extends "frontoffice/base.html" %}
 {% block title %}Portal · Mis documentos{% endblock %}
 {% block content %}
+<section class="ff-card" style="margin-bottom:14px;"><div class="ff-card__head">Subir documento personal</div><div class="ff-card__body"><form id="portal-upload-form" enctype="multipart/form-data" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><input class="ff-input" type="text" name="doc_type" placeholder="Tipo de documento" /><input class="ff-input" type="file" name="file" required /><button class="ff-btn ff-btn--primary" type="submit">Subir</button></form><p id="portal-upload-message" class="ff-form-message" aria-live="polite"></p></div></section>
 <section class="ff-card"><div class="ff-card__head">Documentos personales</div><div class="ff-card__body ff-table-wrap"><table class="ff-table"><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>{% for item in documents_person %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td><td>{{ item.created_at }}</td></tr>{% endfor %}</tbody></table></div></section>
 {% if documents_employee %}
 <section class="ff-card" style="margin-top:14px;"><div class="ff-card__head">Documentos laborales</div><div class="ff-card__body ff-table-wrap"><table class="ff-table"><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>{% for item in documents_employee %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td><td>{{ item.created_at }}</td></tr>{% endfor %}</tbody></table></div></section>
@@ -8,4 +9,19 @@
 {% if documents_company %}
 <section class="ff-card" style="margin-top:14px;"><div class="ff-card__head">Documentos de empresa</div><div class="ff-card__body ff-table-wrap"><table class="ff-table"><thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Empresa</th></tr></thead><tbody>{% for item in documents_company %}<tr><td>{{ item.file_name }}</td><td>{{ item.doc_type }}</td><td>{{ item.status }}</td><td>{{ item.company_name }}</td></tr>{% endfor %}</tbody></table></div></section>
 {% endif %}
+<script>
+  document.getElementById('portal-upload-form')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const message = document.getElementById('portal-upload-message');
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const response = await fetch('/portal/api/documents', { method: 'POST', body: formData });
+    if (response.ok) {
+      if (message) message.textContent = 'Documento subido correctamente.';
+      window.location.reload();
+      return;
+    }
+    if (message) message.textContent = 'No se pudo subir el documento.';
+  });
+</script>
 {% endblock %}

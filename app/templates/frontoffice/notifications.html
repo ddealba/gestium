@@ -12,6 +12,8 @@
             {% if n.status == 'unread' %}<span class="ff-portal-badge" style="background:rgba(91,82,182,.12);color:var(--ff-primary);">Nuevo</span>{% endif %}
             <p style="margin:4px 0 6px;">{{ n.message }}</p>
             <a href="{% if n.entity_type == 'person_request' %}/portal/requests/{{ n.entity_id }}{% elif n.entity_type == 'document' %}/portal/documents{% elif n.entity_type == 'case' %}/portal/cases{% else %}/portal{% endif %}">Abrir</a>
+            <button type="button" class="ff-btn ff-btn--ghost ff-btn--sm" data-notification-action="read" data-notification-id="{{ n.id }}">Marcar leído</button>
+            <button type="button" class="ff-btn ff-btn--ghost ff-btn--sm" data-notification-action="dismiss" data-notification-id="{{ n.id }}">Descartar</button>
           </li>
         {% endfor %}
       </ul>
@@ -20,4 +22,14 @@
     {% endif %}
   </div>
 </section>
+<script>
+  document.addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-notification-action]');
+    if (!button) return;
+    const action = button.dataset.notificationAction;
+    const id = button.dataset.notificationId;
+    const response = await fetch(`/portal/api/notifications/${id}/${action}`, { method: 'POST' });
+    if (response.ok) window.location.reload();
+  });
+</script>
 {% endblock %}

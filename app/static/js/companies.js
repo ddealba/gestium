@@ -13,6 +13,9 @@
   const clearFiltersButton = document.getElementById('companies-clear-filters');
   const prevButton = document.getElementById('companies-prev');
   const nextButton = document.getElementById('companies-next');
+  const createCompanyForm = document.getElementById('company-create-form');
+  const createCompanyName = document.getElementById('company-create-name');
+  const createCompanyTaxId = document.getElementById('company-create-tax-id');
 
   const aclSection = document.getElementById('company-access-panel');
   const aclTitle = document.getElementById('company-access-title');
@@ -229,5 +232,22 @@
   });
 
   refreshButton?.addEventListener('click', loadCompanies);
+
+  createCompanyForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    try {
+      await window.apiFetch('/companies', {
+        method: 'POST',
+        body: JSON.stringify({ name: createCompanyName.value, tax_id: createCompanyTaxId.value }),
+      });
+      createCompanyForm.reset();
+      state.offset = 0;
+      await loadCompanies();
+      setMessage('Empresa creada correctamente.');
+    } catch (error) {
+      window.handleApiError(error, { defaultMessage: 'No se pudo crear la empresa.' });
+      setMessage('No se pudo crear la empresa.', true);
+    }
+  });
   loadCompanies();
 })();

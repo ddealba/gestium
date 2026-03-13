@@ -9,6 +9,7 @@ from app.common.jwt import create_access_token
 from app.common.responses import ok
 from app.common.tenant import tenant_required
 from app.modules.auth.service import AuthService
+from app.modules.documents.service import DocumentModuleService
 from app.modules.person_request.request_schemas import PersonRequestResponseSchema
 from app.modules.person_request.request_service import PersonRequestService
 from app.modules.portal.audit_service import PortalAuditService
@@ -25,6 +26,11 @@ def _portal_context() -> PortalContext:
 @bp.get("/portal/login")
 def portal_login_page():
     return render_template("frontoffice/login.html")
+
+
+@bp.get("/portal/activate")
+def portal_activate_page():
+    return render_template("frontoffice/activate.html", token=request.args.get("token", ""))
 
 
 @bp.post("/portal/login")
@@ -259,6 +265,29 @@ def portal_api_company_cases(company_id: str):
     payload = service.get_portal_cases(context, scope="company")
     PortalAuditService().log("portal_case_viewed", context, "company", company_id)
     return ok([item for item in payload if item["company_id"] == company_id])
+
+
+
+
+@bp.post("/portal/api/documents")
+@auth_required
+@tenant_required
+@portal_user_required
+def portal_api_upload_document():
+    context = _portal_context()
+    file = request.files.get("file")
+    if file is None:
+        return ok({"error": "file_required"}, status_code=400)
+    document = DocumentModuleService().upload_document(
+        client_id=context.client_id,
+        actor_user_id=context.user_id,
+        file=file,
+        person_id=context.person_id,
+        doc_type=request.form.get("doc_type") or "portal_direct_upload",
+    )
+    from app.extensions import db
+    db.session.commit()
+    return ok({"document_id": document.id, "status": document.status}, status_code=201)
 
 
 @bp.get("/portal/api/my-documents")
