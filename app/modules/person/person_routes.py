@@ -17,6 +17,7 @@ from app.modules.person.person_service import PersonService
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
 from app.models.user import User
+from app.modules.notification.notification_service import NotificationService
 
 bp = Blueprint("person", __name__)
 
@@ -197,7 +198,9 @@ def upsert_person_portal_user(person_id: str):
     )
 
     target = portal_user or existing_by_email
+    created_now = False
     if target is None:
+        created_now = True
         target = User(
             client_id=str(g.client_id),
             email=normalized_email,
@@ -217,6 +220,19 @@ def upsert_person_portal_user(person_id: str):
 
     completeness_service = PersonCompletenessService()
     completeness_service.recalculate_person_status(person, actor_user_id=str(g.user.id))
+    if created_now:
+        NotificationService().create_portal_notification(
+            client_id=str(g.client_id),
+            person_id=person.id,
+            user_id=target.id,
+            notification_type="portal_access_created",
+            title="Acceso al portal activado",
+            message="Tu acceso al portal está listo.",
+            entity_type="person",
+            entity_id=person.id,
+            priority="medium",
+            deduplicate=True,
+        )
     db.session.commit()
     return ok(
         {

@@ -213,6 +213,7 @@
           <a class="ff-portal-nav__item{% if request.path.startswith('/portal/cases') %} is-active{% endif %}" href="/portal/cases">Mis expedientes</a>
           <a class="ff-portal-nav__item{% if request.path.startswith('/portal/companies') %} is-active{% endif %}" href="/portal/companies">Mis empresas</a>
           <a class="ff-portal-nav__item{% if request.path.startswith('/portal/requests') %} is-active{% endif %}" href="/portal/requests">Mis solicitudes</a>
+          <a class="ff-portal-nav__item{% if request.path.startswith('/portal/notifications') %} is-active{% endif %}" href="/portal/notifications">Avisos</a>
         </nav>
         {% block content %}{% endblock %}
       </main>

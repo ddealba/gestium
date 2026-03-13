@@ -57,6 +57,20 @@ def portal_home():
     return render_template("frontoffice/home.html", home=payload)
 
 
+
+
+@bp.get("/portal/notifications")
+@auth_required
+@tenant_required
+@portal_user_required
+def portal_notifications():
+    context = _portal_context()
+    items = PortalService().list_portal_notifications(
+        context,
+        status=request.args.get("status"),
+        priority=request.args.get("priority"),
+    )
+    return render_template("frontoffice/notifications.html", notifications=items)
 @bp.get("/portal/profile")
 @auth_required
 @tenant_required

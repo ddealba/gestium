@@ -1,0 +1,23 @@
+{% extends "frontoffice/base.html" %}
+{% block title %}Portal · Avisos{% endblock %}
+{% block content %}
+<section class="ff-card">
+  <div class="ff-card__head">Avisos</div>
+  <div class="ff-card__body">
+    {% if notifications %}
+      <ul style="margin:0;padding-left:16px;display:grid;gap:10px;">
+        {% for n in notifications %}
+          <li>
+            <strong>{{ n.title }}</strong>
+            {% if n.status == 'unread' %}<span class="ff-portal-badge" style="background:rgba(91,82,182,.12);color:var(--ff-primary);">Nuevo</span>{% endif %}
+            <p style="margin:4px 0 6px;">{{ n.message }}</p>
+            <a href="{% if n.entity_type == 'person_request' %}/portal/requests/{{ n.entity_id }}{% elif n.entity_type == 'document' %}/portal/documents{% elif n.entity_type == 'case' %}/portal/cases{% else %}/portal{% endif %}">Abrir</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="ff-muted" style="margin:0;">No tienes avisos por ahora.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

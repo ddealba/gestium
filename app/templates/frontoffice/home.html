@@ -89,16 +89,16 @@
 <section class="ff-card" style="margin-top:14px;">
   <div class="ff-card__head ff-portal-activity-head">
     <span>Avisos</span>
-    {% if home.notifications.unread_count %}<span class="ff-portal-activity-head__count">{{ home.notifications.unread_count }}</span>{% endif %}
+    {% if home.notifications["unread_count"] %}<span class="ff-portal-activity-head__count">{{ home.notifications["unread_count"] }}</span>{% endif %}
   </div>
   <div class="ff-card__body">
-    {% if home.notifications.items %}
+    {% if home.notifications["items"] %}
       <ul style="margin:0;padding-left:16px;display:grid;gap:8px;">
-        {% for n in home.notifications.items %}
+        {% for n in home.notifications["items"] %}
           <li><strong>{{ n.title }}</strong> · {{ n.message }} <a href="{% if n.entity_type == 'person_request' %}/portal/requests/{{ n.entity_id }}{% elif n.entity_type == 'document' %}/portal/documents{% elif n.entity_type == 'case' %}/portal/cases{% else %}/portal{% endif %}">Ver</a></li>
         {% endfor %}
       </ul>
-      <div style="margin-top:10px;"><a class="ff-btn ff-btn--sm" href="/portal/requests">Ver todas</a></div>
+      <div style="margin-top:10px;"><a class="ff-btn ff-btn--sm" href="/portal/notifications">Ver todas</a></div>
     {% else %}
       <p class="ff-muted" style="margin:0;">No tienes avisos por ahora.</p>
     {% endif %}

@@ -13,6 +13,7 @@ from app.modules.cases.repository import CaseEventRepository, CaseRepository
 from app.modules.companies.repository import CompanyRepository
 from app.modules.person.person_repository import PersonRepository
 from app.services.company_access_service import CompanyAccessService
+from app.modules.notification.notification_service import NotificationService
 
 TERMINAL_CASE_STATUSES = {"done", "cancelled"}
 
@@ -34,6 +35,7 @@ class CaseService:
         self.person_repository = person_repository or PersonRepository()
         self.company_access_service = company_access_service or CompanyAccessService()
         self.audit_service = AuditService()
+        self.notification_service = NotificationService()
 
     def list_cases(
         self,
@@ -257,6 +259,18 @@ class CaseService:
                 entity_id=case.id,
                 metadata={"from": previous_status, "to": case.status},
             )
+            if case.person_id:
+                self.notification_service.create_portal_notification(
+                    client_id=client_id,
+                    person_id=case.person_id,
+                    notification_type="case_updated",
+                    title="Tu expediente ha sido actualizado",
+                    message=f"El expediente '{case.title}' cambió a estado {case.status}.",
+                    entity_type="case",
+                    entity_id=case.id,
+                    priority="medium",
+                    deduplicate=False,
+                )
 
         if previous_person_id != case.person_id:
             self.audit_service.log_action(
@@ -305,6 +319,18 @@ class CaseService:
             entity_id=case.id,
             metadata={"from": previous_status, "to": target_status},
         )
+        if case.person_id:
+            self.notification_service.create_portal_notification(
+                client_id=client_id,
+                person_id=case.person_id,
+                notification_type="case_updated",
+                title="Tu expediente ha sido actualizado",
+                message=f"El expediente '{case.title}' cambió a estado {case.status}.",
+                entity_type="case",
+                entity_id=case.id,
+                priority="medium",
+                deduplicate=False,
+            )
         return case
 
     def assign_responsible(
