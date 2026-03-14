@@ -14,6 +14,7 @@
   const orderFilter = document.getElementById('filter-order');
   const applyFiltersButton = document.getElementById('apply-filters');
   const clearFiltersButton = document.getElementById('clear-filters');
+  const createModal = document.getElementById('case-create-modal');
 
   const TERMINAL_STATUSES = new Set(['done', 'cancelled']);
 
@@ -146,6 +147,8 @@
       });
 
       form.reset();
+      createModal?.classList.remove('is-open');
+      createModal?.setAttribute('aria-hidden', 'true');
       setMessage(createMessage, 'Case creado correctamente.', false, true);
       loadCases();
     } catch (error) {

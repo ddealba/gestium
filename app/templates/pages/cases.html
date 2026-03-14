@@ -8,10 +8,15 @@
     <div class="ff-card">
       <div class="ff-card__head ff-page-head">
         <h2>Cases de empresa</h2>
-        <button id="refresh-cases" class="ff-btn ff-btn--ghost" type="button">
-          <i class="ph ph-arrows-clockwise"></i>
-          Recargar
-        </button>
+        <div class="ff-filters__actions">
+          <button id="open-case-create-modal" class="ff-btn ff-btn--primary" type="button" data-ff="modal-open" data-target="#case-create-modal">
+            Nuevo expediente
+          </button>
+          <button id="refresh-cases" class="ff-btn ff-btn--ghost" type="button">
+            <i class="ph ph-arrows-clockwise"></i>
+            Recargar
+          </button>
+        </div>
       </div>
       <div class="ff-card__body">
         <p id="cases-message" class="ff-form-message" aria-live="polite"></p>
@@ -59,51 +64,58 @@
       </div>
     </div>
   </div>
+</section>
 
-  <div class="ff-col-12">
-    <div class="ff-card">
-      <div class="ff-card__head ff-page-head">
-        <h2>Crear case</h2>
-      </div>
-      <div class="ff-card__body">
-        <form id="create-case-form" class="ff-form-stack" data-company-id="{{ company_id }}">
-          <label class="ff-label" for="case-title">Título *</label>
-          <div class="ff-field">
-            <i class="ph ph-text-t"></i>
-            <input id="case-title" name="title" class="ff-input" required />
-          </div>
+<div class="ff-modal" id="case-create-modal" aria-hidden="true">
+  <div class="ff-modal__backdrop" data-ff="modal-close"></div>
+  <div class="ff-card" style="position:relative;width:min(760px,92vw);z-index:1" role="dialog" aria-modal="true" aria-labelledby="case-create-title">
+    <div class="ff-card__head ff-page-head">
+      <h3 id="case-create-title">Nuevo expediente</h3>
+      <button class="ff-iconbtn" type="button" data-ff="modal-close" aria-label="Cerrar">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+    <div class="ff-card__body">
+      <form id="create-case-form" class="ff-form-stack" data-company-id="{{ company_id }}">
+        <label class="ff-label" for="case-title">Título *</label>
+        <div class="ff-field">
+          <i class="ph ph-text-t"></i>
+          <input id="case-title" name="title" class="ff-input" required data-ff-autofocus />
+        </div>
 
-          <label class="ff-label" for="case-type">Tipo *</label>
-          <div class="ff-field">
-            <i class="ph ph-folder-simple"></i>
-            <input id="case-type" name="type" class="ff-input" required />
-          </div>
+        <label class="ff-label" for="case-type">Tipo *</label>
+        <div class="ff-field">
+          <i class="ph ph-folder-simple"></i>
+          <input id="case-type" name="type" class="ff-input" required />
+        </div>
 
-          <label class="ff-label" for="case-person-id">Persona (ID)</label>
-          <div class="ff-field">
-            <i class="ph ph-user"></i>
-            <input id="case-person-id" name="person_id" class="ff-input" />
-          </div>
+        <label class="ff-label" for="case-person-id">Persona (ID)</label>
+        <div class="ff-field">
+          <i class="ph ph-user"></i>
+          <input id="case-person-id" name="person_id" class="ff-input" />
+        </div>
 
-          <label class="ff-label" for="case-description">Descripción</label>
-          <div class="ff-field">
-            <i class="ph ph-note-pencil"></i>
-            <textarea id="case-description" name="description" class="ff-textarea"></textarea>
-          </div>
+        <label class="ff-label" for="case-description">Descripción</label>
+        <div class="ff-field">
+          <i class="ph ph-note-pencil"></i>
+          <textarea id="case-description" name="description" class="ff-textarea"></textarea>
+        </div>
 
-          <label class="ff-label" for="case-due-date">Fecha límite</label>
-          <div class="ff-field">
-            <i class="ph ph-calendar"></i>
-            <input id="case-due-date" name="due_date" class="ff-input" type="date" />
-          </div>
+        <label class="ff-label" for="case-due-date">Fecha límite</label>
+        <div class="ff-field">
+          <i class="ph ph-calendar"></i>
+          <input id="case-due-date" name="due_date" class="ff-input" type="date" />
+        </div>
 
-          <p id="create-case-message" class="ff-form-message" aria-live="polite"></p>
-          <button type="submit" class="ff-btn ff-btn--primary">Crear case</button>
-        </form>
-      </div>
+        <p id="create-case-message" class="ff-form-message" aria-live="polite"></p>
+        <div class="ff-filters__actions" style="justify-content:flex-end;">
+          <button type="submit" class="ff-btn ff-btn--primary">Crear expediente</button>
+          <button type="button" class="ff-btn ff-btn--ghost" data-ff="modal-close">Cancelar</button>
+        </div>
+      </form>
     </div>
   </div>
-</section>
+</div>
 {% endblock %}
 
 {% block page_scripts %}

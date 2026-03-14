@@ -9,6 +9,7 @@
   const personIdInput = document.getElementById('company-relation-person-id');
   const relationTypeInput = document.getElementById('company-relation-type');
   const startInput = document.getElementById('company-relation-start');
+  const modal = document.getElementById('company-relation-modal');
 
   const render = (items) => {
     if (!items?.length) {
@@ -50,6 +51,8 @@
         },
       });
       form.reset();
+      modal?.classList.remove('is-open');
+      modal?.setAttribute('aria-hidden', 'true');
       await load();
     } catch (error) {
       window.handleApiError(error, { defaultMessage: 'No se pudo vincular la persona a la empresa.' });

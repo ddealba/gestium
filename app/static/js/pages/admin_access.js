@@ -10,6 +10,7 @@
   const userSelect = document.getElementById('admin-access-user-select');
   const levelSelect = document.getElementById('admin-access-level-select');
   const addSubmit = document.getElementById('admin-access-add-submit');
+  const addModal = document.getElementById('admin-access-add-modal');
   const addMessage = document.getElementById('admin-access-add-message');
 
   const ACCESS_LEVELS = ['viewer', 'operator', 'manager', 'admin'];
@@ -189,6 +190,8 @@
       });
 
       setMessage(addMessage, 'Acceso añadido correctamente.');
+      addModal?.classList.remove('is-open');
+      addModal?.setAttribute('aria-hidden', 'true');
       await loadAccessForCompany(companyId);
     } catch (error) {
       window.handleApiError(error, { defaultMessage: 'No se pudo añadir el acceso.' });

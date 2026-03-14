@@ -25,6 +25,7 @@
   const employeeStartDate = document.getElementById('employee-start-date');
   const employeeEndDate = document.getElementById('employee-end-date');
   const employeeNewButton = document.getElementById('employee-new');
+  const employeeModal = document.getElementById('employee-create-modal');
 
   const state = { limit: 20, offset: 0, total: 0 };
 
@@ -245,6 +246,9 @@
       }
       return;
     }
+    employeeModal?.classList.add('is-open');
+    employeeModal?.setAttribute('aria-hidden', 'false');
+    employeePersonId?.focus();
     loadEmployeeDocuments(card.dataset.employeeId);
   });
 
@@ -275,6 +279,8 @@
         await window.apiFetch(`/companies/${companyId}/employees`, { method: 'POST', body });
       }
       resetEmployeeForm();
+      employeeModal?.classList.remove('is-open');
+      employeeModal?.setAttribute('aria-hidden', 'true');
       await loadEmployees();
       setMessage('Empleado guardado correctamente.');
     } catch (error) {
