@@ -16,6 +16,7 @@
   const createCompanyForm = document.getElementById('company-create-form');
   const createCompanyName = document.getElementById('company-create-name');
   const createCompanyTaxId = document.getElementById('company-create-tax-id');
+  const createCompanyModal = document.getElementById('company-create-modal');
 
   const aclSection = document.getElementById('company-access-panel');
   const aclTitle = document.getElementById('company-access-title');
@@ -235,12 +236,24 @@
 
   createCompanyForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const name = createCompanyName.value.trim();
+    const taxId = createCompanyTaxId.value.trim().toUpperCase();
+    if (!name || !taxId) {
+      setMessage('Debes completar nombre y NIF.', true);
+      return;
+    }
+
     try {
       await window.apiFetch('/companies', {
         method: 'POST',
-        body: JSON.stringify({ name: createCompanyName.value, tax_id: createCompanyTaxId.value }),
+        body: JSON.stringify({ name, tax_id: taxId }),
       });
       createCompanyForm.reset();
+      if (createCompanyModal) {
+        createCompanyModal.classList.remove('is-open');
+        createCompanyModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
       state.offset = 0;
       await loadCompanies();
       setMessage('Empresa creada correctamente.');

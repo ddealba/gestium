@@ -6,27 +6,18 @@
 <section class="ff-card">
   <div class="ff-card__head ff-page-head">
     <h2>Empresas</h2>
-    <button id="refresh-companies" class="ff-btn ff-btn--ghost" type="button">
-      <i class="ph ph-arrows-clockwise"></i>
-      Recargar
-    </button>
+    <div class="ff-filters__actions">
+      <button id="open-company-create-modal" class="ff-btn ff-btn--primary" type="button" data-ff="modal-open" data-target="#company-create-modal">
+        Nueva empresa
+      </button>
+      <button id="refresh-companies" class="ff-btn ff-btn--ghost" type="button">
+        <i class="ph ph-arrows-clockwise"></i>
+        Recargar
+      </button>
+    </div>
   </div>
   <div class="ff-card__body">
     <p id="companies-message" class="ff-form-message" aria-live="polite"></p>
-    <form id="company-create-form" class="ff-form" style="margin-bottom: 1rem; display:grid; gap:10px; grid-template-columns: repeat(auto-fit,minmax(200px,1fr));">
-      <label>
-        Nombre
-        <input id="company-create-name" class="ff-input" type="text" required />
-      </label>
-      <label>
-        NIF
-        <input id="company-create-tax-id" class="ff-input" type="text" required />
-      </label>
-      <div class="ff-filters__actions" style="align-self:end;">
-        <button class="ff-btn ff-btn--primary" type="submit">Nueva empresa</button>
-      </div>
-    </form>
-
     <div class="ff-filters" id="companies-filters">
       <div>
         <label class="ff-label" for="companies-q">Búsqueda</label>
@@ -63,6 +54,34 @@
     </div>
   </div>
 </section>
+
+<div class="ff-modal" id="company-create-modal" aria-hidden="true">
+  <div class="ff-modal__backdrop" data-ff="modal-close"></div>
+  <div class="ff-card ff-tenant-modal" role="dialog" aria-modal="true" aria-labelledby="company-create-title">
+    <div class="ff-card__head ff-page-head">
+      <h3 id="company-create-title">Nueva empresa</h3>
+      <button class="ff-iconbtn" type="button" data-ff="modal-close" aria-label="Cerrar">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+    <div class="ff-card__body">
+      <form id="company-create-form" class="ff-form" style="display:grid; gap:10px;">
+        <label>
+          Nombre
+          <input id="company-create-name" class="ff-input" type="text" required />
+        </label>
+        <label>
+          NIF
+          <input id="company-create-tax-id" class="ff-input" type="text" required />
+        </label>
+        <div class="ff-filters__actions">
+          <button class="ff-btn ff-btn--primary" type="submit">Crear empresa</button>
+          <button class="ff-btn ff-btn--ghost" type="button" data-ff="modal-close">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <section class="ff-card" id="company-access-panel" hidden>
   <div class="ff-card__head ff-page-head">
