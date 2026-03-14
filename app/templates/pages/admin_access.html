@@ -8,6 +8,7 @@
     <div class="ff-card">
       <div class="ff-card__head ff-page-head">
         <h2>Accesos por empresa</h2>
+        <button id="open-admin-access-add-modal" class="ff-btn ff-btn--primary" type="button" data-ff="modal-open" data-target="#admin-access-add-modal">Nuevo acceso</button>
       </div>
       <div class="ff-card__body ff-form-stack">
         <p class="ff-muted">Gestiona el ACL por empresa para usuarios del tenant sin tocar base de datos.</p>
@@ -41,34 +42,39 @@
       </div>
     </div>
   </div>
+</section>
 
-  <div class="ff-col-12">
-    <div class="ff-card">
-      <div class="ff-card__head ff-page-head">
-        <h3>Añadir acceso</h3>
-      </div>
-      <div class="ff-card__body">
-        <form id="admin-access-add-form" class="ff-form-stack">
-          <label for="admin-access-user-select">
-            Usuario
-            <select id="admin-access-user-select" class="ff-select" required></select>
-          </label>
-          <label for="admin-access-level-select">
-            Nivel de acceso
-            <select id="admin-access-level-select" class="ff-select" required>
-              <option value="viewer">viewer</option>
-              <option value="operator">operator</option>
-              <option value="manager">manager</option>
-              <option value="admin">admin</option>
-            </select>
-          </label>
+<div class="ff-modal" id="admin-access-add-modal" aria-hidden="true">
+  <div class="ff-modal__backdrop" data-ff="modal-close"></div>
+  <div class="ff-card" style="position:relative; z-index:1; width:min(560px, 92vw);" role="dialog" aria-modal="true" aria-labelledby="admin-access-add-title">
+    <div class="ff-card__head ff-page-head">
+      <h3 id="admin-access-add-title">Nuevo acceso</h3>
+      <button type="button" class="ff-iconbtn" data-ff="modal-close" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="ff-card__body">
+      <form id="admin-access-add-form" class="ff-form-stack">
+        <label for="admin-access-user-select">
+          Usuario
+          <select id="admin-access-user-select" class="ff-select" required data-ff-autofocus></select>
+        </label>
+        <label for="admin-access-level-select">
+          Nivel de acceso
+          <select id="admin-access-level-select" class="ff-select" required>
+            <option value="viewer">viewer</option>
+            <option value="operator">operator</option>
+            <option value="manager">manager</option>
+            <option value="admin">admin</option>
+          </select>
+        </label>
+        <div class="ff-filters__actions" style="justify-content:flex-end;">
           <button id="admin-access-add-submit" type="submit" class="ff-btn ff-btn--primary">Añadir</button>
-          <p id="admin-access-add-message" class="ff-form-message" aria-live="polite"></p>
-        </form>
-      </div>
+          <button type="button" class="ff-btn ff-btn--ghost" data-ff="modal-close">Cancelar</button>
+        </div>
+        <p id="admin-access-add-message" class="ff-form-message" aria-live="polite"></p>
+      </form>
     </div>
   </div>
-</section>
+</div>
 {% endblock %}
 
 {% block page_scripts %}

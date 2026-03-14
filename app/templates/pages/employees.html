@@ -8,26 +8,18 @@
     <div class="ff-card">
       <div class="ff-card__head ff-page-head">
         <h2>Empleados de empresa</h2>
-        <button id="refresh-employees" class="ff-btn ff-btn--ghost" type="button">
-          <i class="ph ph-arrows-clockwise"></i>
-          Recargar
-        </button>
+        <div class="ff-filters__actions">
+          <button id="open-employee-create-modal" class="ff-btn ff-btn--primary" type="button" data-ff="modal-open" data-target="#employee-create-modal">
+            Nuevo empleado
+          </button>
+          <button id="refresh-employees" class="ff-btn ff-btn--ghost" type="button">
+            <i class="ph ph-arrows-clockwise"></i>
+            Recargar
+          </button>
+        </div>
       </div>
       <div class="ff-card__body">
         <p id="employees-message" class="ff-form-message" aria-live="polite"></p>
-        <form id="employee-manage-form" class="ff-form" style="margin-bottom:1rem;display:grid; gap:10px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr));">
-          <input type="hidden" id="employee-id" />
-          <label>Person ID<input id="employee-person-id" class="ff-input" type="text" /></label>
-          <label>Nombre<input id="employee-full-name" class="ff-input" type="text" /></label>
-          <label>Referencia<input id="employee-ref" class="ff-input" type="text" /></label>
-          <label>Estado<select id="employee-status" class="ff-input"><option value="active">active</option><option value="terminated">terminated</option></select></label>
-          <label>Alta<input id="employee-start-date" class="ff-input" type="date" required /></label>
-          <label>Baja<input id="employee-end-date" class="ff-input" type="date" /></label>
-          <div class="ff-filters__actions" style="align-self:end;">
-            <button class="ff-btn ff-btn--primary" type="submit">Guardar empleado</button>
-            <button id="employee-new" class="ff-btn ff-btn--ghost" type="button">Nuevo</button>
-          </div>
-        </form>
 
         <div class="ff-filters" id="employees-filters">
           <div>
@@ -71,16 +63,12 @@
     <div class="ff-card" id="company-relations-root" data-company-id="{{ company_id }}">
       <div class="ff-card__head ff-page-head">
         <h2>Personas relacionadas</h2>
+        <button id="open-company-relation-modal" class="ff-btn ff-btn--primary" type="button" data-ff="modal-open" data-target="#company-relation-modal">
+          Nueva relación
+        </button>
       </div>
       <div class="ff-card__body">
         <p class="ff-muted">Gestión de relaciones persona-empresa para backoffice.</p>
-        <form id="company-relation-form" class="ff-form" style="margin: 0 0 1rem 0; display:grid; gap:10px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr));">
-          <label>Person ID<input id="company-relation-person-id" class="ff-input" type="text" required /></label>
-          <label>Tipo<select id="company-relation-type" class="ff-input"><option value="employee">employee</option><option value="owner">owner</option><option value="other">other</option></select></label>
-          <label>Inicio<input id="company-relation-start" class="ff-input" type="date" required /></label>
-          <div class="ff-filters__actions" style="align-self:end;"><button class="ff-btn ff-btn--primary" type="submit">Vincular persona</button></div>
-        </form>
-
         <div class="ff-table-wrap">
           <table class="ff-table">
             <thead>
@@ -120,6 +108,57 @@
   </div>
 
 </section>
+
+<div class="ff-modal" id="employee-create-modal" aria-hidden="true">
+  <div class="ff-modal__backdrop" data-ff="modal-close"></div>
+  <div class="ff-card" style="position:relative; width:min(780px, 92vw); z-index:1" role="dialog" aria-modal="true" aria-labelledby="employee-create-title">
+    <div class="ff-card__head ff-page-head">
+      <h3 id="employee-create-title">Nuevo empleado</h3>
+      <button class="ff-iconbtn" type="button" data-ff="modal-close" aria-label="Cerrar">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+    <div class="ff-card__body">
+      <form id="employee-manage-form" class="ff-form" style="display:grid; gap:10px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr));">
+        <input type="hidden" id="employee-id" />
+        <label>Person ID<input id="employee-person-id" class="ff-input" type="text" data-ff-autofocus /></label>
+        <label>Nombre<input id="employee-full-name" class="ff-input" type="text" /></label>
+        <label>Referencia<input id="employee-ref" class="ff-input" type="text" /></label>
+        <label>Estado<select id="employee-status" class="ff-input"><option value="active">active</option><option value="terminated">terminated</option></select></label>
+        <label>Alta<input id="employee-start-date" class="ff-input" type="date" required /></label>
+        <label>Baja<input id="employee-end-date" class="ff-input" type="date" /></label>
+        <div class="ff-filters__actions" style="grid-column:1 / -1; justify-content:flex-end;">
+          <button class="ff-btn ff-btn--primary" type="submit">Guardar empleado</button>
+          <button id="employee-new" class="ff-btn ff-btn--ghost" type="button">Limpiar</button>
+          <button class="ff-btn ff-btn--ghost" type="button" data-ff="modal-close">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="ff-modal" id="company-relation-modal" aria-hidden="true">
+  <div class="ff-modal__backdrop" data-ff="modal-close"></div>
+  <div class="ff-card" style="position:relative; width:min(680px, 92vw); z-index:1" role="dialog" aria-modal="true" aria-labelledby="company-relation-title">
+    <div class="ff-card__head ff-page-head">
+      <h3 id="company-relation-title">Nueva relación</h3>
+      <button class="ff-iconbtn" type="button" data-ff="modal-close" aria-label="Cerrar">
+        <i class="ph ph-x"></i>
+      </button>
+    </div>
+    <div class="ff-card__body">
+      <form id="company-relation-form" class="ff-form" style="display:grid; gap:10px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr));">
+        <label>Person ID<input id="company-relation-person-id" class="ff-input" type="text" required data-ff-autofocus /></label>
+        <label>Tipo<select id="company-relation-type" class="ff-input"><option value="employee">employee</option><option value="owner">owner</option><option value="other">other</option></select></label>
+        <label>Inicio<input id="company-relation-start" class="ff-input" type="date" required /></label>
+        <div class="ff-filters__actions" style="grid-column:1 / -1; justify-content:flex-end;">
+          <button class="ff-btn ff-btn--primary" type="submit">Vincular persona</button>
+          <button class="ff-btn ff-btn--ghost" type="button" data-ff="modal-close">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block page_scripts %}

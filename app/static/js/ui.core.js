@@ -93,17 +93,33 @@
   }
 
   // Modal
+  const focusModalField=(modal)=>{
+    const target=qs('[data-ff-autofocus], input:not([type="hidden"]), select, textarea, button',modal);
+    if(target) target.focus();
+  };
+  const openModal=(modal)=>{
+    if(!modal) return;
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    window.requestAnimationFrame(()=>focusModalField(modal));
+  };
+  const closeModal=(modal)=>{
+    if(!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  };
   qsa('[data-ff="modal-open"]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id=btn.getAttribute('data-target');
       const modal=id?qs(id):null;
-      if(modal){modal.classList.add('is-open');document.body.style.overflow='hidden';}
+      openModal(modal);
     });
   });
   qsa('[data-ff="modal-close"]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const modal=btn.closest('.ff-modal');
-      if(modal){modal.classList.remove('is-open');document.body.style.overflow='';}
+      closeModal(btn.closest('.ff-modal'));
     });
   });
 
@@ -149,7 +165,7 @@
   // ESC
   document.addEventListener('keydown',(e)=>{
     if(e.key==='Escape'){
-      qsa('.ff-modal.is-open').forEach(m=>m.classList.remove('is-open'));
+      qsa('.ff-modal.is-open').forEach(closeModal);
       qsa('.ff-drawer.is-open').forEach(d=>d.classList.remove('is-open'));
       document.body.style.overflow='';
     }

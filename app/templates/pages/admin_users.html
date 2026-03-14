@@ -8,10 +8,15 @@
     <div class="ff-card">
       <div class="ff-card__head ff-page-head">
         <h2>Administración de usuarios</h2>
-        <button id="refresh-admin-users" class="ff-btn ff-btn--ghost" type="button">
-          <i class="ph ph-arrows-clockwise"></i>
-          Recargar
-        </button>
+        <div class="ff-filters__actions">
+          <button id="open-invite-user-modal" class="ff-btn ff-btn--primary" type="button" data-ff="modal-open" data-target="#invite-user-modal">
+            Nuevo usuario
+          </button>
+          <button id="refresh-admin-users" class="ff-btn ff-btn--ghost" type="button">
+            <i class="ph ph-arrows-clockwise"></i>
+            Recargar
+          </button>
+        </div>
       </div>
       <div class="ff-card__body">
         <p id="admin-users-message" class="ff-form-message" aria-live="polite"></p>
@@ -31,29 +36,34 @@
       </div>
     </div>
   </div>
+</section>
 
-  <div class="ff-col-12">
-    <div class="ff-card">
-      <div class="ff-card__head ff-page-head">
-        <h3>Invitar usuario</h3>
-      </div>
-      <div class="ff-card__body">
-        <form id="invite-user-form" class="ff-form-stack">
-          <label>
-            Email
-            <input id="invite-email" name="email" type="email" class="ff-input" required placeholder="usuario@empresa.com" />
-          </label>
-          <label>
-            Roles
-            <select id="invite-roles" class="ff-select" multiple size="5"></select>
-          </label>
+<div class="ff-modal" id="invite-user-modal" aria-hidden="true">
+  <div class="ff-modal__backdrop" data-ff="modal-close"></div>
+  <div class="ff-card" style="position:relative; z-index:1; width:min(560px, 92vw);" role="dialog" aria-modal="true" aria-labelledby="invite-user-title">
+    <div class="ff-card__head ff-page-head">
+      <h3 id="invite-user-title">Nuevo usuario</h3>
+      <button type="button" class="ff-iconbtn" data-ff="modal-close" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="ff-card__body">
+      <form id="invite-user-form" class="ff-form-stack">
+        <label>
+          Email
+          <input id="invite-email" name="email" type="email" class="ff-input" required placeholder="usuario@empresa.com" data-ff-autofocus />
+        </label>
+        <label>
+          Roles
+          <select id="invite-roles" class="ff-select" multiple size="5"></select>
+        </label>
+        <div class="ff-filters__actions" style="justify-content:flex-end;">
           <button id="invite-submit" type="submit" class="ff-btn ff-btn--primary">Invitar</button>
-          <p id="invite-user-message" class="ff-form-message" aria-live="polite"></p>
-        </form>
-      </div>
+          <button type="button" class="ff-btn ff-btn--ghost" data-ff="modal-close">Cancelar</button>
+        </div>
+        <p id="invite-user-message" class="ff-form-message" aria-live="polite"></p>
+      </form>
     </div>
   </div>
-</section>
+</div>
 
 <div class="ff-modal" id="edit-roles-modal" aria-hidden="true">
   <div class="ff-modal__backdrop" data-close-modal="true"></div>

@@ -13,6 +13,7 @@
   const inviteRolesSelect = document.getElementById('invite-roles');
   const inviteMessage = document.getElementById('invite-user-message');
   const inviteSubmit = document.getElementById('invite-submit');
+  const inviteModal = document.getElementById('invite-user-modal');
 
   const editRolesModal = document.getElementById('edit-roles-modal');
   const closeModalButton = document.getElementById('close-edit-roles-modal');
@@ -138,6 +139,8 @@
       });
 
       inviteForm.reset();
+      inviteModal?.classList.remove('is-open');
+      inviteModal?.setAttribute('aria-hidden', 'true');
       setMessage(inviteMessage, 'Invitación enviada correctamente.');
       await loadUsers();
     } catch (error) {
